@@ -222,6 +222,30 @@ body {
     color: #f0e9e9;
 }
 
+#editProfileTabs {
+    border-bottom: none;
+    gap: 8px;
+}
+
+#editProfileTabs .nav-link {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: #bbb;
+    background-color: #1e1e1e;
+    transition: 0.2s;
+}
+
+#editProfileTabs .nav-link:hover {
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+#editProfileTabs .nav-link.active {
+    background-color: #4f46e5; /* main accent */
+    color: white;
+}
+
 @media (max-width: 1200px) {
     .sidebar {
         width: 210px;
