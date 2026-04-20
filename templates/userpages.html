@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <title>User Profile</title>
-
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -20,8 +19,8 @@
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Navigation</div>
-                <a href="#" class="active">Profile</a>
-                <a href="#">Dashboard</a>
+                <a href="{{ url_for('profile') }}">Profile</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
                 <a href="#">Matches</a>
                 <a href="#">Messages</a>
             </div>
@@ -82,13 +81,6 @@
                     <section class="info-card h-100">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="section-heading">Availability</div>
-                            <button
-                                class="custom-btn secondary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#availabilityModal"
-                            >
-                            Edit
-                            </button>
                         </div>
                         <ul class="info-list">
                             <li id="mondayDisplay">Monday: 10:00 - 14:00</li>
@@ -138,694 +130,289 @@
     </div>
 
     <div class="modal fade" id="profileModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-
-            <div class="modal-header">
-                <h5>Edit Profile</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-                <label class="form-label">Email</label>
-                <input id="emailInput" class="form-control mb-2" placeholder="Email">
-
-                <label class="form-label">University</label>
-                <input id="uniInput" class="form-control mb-2" placeholder="University">
-
-                <label class="form-label">Year Level</label>
-                <input id="yearInput" class="form-control mb-2" placeholder="Year Level">
-
-                <label class="form-label">About</label>
-                <textarea id="aboutInput" class="form-control" placeholder="About"></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" id="saveProfile">Save</button>
-            </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="availabilityModal" tabindex="-1" aria-labelledby="availabilityModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title" id="availabilityModalLabel">Edit Availability</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">Edit Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Monday</label>
-                        <div class="row g-2">
-                            <div class="col">
-                                <select id="mondayStart" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30" >23:30</option>
-                                </select>
+
+                    <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active"
+                                    id="profile-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#profile-pane"
+                                    type="button"
+                                    role="tab">
+                                Profile
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
+                                    id="subjects-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#subjects-pane"
+                                    type="button"
+                                    role="tab">
+                                Subjects
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
+                                    id="availability-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#availability-pane"
+                                    type="button"
+                                    role="tab">
+                                Availability
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <!-- Profile tab -->
+                        <div class="tab-pane fade show active" id="profile-pane" role="tabpanel">
+                            <label for="emailInput" class="form-label">Email</label>
+                            <input id="emailInput" class="form-control mb-3" placeholder="Email">
+
+                            <label for="uniInput" class="form-label">University</label>
+                            <input id="uniInput" class="form-control mb-3" placeholder="University">
+
+                            <label for="yearInput" class="form-label">Year Level</label>
+                            <input id="yearInput" class="form-control mb-3" placeholder="Year Level">
+
+                            <label for="aboutInput" class="form-label">About</label>
+                            <textarea id="aboutInput" class="form-control" rows="4" placeholder="About"></textarea>
+                        </div>
+
+                        <!-- Subjects tab -->
+                        <div class="tab-pane fade" id="subjects-pane" role="tabpanel">
+                            <label for="subject1Input" class="form-label">Subject 1</label>
+                            <input id="subject1Input" class="form-control mb-3" placeholder="Subject 1">
+
+                            <label for="subject2Input" class="form-label">Subject 2</label>
+                            <input id="subject2Input" class="form-control mb-3" placeholder="Subject 2">
+
+                            <label for="subject3Input" class="form-label">Subject 3</label>
+                            <input id="subject3Input" class="form-control" placeholder="Subject 3">
+                        </div>
+
+                        <!-- Availability tab -->
+                        <div class="tab-pane fade" id="availability-pane" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">Monday</label>
+                                <div class="row g-2">
+                                    <div class="col">
+                                        <select id="mondayStart" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select id="mondayEnd" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="14:00">14:00</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col">
-                                <select id="mondayEnd" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30" >23:30</option>
-                                </select>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tuesday</label>
+                                <div class="row g-2">
+                                    <div class="col">
+                                        <select id="tuesdayStart" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select id="tuesdayEnd" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="14:00">14:00</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Wednesday</label>
+                                <div class="row g-2">
+                                    <div class="col">
+                                        <select id="wednesdayStart" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select id="wednesdayEnd" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="16:00">16:00</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Thursday</label>
+                                <div class="row g-2">
+                                    <div class="col">
+                                        <select id="thursdayStart" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select id="thursdayEnd" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="14:00">14:00</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Friday</label>
+                                <div class="row g-2">
+                                    <div class="col">
+                                        <select id="fridayStart" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <select id="fridayEnd" class="form-select">
+                                            <option value="">Unavailable</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="12:00">12:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="14:00">14:00</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-
-                    <div class="mb-3">
-                        <label class="form-label">Tuesday</label>
-                        <div class="row g-2">
-                            <div class="col">
-                                <select id="tuesdayStart" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30">23:30</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <select id="tuesdayEnd" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30" >23:30</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-                    <div class="mb-3">
-                        <label class="form-label">Wednesday</label>
-                        <div class="row g-2">
-                            <div class="col">
-                                <select id="wednesdayStart" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30" >23:30</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <select id="wednesdayEnd" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30" >23:30</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-                    <div class="mb-3">
-                        <label class="form-label">Thursday</label>
-                        <div class="row g-2">
-                            <div class="col">
-                                <select id="thursdayStart" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30" >23:30</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <select id="thursdayEnd" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30">23:30</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-                    <div class="mb-3">
-                        <label class="form-label">Friday</label>
-                        <div class="row g-2">
-                            <div class="col">
-                                <select id="fridayStart" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30">23:30</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <select id="fridayEnd" class="form-select">
-                                    <option value="">Unavailable</option>
-                                    <option value="00:00">00:00</option>
-                                    <option value="00:30" selected>00:30</option>
-                                    <option value="01:00">01:00</option>
-                                    <option value="01:30">01:30</option>
-                                    <option value="02:00">02:00</option>
-                                    <option value="02:30">02:30</option>
-                                    <option value="03:00">03:00</option>
-                                    <option value="03:30">03:30</option>
-                                    <option value="04:00">04:00</option>
-                                    <option value="04:30">04:30</option>
-                                    <option value="05:00">05:00</option>
-                                    <option value="05:30">05:30</option>
-                                    <option value="06:00">06:00</option>
-                                    <option value="06:30">06:30</option>
-                                    <option value="07:00">07:00</option>
-                                    <option value="07:30">07:30</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="12:30">12:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                    <option value="17:30">17:30</option>
-                                    <option value="18:00">18:00</option>
-                                    <option value="18:30">18:30</option>
-                                    <option value="19:00">19:00</option>
-                                    <option value="19:30">19:30</option>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                    <option value="23:30">23:30</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-
-                </div>
-
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveAvailability">Save changes</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="saveProfile">Save</button>
                 </div>
 
             </div>
         </div>
     </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-     const saveButton = document.getElementById("saveAvailability");
 
-    saveButton.addEventListener("click", function () {
-        updateDayFromSelects("mondayStart", "mondayEnd", "mondayDisplay", "Monday");
-        updateDayFromSelects("tuesdayStart", "tuesdayEnd", "tuesdayDisplay", "Tuesday");
-        updateDayFromSelects("wednesdayStart", "wednesdayEnd", "wednesdayDisplay", "Wednesday");
-        updateDayFromSelects("thursdayStart", "thursdayEnd", "thursdayDisplay", "Thursday");
-        updateDayFromSelects("fridayStart", "fridayEnd", "fridayDisplay", "Friday");
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateDayFromSelects(startId, endId, displayId, dayName) {
+            const startValue = document.getElementById(startId).value;
+            const endValue = document.getElementById(endId).value;
+            const displayItem = document.getElementById(displayId);
 
-        const modalElement = document.getElementById("availabilityModal");
-        const modalInstance = bootstrap.Modal.getInstance(modalElement);
-        modalInstance.hide();
-    });
+            if (startValue === "" || endValue === "") {
+                displayItem.style.display = "none";
+                return true;
+            }
 
-    function updateDayFromSelects(startId, endId, displayId, dayName) {
-        const startValue = document.getElementById(startId).value;
-        const endValue = document.getElementById(endId).value;
-        const displayItem = document.getElementById(displayId);
+            if (startValue >= endValue) {
+                alert(dayName + " has an invalid time range.");
+                return false;
+            }
 
-        if (startValue === "" || endValue === "") {
-            displayItem.style.display = "none";
-            return;
+            displayItem.textContent = dayName + ": " + startValue + " - " + endValue;
+            displayItem.style.display = "list-item";
+            return true;
         }
 
-        if (startValue >= endValue) {
-            alert(dayName + " has an invalid time range.");
-            return;
-        }
+        const editBtn = document.getElementById("editProfileBtn");
 
-        displayItem.textContent = dayName + ": " + startValue + " - " + endValue;
-        displayItem.style.display = "list-item";
-    }
+        editBtn.addEventListener("click", function () {
+            document.getElementById("emailInput").value =
+                document.getElementById("emailDisplay").textContent.trim();
 
-    const editBtn = document.getElementById("editProfileBtn");
+            document.getElementById("uniInput").value =
+                document.getElementById("uniDisplay").textContent.trim();
 
-    editBtn.addEventListener("click", function () {
+            document.getElementById("yearInput").value =
+                document.getElementById("yearDisplay").textContent.trim();
 
-        document.getElementById("emailInput").value =
-            document.getElementById("emailDisplay").textContent.trim();
+            document.getElementById("aboutInput").value =
+                document.getElementById("aboutDisplay").textContent.trim();
 
-        document.getElementById("uniInput").value =
-            document.getElementById("uniDisplay").textContent.trim();
+            const modal = new bootstrap.Modal(document.getElementById("profileModal"));
+            modal.show();
+        });
 
-        document.getElementById("yearInput").value =
-            document.getElementById("yearDisplay").textContent.trim();
+        document.getElementById("saveProfile").addEventListener("click", function () {
+            const email = document.getElementById("emailInput").value.trim();
+            const uni = document.getElementById("uniInput").value.trim();
+            const year = document.getElementById("yearInput").value.trim();
+            const about = document.getElementById("aboutInput").value.trim();
 
-        document.getElementById("aboutInput").value =
-            document.getElementById("aboutDisplay").textContent.trim();
+            if (email !== "") {
+                document.getElementById("emailDisplay").textContent = email;
+            }
 
-        const modal = new bootstrap.Modal(document.getElementById("profileModal"));
-        modal.show();
-    });
+            if (uni !== "") {
+                document.getElementById("uniDisplay").textContent = uni;
+            }
 
-    document.getElementById("saveProfile").addEventListener("click", function () {
+            if (year !== "") {
+                document.getElementById("yearDisplay").textContent = year;
+            }
 
-    const email = document.getElementById("emailInput").value.trim();
-    const uni = document.getElementById("uniInput").value.trim();
-    const year = document.getElementById("yearInput").value.trim();
-    const about = document.getElementById("aboutInput").value.trim();
+            if (about !== "") {
+                document.getElementById("aboutDisplay").textContent = about;
+            }
 
-    if (email !== "") document.getElementById("emailDisplay").textContent = email;
-    if (uni !== "") document.getElementById("uniDisplay").textContent = uni;
-    if (year !== "") document.getElementById("yearDisplay").textContent = year;
-    if (about !== "") document.getElementById("aboutDisplay").textContent = about;
+            const validMonday = updateDayFromSelects("mondayStart", "mondayEnd", "mondayDisplay", "Monday");
+            const validTuesday = updateDayFromSelects("tuesdayStart", "tuesdayEnd", "tuesdayDisplay", "Tuesday");
+            const validWednesday = updateDayFromSelects("wednesdayStart", "wednesdayEnd", "wednesdayDisplay", "Wednesday");
+            const validThursday = updateDayFromSelects("thursdayStart", "thursdayEnd", "thursdayDisplay", "Thursday");
+            const validFriday = updateDayFromSelects("fridayStart", "fridayEnd", "fridayDisplay", "Friday");
 
-    bootstrap.Modal.getInstance(document.getElementById("profileModal")).hide();
-    });
+            if (validMonday && validTuesday && validWednesday && validThursday && validFriday) {
+                bootstrap.Modal.getInstance(document.getElementById("profileModal")).hide();
+            }
+        });
 </script>
 </body>
 </html>
