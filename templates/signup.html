@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>Register</h1>
+      <p>Create your account</p>
+
+      <div class="name-row">
+        <input type="text" placeholder="First Name">
+        <input type="text" placeholder="Last Name">
+      </div>
+
+      <input type="email" placeholder="Email">
+      <input type="text" placeholder="Degree (eg. Bachelor of Science)">
+      <input type="text" placeholder="Major (eg. Computer Science)">
+      <input type="password" placeholder="Password">
+      <input type="password" placeholder="Confirm Password">
+
+      <button type="submit">REGISTER</button>
+
+      <a href="index.html">Already registered? Login</a>
+    </div>
+  </div>
+</body>
+</html>
+
