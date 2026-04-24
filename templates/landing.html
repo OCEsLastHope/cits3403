@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudySync</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+  <main class="landing-page">
+    <nav class="landing-nav">
+      <h2>StudySync</h2>
+
+      <div class="landing-links">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="#" class="landing-login">Login</a>
+      </div>
+    </nav>
+
+    <section class="landing-hero">
+      <div class="landing-copy">
+        <p class="landing-tag">Study group matching for UWA students</p>
+
+        <h1>Find people studying the same units as you.</h1>
+
+        <p class="landing-text">
+          StudySync helps students find study partners, join group sessions,
+          organise meetings, and keep track of upcoming revision plans.
+        </p>
+
+        <div class="landing-actions">
+          <a href="{{ url_for('dashboard') }}" class="custom-btn">Get started</a>
+          <a href="{{ url_for('profile') }}" class="custom-btn secondary">View profile</a>
+        </div>
+      </div>
+
+      <div class="landing-card">
+        <h3>Today’s study options</h3>
+
+        <div class="landing-mini-card">
+          <strong>CITS1402 Revision</strong>
+          <span>10:00 AM · Reid Library</span>
+        </div>
+
+        <div class="landing-mini-card">
+          <strong>Database Practice</strong>
+          <span>2:00 PM · Online</span>
+        </div>
+
+        <div class="landing-mini-card">
+          <strong>Flask Project Help</strong>
+          <span>4:30 PM · EZONE</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-features">
+      <div class="feature-card">
+        <h4>Find study partners</h4>
+        <p>Match with students doing the same units or similar topics.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>Create groups</h4>
+        <p>Set up study sessions with a subject, time, location, and members.</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>Track meetings</h4>
+        <p>View your upcoming sessions from one dashboard.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
