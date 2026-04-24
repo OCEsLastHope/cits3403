@@ -4,24 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
+
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <link rel="stylesheet" href="/static/styles.css" />
-=======
-    <link rel="stylesheet" href="../static/styles.css" />
->>>>>>> b451d37 (change the style path on dashboard)
-=======
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
->>>>>>> e10a44a (Adding landing page with Flask)
-=======
-    <link rel="stylesheet" href="../static/styles.css" />
->>>>>>> e9009b485ef4edf9eec4fabc15a4c58dce6defa1
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
+
   <body>
     <div class="app-shell">
       <aside class="sidebar">
@@ -29,25 +20,15 @@
 
         <div class="sidebar-section">
           <div class="sidebar-title">Navigation</div>
-<<<<<<< HEAD
-<<<<<<< HEAD
-          <a href="#">Profile</a>
-          <a href="#" class="active">Dashboard</a>
-=======
           <a href="{{ url_for('profile') }}">Profile</a>
-          <a href="{{ url_for('dashboard') }}">Dashboard</a>
->>>>>>> e9009b4 (Added Flask implementation with app.py and requirements.txt)
-=======
-          <a href="{{ url_for('profile') }}">Profile</a>
-          <a href="{{ url_for('dashboard') }}">Dashboard</a>
->>>>>>> e9009b485ef4edf9eec4fabc15a4c58dce6defa1
+          <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
           <a href="#">Matches</a>
           <a href="#">Messages</a>
         </div>
 
         <div class="sidebar-section">
           <div class="sidebar-title">Settings</div>
-          <a href="#">Edit Profile</a>
+          <a href="{{ url_for('profile') }}">Edit Profile</a>
           <a href="#">Logout</a>
         </div>
       </aside>
@@ -59,6 +40,7 @@
             <p>Welcome back, username!</p>
           </div>
         </div>
+
         <div class="row g-4">
           <div class="col-lg-8">
             <div class="row g-4">
@@ -100,158 +82,51 @@
             <div class="info-card">
               <h4 class="mb-4">Upcoming meetings</h4>
 
-              <div
-                class="d-flex align-items-center justify-content-between p-3 mb-3 rounded"
-                style="
-                  background: rgba(255, 255, 255, 0.05);
-                  border: 1px solid rgba(255, 255, 255, 0.05);
-                "
-              >
-                <div class="d-flex align-items-center gap-3">
-                  <div
-                    class="text-center p-2 rounded"
-                    style="
-                      background: rgba(197, 92, 255, 0.15);
-                      min-width: 65px;
-                    "
-                  >
-                    <div
-                      class="fw-bold"
-                      style="
-                        color: #d56cff;
-                        font-size: 12px;
-                        text-transform: uppercase;
-                      "
-                    >
-                      Oct
-                    </div>
-                    <div class="fs-4 fw-bold">24</div>
+              <div class="meeting-card">
+                <div class="meeting-left">
+                  <div class="date-box purple">
+                    <div class="month">Oct</div>
+                    <div class="day">24</div>
                   </div>
 
                   <div>
-                    <h5 class="m-0 mb-1">CITS1402 Revision</h5>
-                    <div class="text-light" style="font-size: 14px">
-                      10:00 AM - 12:00 PM
-                      <span class="mx-2" style="color: #aab3d9">|</span> Reid
-                      Library, Ground Floor
-                    </div>
+                    <h5>CITS1402 Revision</h5>
+                    <p>10:00 AM - 12:00 PM | Reid Library, Ground Floor</p>
                   </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-4">
-                  <div class="d-flex">
-                    <div
-                      class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
-                      style="
-                        width: 36px;
-                        height: 36px;
-                        background: linear-gradient(135deg, #d66dff, #41d9ff);
-                        border: 2px solid #131b36;
-                        z-index: 3;
-                      "
-                    >
-                      MP
-                    </div>
-                    <div
-                      class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
-                      style="
-                        width: 36px;
-                        height: 36px;
-                        background: #4cd8ff;
-                        border: 2px solid #131b36;
-                        margin-left: -12px;
-                        z-index: 2;
-                      "
-                    >
-                      JD
-                    </div>
-                    <div
-                      class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
-                      style="
-                        width: 36px;
-                        height: 36px;
-                        background: #c55cff;
-                        border: 2px solid #131b36;
-                        margin-left: -12px;
-                        z-index: 1;
-                        font-size: 12px;
-                      "
-                    >
-                      +2
-                    </div>
+                <div class="meeting-right">
+                  <div class="avatar-row">
+                    <div class="small-avatar">MP</div>
+                    <div class="small-avatar blue">JD</div>
+                    <div class="small-avatar purple">+2</div>
                   </div>
+
                   <button class="custom-btn secondary py-1 px-3">
                     Details
                   </button>
                 </div>
               </div>
 
-              <div
-                class="d-flex align-items-center justify-content-between p-3 rounded"
-                style="
-                  background: rgba(255, 255, 255, 0.05);
-                  border: 1px solid rgba(255, 255, 255, 0.05);
-                "
-              >
-                <div class="d-flex align-items-center gap-3">
-                  <div
-                    class="text-center p-2 rounded"
-                    style="
-                      background: rgba(65, 217, 255, 0.15);
-                      min-width: 65px;
-                    "
-                  >
-                    <div
-                      class="fw-bold"
-                      style="
-                        color: #4cd8ff;
-                        font-size: 12px;
-                        text-transform: uppercase;
-                      "
-                    >
-                      Oct
-                    </div>
-                    <div class="fs-4 fw-bold">28</div>
+              <div class="meeting-card">
+                <div class="meeting-left">
+                  <div class="date-box blue">
+                    <div class="month">Oct</div>
+                    <div class="day">28</div>
                   </div>
 
                   <div>
-                    <h5 class="m-0 mb-1">Math Exam Prep</h5>
-                    <div class="text-light" style="font-size: 14px">
-                      2:00 PM - 4:00 PM
-                      <span class="mx-2" style="color: #aab3d9">|</span> Online
-                      (Zoom)
-                    </div>
+                    <h5>Math Exam Prep</h5>
+                    <p>2:00 PM - 4:00 PM | Online (Zoom)</p>
                   </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-4">
-                  <div class="d-flex">
-                    <div
-                      class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
-                      style="
-                        width: 36px;
-                        height: 36px;
-                        background: linear-gradient(135deg, #d66dff, #41d9ff);
-                        border: 2px solid #131b36;
-                        z-index: 3;
-                      "
-                    >
-                      MP
-                    </div>
-                    <div
-                      class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle"
-                      style="
-                        width: 36px;
-                        height: 36px;
-                        background: #c55cff;
-                        border: 2px solid #131b36;
-                        margin-left: -12px;
-                        z-index: 2;
-                      "
-                    >
-                      SK
-                    </div>
+                <div class="meeting-right">
+                  <div class="avatar-row">
+                    <div class="small-avatar">MP</div>
+                    <div class="small-avatar purple">SK</div>
                   </div>
+
                   <button class="custom-btn secondary py-1 px-3">
                     Details
                   </button>
