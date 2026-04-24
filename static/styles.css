@@ -232,3 +232,64 @@ body {
         align-items: flex-start;
     }
 }
+
+/* LOGIN PAGE */
+
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+
+.login-page .box {
+    width: 420px;
+    padding: 40px;
+    border-radius: 24px;
+
+    
+    background: rgba(19, 27, 54, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+
+.login-page form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+.login-page input {
+    width: 100%;
+    padding: 16px;
+    border-radius: 10px;
+
+    /* reuse your existing input style */
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.login-page input::placeholder {
+    color: #bfc7f5;
+}
+
+/* Checkbox row */
+.login-page .remember label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.login-page .remember input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.login-page a {
+    color: #cfd5ff;
+    text-decoration: none;
+}
