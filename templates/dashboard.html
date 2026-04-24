@@ -10,6 +10,7 @@
     />
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     <link rel="stylesheet" href="/static/styles.css" />
 =======
     <link rel="stylesheet" href="../static/styles.css" />
@@ -17,6 +18,9 @@
 =======
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 >>>>>>> e10a44a (Adding landing page with Flask)
+=======
+    <link rel="stylesheet" href="../static/styles.css" />
+>>>>>>> e9009b485ef4edf9eec4fabc15a4c58dce6defa1
   </head>
   <body>
     <div class="app-shell">
@@ -26,12 +30,17 @@
         <div class="sidebar-section">
           <div class="sidebar-title">Navigation</div>
 <<<<<<< HEAD
+<<<<<<< HEAD
           <a href="#">Profile</a>
           <a href="#" class="active">Dashboard</a>
 =======
           <a href="{{ url_for('profile') }}">Profile</a>
           <a href="{{ url_for('dashboard') }}">Dashboard</a>
 >>>>>>> e9009b4 (Added Flask implementation with app.py and requirements.txt)
+=======
+          <a href="{{ url_for('profile') }}">Profile</a>
+          <a href="{{ url_for('dashboard') }}">Dashboard</a>
+>>>>>>> e9009b485ef4edf9eec4fabc15a4c58dce6defa1
           <a href="#">Matches</a>
           <a href="#">Messages</a>
         </div>

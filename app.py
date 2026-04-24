@@ -4,11 +4,14 @@ app = Flask(__name__)
 
 
 @app.route("/")
+<<<<<<< HEAD
 def landing():
     return render_template("landing.html")
 
 
 @app.route("/dashboard")
+=======
+>>>>>>> e9009b485ef4edf9eec4fabc15a4c58dce6defa1
 def dashboard():
     return render_template("dashboard.html")
 
