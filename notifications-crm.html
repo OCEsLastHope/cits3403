@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0f1120;
+    --sidebar:   #151829;
+    --surface:   #1a1f35;
+    --surface2:  #1f2540;
+    --border:    rgba(255,255,255,0.07);
+    --cyan:      #00d4e8;
+    --cyan2:     #00b4cc;
+    --magenta:   #d63af9;
+    --pink:      #f04cb0;
+    --purple:    #8b5cf6;
+    --purple2:   #6d3fc7;
+    --text:      #e8eaf6;
+    --muted:     #6b7280;
+    --muted2:    #4b5563;
+    --glow-cyan: 0 0 18px rgba(0,212,232,0.35);
+    --glow-mag:  0 0 18px rgba(214,58,249,0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo {
+    font-size: 15px;
+    font-weight: 700;
+    padding: 0 24px 28px;
+    letter-spacing: -0.3px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section {
+    padding: 20px 24px 6px;
+  }
+
+  .sidebar-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .sidebar-section-title.cyan  { color: var(--cyan); }
+  .sidebar-section-title.mag   { color: var(--magenta); }
+  .sidebar-section-title.purple{ color: var(--purple); }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 2px;
+  }
+
+  .sidebar-item:hover { background: var(--surface); color: var(--text); }
+
+  .sidebar-item.active {
+    background: linear-gradient(90deg, rgba(139,92,246,0.25), rgba(109,63,199,0.1));
+    color: var(--text);
+    border-left: 3px solid var(--purple);
+    padding-left: 7px;
+  }
+
+  .sidebar-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 100px;
+    background: var(--magenta);
+    color: #fff;
+  }
+
+  .sidebar-badge.cyan-b {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .sidebar-footer p {
+    font-size: 11px;
+    color: var(--muted2);
+    margin-bottom: 10px;
+  }
+
+  .sidebar-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--purple2), var(--magenta));
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--glow-mag);
+    transition: opacity 0.2s;
+  }
+
+  .sidebar-btn:hover { opacity: 0.85; }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .header-actions { display: flex; gap: 10px; }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple2), var(--magenta));
+    color: #fff;
+    border: none;
+    box-shadow: var(--glow-mag);
+  }
+
+  .btn-primary:hover { opacity: 0.85; color: #fff; }
+
+  /* Stat cards */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    border-radius: 14px;
+    padding: 18px 22px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card.cyan-card {
+    background: linear-gradient(135deg, #0a2a3a, #0d3040);
+    border-color: rgba(0,212,232,0.2);
+  }
+
+  .stat-card.mag-card {
+    background: linear-gradient(135deg, #2a0a35, #350d40);
+    border-color: rgba(214,58,249,0.2);
+  }
+
+  .stat-card.dark-card {
+    background: var(--surface);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+
+  .stat-value.cyan  { color: var(--cyan);    text-shadow: var(--glow-cyan); }
+  .stat-value.mag   { color: var(--magenta); text-shadow: var(--glow-mag); }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .stat-glow-circle {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    right: -20px;
+    top: -20px;
+    opacity: 0.12;
+  }
+
+  .stat-glow-circle.cyan { background: var(--cyan); }
+  .stat-glow-circle.mag  { background: var(--magenta); }
+
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .stat-row:last-child { margin-bottom: 0; }
+
+  .stat-row-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .stat-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .stat-icon.cyan-i { background: rgba(0,212,232,0.15); }
+  .stat-icon.mag-i  { background: rgba(214,58,249,0.15); }
+
+  .stat-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 100px;
+  }
+
+  .stat-pill.red  { background: rgba(239,68,68,0.2);  color: #f87171; }
+  .stat-pill.green{ background: rgba(0,212,232,0.15); color: var(--cyan); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 9px 14px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .tab.active {
+    background: var(--surface2);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .t-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 100px;
+    background: var(--magenta);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(214,58,249,0.5);
+  }
+
+  .t-badge.cyan-t {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    box-shadow: none;
+  }
+
+  /* Notif list */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin: 20px 0 10px;
+  }
+
+  .notif-list { display: flex; flex-direction: column; gap: 3px; }
+
+  .notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 15px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    position: relative;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .notif-item:nth-child(1){animation-delay:.03s}
+  .notif-item:nth-child(2){animation-delay:.07s}
+  .notif-item:nth-child(3){animation-delay:.11s}
+  .notif-item:nth-child(4){animation-delay:.15s}
+  .notif-item:nth-child(5){animation-delay:.19s}
+
+  .notif-item.unread {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .notif-item:hover {
+    background: var(--surface2);
+    border-color: rgba(0,212,232,0.15);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+
+  .unread-dot {
+    position: absolute;
+    top: 17px;
+    right: 17px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .av-status {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+  }
+
+  .av-status.online { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  .av-status.away   { background: #f59e0b; }
+
+  .notif-body { flex: 1; min-width: 0; }
+
+  .notif-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+
+  .notif-name {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+
+  .type-pill {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .pill-dm      { background: rgba(0,212,232,0.12);  color: var(--cyan); border: 1px solid rgba(0,212,232,0.25); }
+  .pill-mention { background: rgba(214,58,249,0.12); color: var(--magenta); border: 1px solid rgba(214,58,249,0.25); }
+  .pill-react   { background: rgba(139,92,246,0.15); color: var(--purple); border: 1px solid rgba(139,92,246,0.3); }
+  .pill-system  { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  .notif-time {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted2);
+  }
+
+  .notif-text {
+    font-size: 13px;
+    color: #8892a4;
+    font-weight: 300;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .notif-text strong { color: #bcc5d6; font-weight: 500; }
+
+  .notif-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 7px;
+  }
+
+  .notif-channel { font-size: 11px; color: var(--muted2); }
+
+  .notif-actions {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .notif-item:hover .notif-actions { opacity: 1; }
+
+  .act-btn {
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    padding: 3px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .act-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  .act-btn.reply {
+    border-color: rgba(0,212,232,0.3);
+    color: var(--cyan);
+  }
+
+  .act-btn.reply:hover { background: rgba(0,212,232,0.1); }
+
+  /* Read items */
+  .notif-item.read .notif-name  { color: var(--muted); }
+  .notif-item.read .notif-text  { color: var(--muted2); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">CRM Dashboard</div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title cyan">Profile</div>
+    <div class="sidebar-item">👤 &nbsp;My Profile</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title mag">Messages</div>
+    <div class="sidebar-item active">🔔 &nbsp;Notifications <span class="sidebar-badge">5</span></div>
+    <div class="sidebar-item">💬 &nbsp;Direct Messages</div>
+    <div class="sidebar-item">📧 &nbsp;Email <span class="sidebar-badge cyan-b">+33%</span></div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title purple">Channels</div>
+    <div class="sidebar-item">📞 &nbsp;Phone Call</div>
+    <div class="sidebar-item">💻 &nbsp;Online Chat</div>
+    <div class="sidebar-item">📩 &nbsp;Email</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title cyan">Ticket Status</div>
+    <div class="sidebar-item">📋 &nbsp;Created</div>
+    <div class="sidebar-item">🔓 &nbsp;Open</div>
+    <div class="sidebar-item">💬 &nbsp;Responded</div>
+    <div class="sidebar-item">✅ &nbsp;Solved <span class="sidebar-badge">new</span></div>
+    <div class="sidebar-item">🗑 &nbsp;Deleted</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <p>Full Notifications Report</p>
+    <button class="sidebar-btn">⬇ &nbsp;Download</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>Notifications</h1>
+      <p class="header-sub">You have 5 unread messages today</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="markAllRead()">Clear all</button>
+      <button class="btn btn-primary" onclick="markAllRead()">Mark all read</button>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stats">
+    <div class="stat-card cyan-card">
+      <div class="stat-glow-circle cyan"></div>
+      <div class="stat-label">Avg Response Time</div>
+      <div class="stat-value cyan">30 <span style="font-size:18px;font-weight:400">h</span> 15 <span style="font-size:18px;font-weight:400">min</span></div>
+      <div class="stat-sub">↓ 12% from last week</div>
+    </div>
+    <div class="stat-card mag-card">
+      <div class="stat-glow-circle mag"></div>
+      <div class="stat-label">Avg Resolve Time</div>
+      <div class="stat-value mag">22 <span style="font-size:18px;font-weight:400">h</span> 40 <span style="font-size:18px;font-weight:400">min</span></div>
+      <div class="stat-sub">↑ 5% from last week</div>
+    </div>
+    <div class="stat-card dark-card">
+      <div class="stat-row">
+        <div class="stat-row-label">
+          <div class="stat-icon mag-i">💬</div>
+          Messages
+        </div>
+        <span class="stat-pill red">−20%</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-row-label">
+          <div class="stat-icon cyan-i">📧</div>
+          Emails
+        </div>
+        <span class="stat-pill green">+33%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this)">All <span class="t-badge">5</span></button>
+    <button class="tab" onclick="switchTab(this)">Messages <span class="t-badge">3</span></button>
+    <button class="tab" onclick="switchTab(this)">Mentions <span class="t-badge cyan-t">2</span></button>
+    <button class="tab" onclick="switchTab(this)">System</button>
+    <button class="tab" onclick="switchTab(this)">Archived</button>
+  </div>
+
+  <!-- New notifications -->
+  <div class="section-label">New</div>
+  <div class="notif-list" id="new-list">
+
+    <div class="notif-item unread" data-id="1">
+      <div class="unread-dot"></div>
+      <div class="avatar" style="background:rgba(0,212,232,0.15);color:var(--cyan)">
+        AK <div class="av-status online"></div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">Alina K.</span>
+          <span class="type-pill pill-dm">DM</span>
+          <span class="notif-time">2m ago</span>
+        </div>
+        <div class="notif-text">Hey, did you review the <strong>design brief</strong> I sent this morning?</div>
+        <div class="notif-meta">
+          <span class="notif-channel">Direct message</span>
+          <div class="notif-actions">
+            <button class="act-btn reply" onclick="event.stopPropagation()">Reply</button>
+            <button class="act-btn" onclick="dismiss(event,1)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notif-item unread" data-id="2">
+      <div class="unread-dot"></div>
+      <div class="avatar" style="background:rgba(214,58,249,0.15);color:var(--magenta)">
+        MS <div class="av-status online"></div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">Marcus S.</span>
+          <span class="type-pill pill-mention">@mention</span>
+          <span class="notif-time">11m ago</span>
+        </div>
+        <div class="notif-text"><strong>@you</strong> can you push the staging deploy before 5pm today?</div>
+        <div class="notif-meta">
+          <span class="notif-channel">#engineering</span>
+          <div class="notif-actions">
+            <button class="act-btn reply" onclick="event.stopPropagation()">Reply</button>
+            <button class="act-btn" onclick="dismiss(event,2)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notif-item unread" data-id="3">
+      <div class="unread-dot"></div>
+      <div class="avatar" style="background:rgba(139,92,246,0.15);color:var(--purple)">
+        PW <div class="av-status away"></div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">Priya W.</span>
+          <span class="type-pill pill-react">Reaction</span>
+          <span class="notif-time">34m ago</span>
+        </div>
+        <div class="notif-text">Reacted <strong>🔥</strong> to your message in <strong>#design-review</strong></div>
+        <div class="notif-meta">
+          <span class="notif-channel">#design-review</span>
+          <div class="notif-actions">
+            <button class="act-btn" onclick="dismiss(event,3)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notif-item unread" data-id="4">
+      <div class="unread-dot"></div>
+      <div class="avatar" style="background:rgba(0,212,232,0.1);color:var(--cyan2)">
+        TN
+      </div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">Tom N.</span>
+          <span class="type-pill pill-dm">DM</span>
+          <span class="notif-time">1h ago</span>
+        </div>
+        <div class="notif-text">Quick question about the <strong>Q3 report</strong> — do you have the raw numbers?</div>
+        <div class="notif-meta">
+          <span class="notif-channel">Direct message</span>
+          <div class="notif-actions">
+            <button class="act-btn reply" onclick="event.stopPropagation()">Reply</button>
+            <button class="act-btn" onclick="dismiss(event,4)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notif-item unread" data-id="5">
+      <div class="unread-dot"></div>
+      <div class="avatar" style="background:rgba(255,255,255,0.05);color:#6b7280;font-size:18px">
+        ⚙️
+      </div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">System</span>
+          <span class="type-pill pill-system">Alert</span>
+          <span class="notif-time">2h ago</span>
+        </div>
+        <div class="notif-text">Your storage is at <strong>87%</strong>. Consider clearing old files.</div>
+        <div class="notif-meta">
+          <span class="notif-channel">System notification</span>
+          <div class="notif-actions">
+            <button class="act-btn" onclick="dismiss(event,5)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Earlier -->
+  <div class="section-label" style="margin-top:28px">Earlier</div>
+  <div class="notif-list">
+
+    <div class="notif-item read" data-id="6">
+      <div class="avatar" style="background:rgba(214,58,249,0.08);color:#7a3fa0">JL</div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">Jamie L.</span>
+          <span class="type-pill pill-mention">@mention</span>
+          <span class="notif-time">Yesterday</span>
+        </div>
+        <div class="notif-text">Checked — the <strong>API keys</strong> are rotated, thanks for flagging</div>
+        <div class="notif-meta">
+          <span class="notif-channel">#security</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="notif-item read" data-id="7">
+      <div class="avatar" style="background:rgba(0,212,232,0.08);color:#3a8a96">RB</div>
+      <div class="notif-body">
+        <div class="notif-top">
+          <span class="notif-name">Rosa B.</span>
+          <span class="type-pill pill-dm">DM</span>
+          <span class="notif-time">2 days ago</span>
+        </div>
+        <div class="notif-text">Thanks for covering the standup 🙌</div>
+        <div class="notif-meta">
+          <span class="notif-channel">Direct message</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  function markAllRead() {
+    document.querySelectorAll('.unread-dot').forEach(d => {
+      d.style.transition = 'opacity 0.3s';
+      d.style.opacity = '0';
+      setTimeout(() => d.remove(), 300);
+    });
+    document.querySelectorAll('.notif-item.unread').forEach(i => i.classList.remove('unread'));
+    document.querySelectorAll('.t-badge').forEach(b => b.remove());
+    document.querySelector('.header-sub').textContent = 'All caught up ✓';
+  }
+
+  function dismiss(e, id) {
+    e.stopPropagation();
+    const item = document.querySelector(`[data-id="${id}"]`);
+    item.style.transition = 'opacity 0.25s, transform 0.25s, max-height 0.35s, padding 0.35s, margin 0.35s';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(16px)';
+    item.style.maxHeight = item.offsetHeight + 'px';
+    setTimeout(() => {
+      item.style.maxHeight = '0';
+      item.style.padding = '0';
+      item.style.margin = '0';
+      item.style.border = 'none';
+    }, 200);
+    setTimeout(() => item.remove(), 500);
+  }
+
+  function switchTab(el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  document.querySelectorAll('.notif-item.unread').forEach(item => {
+    item.addEventListener('click', () => {
+      const dot = item.querySelector('.unread-dot');
+      if (dot) { dot.style.transition = 'opacity 0.3s'; dot.style.opacity = '0'; setTimeout(() => dot.remove(), 300); }
+      item.classList.remove('unread');
+    });
+  });
+</script>
+</body>
+</html>
