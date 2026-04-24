@@ -267,7 +267,7 @@ body {
     padding: 16px;
     border-radius: 10px;
 
-    /* reuse your existing input style */
+  
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
@@ -277,7 +277,7 @@ body {
     color: #bfc7f5;
 }
 
-/* Checkbox row */
+
 .login-page .remember label {
     display: flex;
     align-items: center;
@@ -293,3 +293,103 @@ body {
     color: #cfd5ff;
     text-decoration: none;
 }
+
+/* sign up page */ 
+
+.auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #100b2f, #101936, #172a63);
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-container {
+    width: 75%;
+    max-width: 950px;
+}
+
+.auth-container h1 {
+    font-size: 58px;
+    margin-bottom: 5px;
+    background: linear-gradient(90deg, #c04cff, #4da3ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-subtitle {
+    color: #c8c8e8;
+    font-size: 20px;
+    margin-bottom: 35px;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(180, 90, 255, 0.45);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 0 35px rgba(94, 80, 255, 0.25);
+}
+
+.form-row {
+    display: flex;
+    gap: 35px;
+}
+
+.form-group {
+    flex: 1;
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #f1f1ff;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(180, 90, 255, 0.7);
+    background: #090d2a;
+    color: white;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.form-group input::placeholder {
+    color: #8f8bbf;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4da3ff;
+    box-shadow: 0 0 12px rgba(77, 163, 255, 0.45);
+}
+
+.auth-actions {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+    margin-top: 10px;
+}
+
+.auth-actions button {
+    width: 170px;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #b343ff, #3f7cff);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.auth-actions a {
+    color: #4da3ff;
+}
+

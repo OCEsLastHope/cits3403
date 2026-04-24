@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,30 +6,60 @@
 </head>
 
 <body>
-    <div class="page">
-        <div class="register-container">
+    <div class="auth-page">
+        <div class="auth-container">
             <h1>Register</h1>
-            <p class="register-subtitle">Create your account</p>
+            <p class="auth-subtitle">Create your account</p>
 
-            <form method="POST">
-                {% csrf_token %}
+            <div class="auth-card">
+                <form>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" placeholder="First Name">
+                        </div>
 
-                <div class="name-row">
-                    <input type="text" name="first_name" placeholder="First Name">
-                    <input type="text" name="last_name" placeholder="Last Name">
-                </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" placeholder="Last Name">
+                        </div>
+                    </div>
 
-                <input type="email" name="email" placeholder="Email">
-                <input type="text" name="degree" placeholder="Degree (eg. Bachelor of Science)">
-                <input type="text" name="major" placeholder="Major (eg. Computer Science)">
-                <input type="password" name="password" placeholder="Password">
-                <input type="password" name="confirm_password" placeholder="Confirm Password">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="Email">
+                    </div>
 
-                <div class="register-actions">
-                    <button type="submit">REGISTER</button>
-                    <p>Already registered? <a href="{% url 'login' %}">Login</a></p>
-                </div>
-            </form>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Degree</label>
+                            <input type="text" name="degree" placeholder="Degree (eg. Bachelor of Science)">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Major</label>
+                            <input type="text" name="major" placeholder="Major (eg. Computer Science)">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" placeholder="Password">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" name="confirm_password" placeholder="Confirm Password">
+                        </div>
+                    </div>
+
+                    <div class="auth-actions">
+                        <button type="submit">REGISTER</button>
+                        <p>Already registered? <a href="loginpage.html">Login</a></p>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </body>
