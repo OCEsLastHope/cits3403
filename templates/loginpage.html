@@ -1,31 +1,98 @@
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <link rel="stylesheet" href="../static/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | StudySync</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body class="login-page">
 
-  <div class="box">
-    <form>
-      <h1>Login</h1>
+    <main class="login-wrapper">
 
-      <input type="text" placeholder="Username">
+        <section class="login-left">
+            <h2>StudySync</h2>
 
-      <input type="password" placeholder="Password">
+            <h1>
+                Welcome back,<br>
+                <span>let’s continue learning</span>
+            </h1>
 
-      <div class="remember">
-        <label>
-          <input type="checkbox"> Remember me
-        </label>
-      </div>
+            <p>
+                Access your account, find your study partners, and continue your learning journey.
+            </p>
 
-      <a href="#">Forgot password?</a>
-    </form>
-  </div>
+            <div class="login-feature">
+                <span>💬</span>
+                <div>
+                    <h3>Connect</h3>
+                    <p>Find and connect with students from your university.</p>
+                </div>
+            </div>
+
+            <div class="login-feature">
+                <span>📚</span>
+                <div>
+                    <h3>Collaborate</h3>
+                    <p>Study together and achieve better results.</p>
+                </div>
+            </div>
+
+            <div class="login-feature">
+                <span>🔒</span>
+                <div>
+                    <h3>Secure</h3>
+                    <p>Your account details are kept safe.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="login-card">
+
+            <div class="login-icon">🔒</div>
+
+            <h1>Login</h1>
+            <p class="login-subtitle">Enter your credentials to access your account</p>
+
+            <form method="POST" class="login-form">
+
+                <div class="login-input">
+                    <span>👤</span>
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+
+                <div class="login-input">
+                    <span>🔐</span>
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+
+                <div class="login-options">
+                    <label>
+                        <input type="checkbox" name="remember">
+                        Remember me
+                    </label>
+
+                    <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    Login <span>→</span>
+                </button>
+
+            </form>
+
+            <p class="signup-link">
+                Don’t have an account?
+                <a href="{{ url_for('signup') }}">Register</a>
+            </p>
+
+        </section>
+
+    </main>
 
 </body>
 </html>
+
 
