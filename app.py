@@ -4,8 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///studysync.db'
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
@@ -20,23 +19,30 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.email}>'
 
-with app.app_context():
-    db.create_all()
-
 @app.route("/")
 def landing():
     return render_template("landing.html")
 
+@app.route("/login")
+def login():
+    return render_template("loginpage.html")
+
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    return render_template("forgot_password.html")
 
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
 
-
 @app.route("/profile")
 def profile():
     return render_template("userpages.html")
 
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
+    
