@@ -75,24 +75,33 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Degree</label>
-                        <select name="degree" required>
+                        <select name="degree" id="degree" onchange="handleDegreeChange()" required>
                             <option value="">Select your degree</option>
                             <option>Bachelor of Science</option>
                             <option>Bachelor of Commerce</option>
                             <option>Bachelor of Arts</option>
                             <option>Bachelor of Engineering</option>
+                            <option>Bachelor of Philosophy</option>
+                            <option value="other">Other</option>
                         </select>
+
+                        <input 
+                            type="text" 
+                            id="other-degree" 
+                            name="other_degree" 
+                            placeholder="Enter your degree"
+                            style="display: none; margin-top: 10px;"
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>Major</label>
-                        <select name="major" required>
-                            <option value="">Select your major</option>
-                            <option>Computer Science</option>
-                            <option>Data Science</option>
-                            <option>Cybersecurity</option>
-                            <option>Business Analytics</option>
-                        </select>
+                        <input 
+                            type="text" 
+                            name="major" 
+                            placeholder="Enter your major" 
+                            required
+                        >
                     </div>
                 </div>
 
@@ -127,5 +136,22 @@
 
     </main>
 
+    <script>
+        function handleDegreeChange() {
+            const degree = document.getElementById("degree").value;
+            const otherInput = document.getElementById("other-degree");
+
+            if (degree === "other") {
+                otherInput.style.display = "block";
+                otherInput.required = true;
+            } else {
+                otherInput.style.display = "none";
+                otherInput.required = false;
+                otherInput.value = "";
+            }
+        }
+    </script>
+
 </body>
 </html>
+
