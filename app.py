@@ -39,6 +39,10 @@ def dashboard():
 def profile():
     return render_template("userpages.html")
 
+@app.route("/signup")
+def signup():
+    return render_template("signup.html")
+
 with app.app_context():
     db.create_all()
 

@@ -257,6 +257,220 @@ body {
     }
 }
 
+/* log in */
+
+.login-page {
+    min-height: 100vh;
+    margin: 0;
+    background:
+        url("../static/bgUI.png") center/cover no-repeat,
+        linear-gradient(135deg, #070817, #0b1028 55%, #061428);
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.login-wrapper {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    align-items: center;
+    gap: 40px;
+    padding: 0 80px;
+}
+
+.login-left {
+    max-width: 500px;
+}
+
+.login-left h2 {
+    font-size: 24px;
+    margin-bottom: 40px;
+    color: #c084fc;
+}
+
+.login-left h1 {
+    font-size: 52px;
+    line-height: 1.1;
+    margin-bottom: 18px;
+}
+
+.login-left h1 span {
+    background: linear-gradient(90deg, #b23cff, #2f80ff);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.login-left > p {
+    max-width: 430px;
+    color: #d7dcff;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.login-feature {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    max-width: 390px;
+    margin-bottom: 14px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(130, 80, 255, 0.22);
+}
+
+.login-feature span {
+    font-size: 22px;
+}
+
+.login-feature h3 {
+    margin: 0 0 5px;
+    font-size: 16px;
+}
+
+.login-feature p {
+    margin: 0;
+    font-size: 14px;
+    color: #b9c1ee;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 620px;
+    min-height: 620px;
+    padding: 60px 70px;
+    border-radius: 26px;
+    background: rgba(8, 12, 34, 0.82);
+    border: 1.5px solid rgba(150, 70, 255, 0.55);
+    box-shadow: 0 0 45px rgba(90, 100, 255, 0.35);
+    backdrop-filter: blur(12px);
+    text-align: center;
+    box-sizing: border-box;
+    justify-self: end;
+}
+
+.login-icon {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(140, 70, 255, 0.22);
+    border: 1px solid rgba(160, 90, 255, 0.6);
+    box-shadow: 0 0 25px rgba(150, 70, 255, 0.7);
+}
+
+.login-card h1 {
+    font-size: 38px;
+    margin: 0;
+}
+
+.login-subtitle {
+    color: #b9c1ee;
+    margin: 8px 0 24px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.login-input {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: rgba(3, 7, 24, 0.75);
+    border: 1.5px solid rgba(130, 80, 255, 0.45);
+}
+
+.login-input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 15px;
+}
+
+.login-input input::placeholder {
+    color: #aeb5d9;
+}
+
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #dce1ff;
+    margin-top: 2px;
+}
+
+.login-options a,
+.signup-link a {
+    color: #c13cff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-btn {
+    height: 58px;
+    border: none;
+    border-radius: 13px;
+    background: linear-gradient(90deg, #bf37ff, #2f80ff);
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.signup-link {
+    margin-top: 22px;
+    color: #dce1ff;
+    font-size: 14px;
+}
+
+@media (max-width: 900px) {
+    .login-wrapper {
+        grid-template-columns: 1fr;
+        padding: 40px 25px;
+    }
+
+    .login-left {
+        text-align: center;
+        max-width: none;
+    }
+
+    .login-left h2 {
+        margin-bottom: 35px;
+    }
+
+    .login-left h1 {
+        font-size: 40px;
+    }
+
+    .login-left > p,
+    .login-feature {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .login-card {
+        max-width: 520px;
+        min-height: auto;
+        padding: 40px 25px;
+        justify-self: center;
+    }
+}
+
+
+
 /* FORGOT PASSWORD PAGE */
 
 .forgot-password-page {
