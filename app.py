@@ -1,4 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, url_for, redirect
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from werkzeug.security import generate_password_hash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -39,8 +41,8 @@ def dashboard():
 def profile():
     return render_template("userpages.html")
 
-@app.route("/signup")
-def signup():
+@app.route("/register")
+def register():
     return render_template("signup.html")
 
 with app.app_context():
