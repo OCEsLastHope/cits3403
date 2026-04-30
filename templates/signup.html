@@ -1,66 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register</title>
-    <link rel="stylesheet" href="../static/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | StudySync</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
-<body>
-    <div class="auth-page">
-        <div class="auth-container">
+<body class="register-page">
+
+    <main class="register-wrapper">
+
+        <section class="register-left">
+            <h2>Study<span>Sync</span></h2>
+
             <h1>Register</h1>
-            <p class="auth-subtitle">Create your account</p>
+            <p class="register-subtitle">Create your StudySync account</p>
 
-            <div class="auth-card">
-                <form>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>First Name</label>
-                            <input type="text" name="first_name" placeholder="First Name">
-                        </div>
+            <p class="register-description">
+                Join a community of students and find the perfect study partners.
+            </p>
 
-                        <div class="form-group">
-                            <label>Last Name</label>
-                            <input type="text" name="last_name" placeholder="Last Name">
-                        </div>
+            <div class="register-feature">
+                <div class="feature-icon">👥</div>
+                <div>
+                    <h3>Connect</h3>
+                    <p>Find and connect with students from your university.</p>
+                </div>
+            </div>
+
+            <div class="register-feature">
+                <div class="feature-icon">🎓</div>
+                <div>
+                    <h3>Collaborate</h3>
+                    <p>Study together and achieve better results.</p>
+                </div>
+            </div>
+
+            <div class="register-feature">
+                <div class="feature-icon">🛡️</div>
+                <div>
+                    <h3>Secure</h3>
+                    <p>Your data is protected with enterprise-grade security.</p>
+                </div>
+            </div>
+
+            <div class="quote-card">
+                <p>“Education is the most powerful weapon which you can use to change the world.”</p>
+                <span>— Nelson Mandela</span>
+            </div>
+        </section>
+
+        <section class="register-card">
+
+            <form method="POST" class="register-form">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" placeholder="First Name" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" placeholder="Email">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" placeholder="Last Name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="Email address" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Degree</label>
+                        <select name="degree" id="degree" onchange="handleDegreeChange()" required>
+                            <option value="">Select your degree</option>
+                            <option>Bachelor of Science</option>
+                            <option>Bachelor of Commerce</option>
+                            <option>Bachelor of Arts</option>
+                            <option>Bachelor of Engineering</option>
+                            <option>Bachelor of Philosophy</option>
+                            <option value="other">Other</option>
+                        </select>
+
+                        <input 
+                            type="text" 
+                            id="other-degree" 
+                            name="other_degree" 
+                            placeholder="Enter your degree"
+                            style="display: none; margin-top: 10px;"
+                        >
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Degree</label>
-                            <input type="text" name="degree" placeholder="Degree (eg. Bachelor of Science)">
-                        </div>
+                    <div class="form-group">
+                        <label>Major</label>
+                        <input 
+                            type="text" 
+                            name="major" 
+                            placeholder="Enter your major" 
+                            required
+                        >
+                    </div>
+                </div>
 
-                        <div class="form-group">
-                            <label>Major</label>
-                            <input type="text" name="major" placeholder="Major (eg. Computer Science)">
-                        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="Create a password" required>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" name="password" placeholder="Password">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Confirm Password</label>
-                            <input type="password" name="confirm_password" placeholder="Confirm Password">
-                        </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" name="confirm_password" placeholder="Confirm your password" required>
                     </div>
+                </div>
 
-                    <div class="auth-actions">
-                        <button type="submit">REGISTER</button>
-                        <p>Already registered? <a href="loginpage.html">Login</a></p>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                <button type="submit" class="register-btn">
+                    REGISTER →
+                </button>
+
+                <p class="login-link">
+                    Already registered?
+                    <a href="{{ url_for('login') }}">Login</a>
+                </p>
+
+                <p class="privacy-text">
+                    🛡️ We respect your privacy. Your information is safe with us.
+                </p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <script>
+        function handleDegreeChange() {
+            const degree = document.getElementById("degree").value;
+            const otherInput = document.getElementById("other-degree");
+
+            if (degree === "other") {
+                otherInput.style.display = "block";
+                otherInput.required = true;
+            } else {
+                otherInput.style.display = "none";
+                otherInput.required = false;
+                otherInput.value = "";
+            }
+        }
+    </script>
+
 </body>
 </html>
+
