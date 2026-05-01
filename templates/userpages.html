@@ -15,21 +15,44 @@
 
     <div class="app-shell">
         <aside class="sidebar">
-            <h2>StudySync</h2>
+            <h2><span class="logo-study">Study</span><span class="logo-sync">Sync</span></h2>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Navigation</div>
-                <a href="{{ url_for('profile') }}">Profile</a>
-                <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <a href="#">Matches</a>
-                <a href="{{ url_for('notifications') }}" class="active">Notifications</a>
+                <a href="{{ url_for('landing') }}">
+                    <i class="bi bi-house"></i> Home
+                </a>
+                <a href="{{ url_for('dashboard') }}">
+                    <i class="bi bi-grid"></i> Dashboard
+                </a>
+                <a href="{{ url_for('profile') }}" class="active">
+                    <i class="bi bi-person"></i> Profile
+                </a>
+                <a href="#">
+                    <i class="bi bi-people"></i> Matches
+                </a>
+                <a href="{{ url_for('notifications') }}">
+                    <i class="bi bi-bell"></i> Notifications
+                </a>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Settings</div>
-                <a href="#" id="editProfileBtn">Edit Profile</a>
-                <a href="#">Logout</a>
+                <a href="#" id="editProfileBtn"><i class="bi bi-pencil"></i> Edit Profile</a>
+                <a href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
+
+            {% if current_user %}
+            <div class="sidebar-user-footer">
+                <div class="sidebar-user-avatar">
+                    {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
+                </div>
+                <div>
+                    <div class="sidebar-user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+                    <div class="sidebar-user-email">{{ current_user.email }}</div>
+                </div>
+            </div>
+            {% endif %}
         </aside>
 
         <main class="main-content">
