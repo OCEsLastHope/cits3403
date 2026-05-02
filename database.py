@@ -10,6 +10,13 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     degree = db.Column(db.String(100), nullable=False)
     major = db.Column(db.String(100), nullable=False)
+    bio = db.Column(db.Text, nullable=True)
+    sessions_per_week = db.Column(db.Integer, nullable=True)
+    preferred_group_size = db.Column(db.String(20), nullable=True)
+    study_mode = db.Column(db.String(30), nullable=True)
+
+    subjects = db.relationship('UserSubject', backref='user', lazy=True, cascade='all, delete-orphan')
+    availabilities = db.relationship('UserAvailability', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -51,3 +58,17 @@ class Notification(db.Model):
         if s < 86400: return f'{s//3600}h ago'
         if s < 172800: return 'Yesterday'
         return f'{s//86400} days ago'
+
+
+class UserSubject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    subject_code = db.Column(db.String(30), nullable=False)
+
+
+class UserAvailability(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    day_of_week = db.Column(db.String(20), nullable=False)
+    start_time = db.Column(db.String(10), nullable=False)
+    end_time = db.Column(db.String(10), nullable=False)

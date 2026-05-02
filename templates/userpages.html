@@ -64,9 +64,27 @@
             </div>
 
             <section class="profile-card">
-                <div class="avatar">MP</div>
-                <div class="profile-name">Mineth Perera</div>
-                <div class="profile-subtext">UWA • Computer Science and Mathematics</div>
+                <div class="avatar">
+                    {% if current_user %}
+                        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
+                    {% else %}
+                        SS
+                    {% endif %}
+                </div>
+                <div class="profile-name">
+                    {% if current_user %}
+                        {{ current_user.first_name }} {{ current_user.last_name }}
+                    {% else %}
+                        StudySync User
+                    {% endif %}
+                </div>
+                <div class="profile-subtext">
+                    {% if current_user %}
+                        {{ current_user.degree }} • {{ current_user.major }}
+                    {% else %}
+                        Degree and major not available
+                    {% endif %}
+                </div>
 
                 <div class="mb-3">
                     <span class="tag">Quiet Study</span>
@@ -74,18 +92,16 @@
                     <span class="tag">Library Sessions</span>
                 </div>
 
-                <p class="mb-0 text-light">
-                    Looking for people to study with for exams and weekly revision sessions.
-                </p>
+                <p class="mb-0 text-light">Looking for people to study with for exams and weekly revision sessions.</p>
             </section>
 
             <div class="row g-4">
                 <div class="col-lg-4">
                     <section class="info-card h-100">
                         <div class="section-heading">Basic Info</div>
-                        <p><strong>Email:</strong> <span id="emailDisplay">minethperera@email.com</span></p>
-                        <p><strong>University:</strong> <span id="uniDisplay">UWA</span></p>
-                        <p><strong>Year Level:</strong> <span id="yearDisplay">2</span></p>
+                        <p><strong>Email:</strong> <span id="emailDisplay">{{ current_user.email if current_user else 'Not available' }}</span></p>
+                        <p><strong>Degree:</strong> <span id="uniDisplay">{{ current_user.degree if current_user else 'Not available' }}</span></p>
+                        <p><strong>Major:</strong> <span id="yearDisplay">{{ current_user.major if current_user else 'Not available' }}</span></p>
                     </section>
                 </div>
 
@@ -93,9 +109,13 @@
                     <section class="info-card h-100">
                         <div class="section-heading">Subjects</div>
                         <ul class="info-list">
-                            <li>CITS1402</li>
-                            <li>CITS3007</li>
-                            <li>Mathematics</li>
+                            {% if subjects %}
+                                {% for subject in subjects %}
+                                    <li>{{ subject }}</li>
+                                {% endfor %}
+                            {% else %}
+                                <li>No subjects added yet</li>
+                            {% endif %}
                         </ul>
                     </section>
                 </div>
@@ -106,11 +126,16 @@
                             <div class="section-heading">Availability</div>
                         </div>
                         <ul class="info-list">
-                            <li id="mondayDisplay">Monday: 10:00 - 14:00</li>
-                            <li id="tuesdayDisplay" style="display: none;">Tuesday:</li>
-                            <li id="wednesdayDisplay">Wednesday: 12:00 - 16:00</li>
-                            <li id="thursdayDisplay" style="display: none;">Thursday:</li>
-                            <li id="fridayDisplay">Friday: 09:00 - 11:00</li>
+                            {% for day in day_names %}
+                                {% if availability_map.get(day) %}
+                                    {% for slot in availability_map[day] %}
+                                        <li id="{{ day|lower }}Display{{ loop.index }}">{{ day }}: {{ slot[0] }} - {{ slot[1] }}</li>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if not availability_map.values() | select | list %}
+                                <li>No availability added yet</li>
+                            {% endif %}
                         </ul>
                     </section>
                 </div>
@@ -122,19 +147,19 @@
                             <div class="col-sm-4">
                                 <div class="stats-box">
                                     <div class="stats-label">Sessions / Week</div>
-                                    <div class="stats-value">3</div>
+                                    <div class="stats-value">{{ current_user.sessions_per_week if current_user and current_user.sessions_per_week else '-' }}</div>
                                 </div>
                             </div>
                             <div class="col-sm-4">
                                 <div class="stats-box">
                                     <div class="stats-label">Preferred Group Size</div>
-                                    <div class="stats-value">2-4</div>
+                                    <div class="stats-value">{{ current_user.preferred_group_size if current_user and current_user.preferred_group_size else '-' }}</div>
                                 </div>
                             </div>
                             <div class="col-sm-4">
                                 <div class="stats-box">
                                     <div class="stats-label">Mode</div>
-                                    <div class="stats-value">In Person</div>
+                                    <div class="stats-value">{{ current_user.study_mode if current_user and current_user.study_mode else '-' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -143,9 +168,7 @@
 
                 <div class="col-lg-6">
                     <section class="info-card h-100">
-                        <p class="mb-0" id="aboutDisplay">
-                            I prefer structured study sessions, revision before tests, and working through practice questions with other students taking similar units.
-                        </p>
+                        <p class="mb-0" id="aboutDisplay">{{ current_user.bio if current_user and current_user.bio else 'Add your study bio in Edit Profile.' }}</p>
                     </section>
                 </div>
             </div>
@@ -162,6 +185,19 @@
                 </div>
 
                 <div class="modal-body">
+                    {% if profile_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Please fix these availability issues:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for error in profile_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form id="profileForm" method="POST" action="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}">
+                    <input type="hidden" name="user_id" value="{{ current_user.id if current_user else 1 }}">
 
                     <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -203,160 +239,104 @@
                         <!-- Profile tab -->
                         <div class="tab-pane fade show active" id="profile-pane" role="tabpanel">
                             <label for="emailInput" class="form-label">Email</label>
-                            <input id="emailInput" class="form-control mb-3" placeholder="Email">
+                            <input id="emailInput" name="email" class="form-control mb-3" placeholder="Email" value="{{ current_user.email if current_user else '' }}">
 
-                            <label for="uniInput" class="form-label">University</label>
-                            <input id="uniInput" class="form-control mb-3" placeholder="University">
+                            <label for="uniInput" class="form-label">Degree</label>
+                            <input id="uniInput" name="degree" class="form-control mb-3" placeholder="Degree" value="{{ current_user.degree if current_user else '' }}">
 
-                            <label for="yearInput" class="form-label">Year Level</label>
-                            <input id="yearInput" class="form-control mb-3" placeholder="Year Level">
+                            <label for="yearInput" class="form-label">Major</label>
+                            <input id="yearInput" name="major" class="form-control mb-3" placeholder="Major" value="{{ current_user.major if current_user else '' }}">
+
+                            <label for="sessionsInput" class="form-label">Sessions / Week</label>
+                            <input id="sessionsInput" name="sessions_per_week" class="form-control mb-3" type="number" min="0" placeholder="Sessions / Week" value="{{ current_user.sessions_per_week if current_user and current_user.sessions_per_week else '' }}">
+
+                            <label for="groupSizeInput" class="form-label">Preferred Group Size</label>
+                            <input id="groupSizeInput" name="preferred_group_size" class="form-control mb-3" placeholder="e.g. 2-4" value="{{ current_user.preferred_group_size if current_user and current_user.preferred_group_size else '' }}">
+
+                            <label for="studyModeInput" class="form-label">Study Mode</label>
+                            <input id="studyModeInput" name="study_mode" class="form-control mb-3" placeholder="e.g. In Person / Online" value="{{ current_user.study_mode if current_user and current_user.study_mode else '' }}">
 
                             <label for="aboutInput" class="form-label">About</label>
-                            <textarea id="aboutInput" class="form-control" rows="4" placeholder="About"></textarea>
+                            <textarea id="aboutInput" name="bio" class="form-control" rows="4" placeholder="About">{{ current_user.bio if current_user and current_user.bio else '' }}</textarea>
                         </div>
 
                         <!-- Subjects tab -->
                         <div class="tab-pane fade" id="subjects-pane" role="tabpanel">
                             <label for="subject1Input" class="form-label">Subject 1</label>
-                            <input id="subject1Input" class="form-control mb-3" placeholder="Subject 1">
+                            <input id="subject1Input" name="subject1" class="form-control mb-3" placeholder="Subject 1" value="{{ subjects[0] if subjects|length > 0 else '' }}">
 
                             <label for="subject2Input" class="form-label">Subject 2</label>
-                            <input id="subject2Input" class="form-control mb-3" placeholder="Subject 2">
+                            <input id="subject2Input" name="subject2" class="form-control mb-3" placeholder="Subject 2" value="{{ subjects[1] if subjects|length > 1 else '' }}">
 
                             <label for="subject3Input" class="form-label">Subject 3</label>
-                            <input id="subject3Input" class="form-control" placeholder="Subject 3">
+                            <input id="subject3Input" name="subject3" class="form-control" placeholder="Subject 3" value="{{ subjects[2] if subjects|length > 2 else '' }}">
                         </div>
 
                         <!-- Availability tab -->
                         <div class="tab-pane fade" id="availability-pane" role="tabpanel">
-                            <div class="mb-3">
-                                <label class="form-label">Monday</label>
-                                <div class="row g-2">
-                                    <div class="col">
-                                        <select id="mondayStart" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
+                            {% for day in day_names %}
+                                {% set day_key = day|lower %}
+                                <div class="mb-3" data-day="{{ day_key }}">
+                                    <label class="form-label">{{ day }}</label>
+                                    <div class="availability-slots" id="{{ day_key }}Slots">
+                                        {% if availability_map.get(day) %}
+                                            {% for slot in availability_map[day] %}
+                                                <div class="row g-2 mb-2 availability-row">
+                                                    <div class="col">
+                                                        <select name="{{ day_key }}_start" class="form-select">
+                                                            <option value="">Unavailable</option>
+                                                            {% for time in time_options %}
+                                                                <option value="{{ time }}" {% if slot[0] == time %}selected{% endif %}>{{ time }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="col">
+                                                        <select name="{{ day_key }}_end" class="form-select">
+                                                            <option value="">Unavailable</option>
+                                                            {% for time in time_options %}
+                                                                <option value="{{ time }}" {% if slot[1] == time %}selected{% endif %}>{{ time }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-auto d-flex align-items-center">
+                                                        <button type="button" class="btn btn-outline-light btn-sm remove-slot">Remove</button>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="row g-2 mb-2 availability-row">
+                                                <div class="col">
+                                                    <select name="{{ day_key }}_start" class="form-select">
+                                                        <option value="">Unavailable</option>
+                                                        {% for time in time_options %}
+                                                            <option value="{{ time }}">{{ time }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col">
+                                                    <select name="{{ day_key }}_end" class="form-select">
+                                                        <option value="">Unavailable</option>
+                                                        {% for time in time_options %}
+                                                            <option value="{{ time }}">{{ time }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-auto d-flex align-items-center">
+                                                    <button type="button" class="btn btn-outline-light btn-sm remove-slot">Remove</button>
+                                                </div>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                    <div class="col">
-                                        <select id="mondayEnd" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                            <option value="13:00">13:00</option>
-                                            <option value="14:00">14:00</option>
-                                        </select>
-                                    </div>
+                                    <button type="button" class="btn btn-outline-info btn-sm add-slot" data-day="{{ day_key }}">Add time slot</button>
                                 </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Tuesday</label>
-                                <div class="row g-2">
-                                    <div class="col">
-                                        <select id="tuesdayStart" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <select id="tuesdayEnd" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                            <option value="13:00">13:00</option>
-                                            <option value="14:00">14:00</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Wednesday</label>
-                                <div class="row g-2">
-                                    <div class="col">
-                                        <select id="wednesdayStart" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <select id="wednesdayEnd" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                            <option value="13:00">13:00</option>
-                                            <option value="16:00">16:00</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Thursday</label>
-                                <div class="row g-2">
-                                    <div class="col">
-                                        <select id="thursdayStart" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <select id="thursdayEnd" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                            <option value="13:00">13:00</option>
-                                            <option value="14:00">14:00</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Friday</label>
-                                <div class="row g-2">
-                                    <div class="col">
-                                        <select id="fridayStart" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <select id="fridayEnd" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="12:00">12:00</option>
-                                            <option value="13:00">13:00</option>
-                                            <option value="14:00">14:00</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endfor %}
                         </div>
+                    </div>
+                    </form>
+                </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" id="saveProfile">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="profileForm" class="btn btn-primary">Save</button>
                 </div>
 
             </div>
@@ -365,76 +345,67 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function updateDayFromSelects(startId, endId, displayId, dayName) {
-            const startValue = document.getElementById(startId).value;
-            const endValue = document.getElementById(endId).value;
-            const displayItem = document.getElementById(displayId);
-
-            if (startValue === "" || endValue === "") {
-                displayItem.style.display = "none";
-                return true;
-            }
-
-            if (startValue >= endValue) {
-                alert(dayName + " has an invalid time range.");
-                return false;
-            }
-
-            displayItem.textContent = dayName + ": " + startValue + " - " + endValue;
-            displayItem.style.display = "list-item";
-            return true;
-        }
-
         const editBtn = document.getElementById("editProfileBtn");
 
         editBtn.addEventListener("click", function () {
-            document.getElementById("emailInput").value =
-                document.getElementById("emailDisplay").textContent.trim();
-
-            document.getElementById("uniInput").value =
-                document.getElementById("uniDisplay").textContent.trim();
-
-            document.getElementById("yearInput").value =
-                document.getElementById("yearDisplay").textContent.trim();
-
-            document.getElementById("aboutInput").value =
-                document.getElementById("aboutDisplay").textContent.trim();
-
             const modal = new bootstrap.Modal(document.getElementById("profileModal"));
             modal.show();
         });
 
-        document.getElementById("saveProfile").addEventListener("click", function () {
-            const email = document.getElementById("emailInput").value.trim();
-            const uni = document.getElementById("uniInput").value.trim();
-            const year = document.getElementById("yearInput").value.trim();
-            const about = document.getElementById("aboutInput").value.trim();
+        {% if open_profile_modal %}
+            const profileModal = new bootstrap.Modal(document.getElementById("profileModal"));
+            profileModal.show();
+        {% endif %}
 
-            if (email !== "") {
-                document.getElementById("emailDisplay").textContent = email;
+        function buildAvailabilityRow(dayKey) {
+            const row = document.createElement("div");
+            row.className = "row g-2 mb-2 availability-row";
+
+            const timeOptions = `
+                <option value="">Unavailable</option>
+                {% for time in time_options %}
+                    <option value="{{ time }}">{{ time }}</option>
+                {% endfor %}
+            `;
+
+            row.innerHTML = `
+                <div class="col">
+                    <select name="${dayKey}_start" class="form-select">${timeOptions}</select>
+                </div>
+                <div class="col">
+                    <select name="${dayKey}_end" class="form-select">${timeOptions}</select>
+                </div>
+                <div class="col-auto d-flex align-items-center">
+                    <button type="button" class="btn btn-outline-light btn-sm remove-slot">Remove</button>
+                </div>
+            `;
+            return row;
+        }
+
+        document.querySelectorAll(".add-slot").forEach((button) => {
+            button.addEventListener("click", function () {
+                const dayKey = this.dataset.day;
+                const container = document.getElementById(`${dayKey}Slots`);
+                container.appendChild(buildAvailabilityRow(dayKey));
+            });
+        });
+
+        document.getElementById("availability-pane").addEventListener("click", function (event) {
+            if (!event.target.classList.contains("remove-slot")) {
+                return;
             }
 
-            if (uni !== "") {
-                document.getElementById("uniDisplay").textContent = uni;
+            const dayContainer = event.target.closest("[data-day]");
+            const row = event.target.closest(".availability-row");
+            const slotRows = dayContainer.querySelectorAll(".availability-row");
+
+            if (slotRows.length === 1) {
+                row.querySelector(`select[name$="_start"]`).value = "";
+                row.querySelector(`select[name$="_end"]`).value = "";
+                return;
             }
 
-            if (year !== "") {
-                document.getElementById("yearDisplay").textContent = year;
-            }
-
-            if (about !== "") {
-                document.getElementById("aboutDisplay").textContent = about;
-            }
-
-            const validMonday = updateDayFromSelects("mondayStart", "mondayEnd", "mondayDisplay", "Monday");
-            const validTuesday = updateDayFromSelects("tuesdayStart", "tuesdayEnd", "tuesdayDisplay", "Tuesday");
-            const validWednesday = updateDayFromSelects("wednesdayStart", "wednesdayEnd", "wednesdayDisplay", "Wednesday");
-            const validThursday = updateDayFromSelects("thursdayStart", "thursdayEnd", "thursdayDisplay", "Thursday");
-            const validFriday = updateDayFromSelects("fridayStart", "fridayEnd", "fridayDisplay", "Friday");
-
-            if (validMonday && validTuesday && validWednesday && validThursday && validFriday) {
-                bootstrap.Modal.getInstance(document.getElementById("profileModal")).hide();
-            }
+            row.remove();
         });
 </script>
 </body>
