@@ -74,41 +74,42 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Degree</label>
-                        <select name="degree" id="degree" onchange="handleDegreeChange()" required>
-                            <option value="" disabled selected hidden>Select your degree</option>
-                            <option>Bachelor of Science</option>
-                            <option>Bachelor of Commerce</option>
-                            <option>Bachelor of Arts</option>
-                            <option>Bachelor of Engineering</option>
-                            <option>Bachelor of Philosophy</option>
+                        <label>Degree Type</label>
+                        <select id="degree-type" onchange="updateDegreeOptions()" required>
+                            <option value="" disabled selected hidden>Select degree type</option>
+                            <option value="bachelors">Bachelor's degree</option>
+                            <option value="honours">Honours</option>
+                            <option value="combined_bachelors">Combined Bachelor's + Bachelor's</option>
+                            <option value="combined_masters">Combined Bachelor's + Master's</option>
                             <option value="other">Other</option>
                         </select>
-
-                        <input 
-                            type="text" 
-                            id="other-degree" 
-                            name="other_degree" 
-                            placeholder="Enter your degree"
-                            style="display: none; margin-top: 10px;"
-                        >
                     </div>
 
                     <div class="form-group">
-                        <label>Major</label>
-                        <input 
-                            type="text" 
-                            name="major" 
-                            placeholder="Enter your major" 
-                            required
+                        <label>Degree</label>
+                        <select name="degree" id="degree" onchange="handleDegreeChange()" required>
+                            <option value="" disabled selected hidden>Select your degree</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            id="other-degree"
+                            name="other_degree"
+                            placeholder="Enter your degree"
+                            style="display: none; margin-top: 10px;"
                         >
                     </div>
                 </div>
 
                 <div class="form-group">
+                    <label>Major</label>
+                    <input type="text" name="major" placeholder="Enter your major" required>
+                </div>
+
+                <div class="form-group">
                     <label>Username</label>
                     <input type="text" name="username" placeholder="Choose a username" required>
-                     </div>
+                </div>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -123,7 +124,7 @@
                 </div>
 
                 <button type="submit" class="register-btn">
-                    Continue →
+                    Register →
                 </button>
 
                 <p class="login-link">
@@ -142,6 +143,170 @@
     </main>
 
     <script>
+        const degreeOptions = {
+            bachelors: [
+                "Bachelor of Agribusiness [BP020]",
+                "Bachelor of Agricultural Science [BP019]",
+                "Bachelor of Art History and Curatorial Studies [BP070]",
+                "Bachelor of Arts [BP001]",
+                "Bachelor of Arts (Integrated Professional) [BW001]",
+                "Bachelor of Biological Science [BP025]",
+                "Bachelor of Biomedical Science [BP006]",
+                "Bachelor of Biomedicine (Specialised) [BP056]",
+                "Bachelor of Business [BP009]",
+                "Bachelor of Commerce [BP002]",
+                "Bachelor of Commerce (Integrated Professional) [BW002]",
+                "Bachelor of Criminology and Criminal Justice [BP050]",
+                "Bachelor of Earth Sciences [BP029]",
+                "Bachelor of Economics [BP013]",
+                "Bachelor of Environmental Design [BP011]",
+                "Bachelor of Environmental Science [BP022]",
+                "Bachelor of Geographical and Spatial Science [BP055]",
+                "Bachelor of Human Rights [BP034]",
+                "Bachelor of Human Sciences [BP031]",
+                "Bachelor of International Relations [BP058]",
+                "Bachelor of Letters [BP501]",
+                "Bachelor of Marine Science [BP023]",
+                "Bachelor of Mathematics [BP059]",
+                "Bachelor of Media and Communication [BP069]",
+                "Bachelor of Modern Languages [BP054]",
+                "Bachelor of Molecular Sciences [BP028]",
+                "Bachelor of Music [BP008]",
+                "Bachelor of Philosophy, Politics and Economics [BP012]",
+                "Bachelor of Psychological Studies [BP503]",
+                "Bachelor of Psychology [BP030]",
+                "Bachelor of Science [BP004]",
+                "Bachelor of Science (Integrated Professional) [BW004]",
+                "Bachelor of Science and Technology [BP502]",
+                "Bachelor of Social and Environmental Sustainability [BP062]",
+                "Bachelor of Sport and Exercise Sciences [BP026]"
+            ],
+
+            honours: [
+                "Bachelor of Advanced Computer Science [Honours] [BH008]",
+                "Bachelor of Arts (Honours) [BH001]",
+                "Bachelor of Biological Science (Honours) [BH024]",
+                "Bachelor of Biomedical Science (Honours) [BH006]",
+                "Bachelor of Business (Honours) [BH021]",
+                "Bachelor of Commerce (Honours) [BH002]",
+                "Bachelor of Criminology and Criminal Justice (Honours) [BH018]",
+                "Bachelor of Earth Sciences (Honours) [BH026]",
+                "Bachelor of Economics (Honours) [BH013]",
+                "Bachelor of Education (Primary) (Honours) [BH020]",
+                "Bachelor of Engineering (Honours) [BH011]",
+                "Bachelor of Environmental Design (Honours) [BH040]",
+                "Bachelor of Human Rights Honours [BH019]",
+                "Bachelor of Landscape Architecture (Honours) [BH039]",
+                "Bachelor of Marine Science (Honours) [BH025]",
+                "Bachelor of Mathematics (Honours) [BH035]",
+                "Bachelor of Modern Languages Honours [BH016]",
+                "Bachelor of Music (Honours) [BH009]",
+                "Bachelor of Nursing (Honours) [BH028]",
+                "Bachelor of Philosophy (Honours) [BH005]",
+                "Bachelor of Philosophy, Politics, and Economics (Honours) [BH015]",
+                "Bachelor of Psychology (Honours) [BH014]",
+                "Bachelor of Science (Honours) [BH004]",
+                "Bachelor of Social Work (Honours) [BH017]",
+                "Bachelor of Sport and Exercise Sciences (Honours) [BH032]"
+            ],
+
+            combined_bachelors: [
+                "Bachelor of Agribusiness and Bachelor of Science [CB001]",
+                "Bachelor of Agricultural Science and Bachelor of Arts [CB009]",
+                "Bachelor of Agricultural Science and Bachelor of Commerce [CB010]",
+                "Bachelor of Agricultural Science and Bachelor of Science [CB003]",
+                "Bachelor of Art History and Curatorial Studies and Bachelor of Arts [CB049]",
+                "Bachelor of Art History and Curatorial Studies and Bachelor of Commerce [CB052]",
+                "Bachelor of Criminology and Criminal Justice and Bachelor of Arts [CB047]",
+                "Bachelor of Criminology and Criminal Justice and Bachelor of Science [CB053]",
+                "Bachelor of Economics / Bachelor of Commerce [CB020]",
+                "Bachelor of Engineering (Honours) and Bachelor of Modern Languages [CB030]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Arts [CB034]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Commerce [CB006]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Philosophy (Honours) [CB014]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Science [CB004]",
+                "Bachelor of Environmental Science and Bachelor of Arts [CB008]",
+                "Bachelor of Environmental Science and Bachelor of Commerce [CB007]",
+                "Bachelor of Environmental Science and Bachelor of Science [CB002]",
+                "Bachelor of Human Rights and Bachelor of Arts [CB022]",
+                "Bachelor of Human Rights and Bachelor of Commerce [CB023]",
+                "Bachelor of International Relations and Bachelor of Arts [CB046]",
+                "Bachelor of International Relations and Bachelor of Commerce [CB054]",
+                "Bachelor of Mathematics and Bachelor of Arts [CB044]",
+                "Bachelor of Media and Communication and Bachelor of Arts [CB021]",
+                "Bachelor of Media and Communication and Bachelor of Commerce [CB048]",
+                "Bachelor of Modern Languages and Bachelor of Arts [CB026]",
+                "Bachelor of Modern Languages and Bachelor of Biomedical Science [CB032]",
+                "Bachelor of Modern Languages and Bachelor of Business [CB028]",
+                "Bachelor of Modern Languages and Bachelor of Commerce [CB027]",
+                "Bachelor of Modern Languages and Bachelor of Science [CB029]",
+                "Bachelor of Music and Bachelor of Arts [CB038]",
+                "Bachelor of Music and Bachelor of Biomedical Science [CB042]",
+                "Bachelor of Music and Bachelor of Business [CB041]",
+                "Bachelor of Music and Bachelor of Science [CB039]",
+                "Bachelor of Philosophy (Honours)/Bachelor of Modern Languages [CB031]",
+                "Bachelor of Philosophy, Politics and Economics and Bachelor of Arts [CB012]",
+                "Bachelor of Philosophy, Politics and Economics and Bachelor of Commerce [CB017]",
+                "Bachelor of Psychology and Bachelor of Arts [CB011]",
+                "Bachelor of Psychology and Bachelor of Commerce [CB013]",
+                "Bachelor of Psychology and Bachelor of Science [CB043]",
+                "Bachelor of Social and Environmental Sustainability and Bachelor of Arts [CB045]"
+            ],
+
+            combined_masters: [
+                "Bachelor of Biological Science and Master of Biotechnology [CM029]",
+                "Bachelor of Marine Science and Master of Environmental Science [CM011]",
+                "Bachelor of Sport and Exercise Sciences and Master of Public Health [CM017]",
+                "Bachelor of Agribusiness and Master of Agricultural Economics [CM014]",
+                "Bachelor of Agricultural Science and Master of Agricultural Science [CM013]",
+                "Bachelor of Biological Science and Master of Biological Science [CM005]",
+                "Bachelor of Earth Sciences and Master of Geoscience [CM009]",
+                "Bachelor of Earth Sciences and Master of Oceanography [CM012]",
+                "Bachelor of Economics and Master of Economics [CM002]",
+                "Bachelor of Environmental Science and Master of Environmental Science [CM008]",
+                "Bachelor of Geographical and Spatial Science and Master of Environmental Science [CM032]",
+                "Bachelor of Human Sciences (Pharmaceutical Health) and Doctor of Pharmacy [CM039]",
+                "Bachelor of Human Sciences and Master of Bioinformatics [CM021]",
+                "Bachelor of Human Sciences and Master of Biomedical Science [CM030]",
+                "Bachelor of Marine Science and Master of Marine Biology [CM010]",
+                "Bachelor of Marine Sciences and Master of Oceanography [CM038]",
+                "Bachelor of Molecular Sciences and Master of Biomedical Science [CM004]",
+                "Bachelor of Molecular Sciences and Master of Biotechnology [CM007]",
+                "Bachelor of Molecular Sciences and Master of Bioinformatics [CM024]",
+                "Bachelor of Science Frontier Physics and Master of Physics [CM015]",
+                "Bachelor of Science Frontier Physics and Master of Physics - Medical Physics [CM040]",
+                "Bachelor of Sport and Exercise Sciences and Master of Clinical Exercise Physiology [CM018]",
+                "Bachelor of Sport and Exercise Sciences and Master of Applied Human Performance Science [CM019]"
+            ]
+        };
+
+        function updateDegreeOptions() {
+            const type = document.getElementById("degree-type").value;
+            const degreeSelect = document.getElementById("degree");
+            const otherInput = document.getElementById("other-degree");
+
+            degreeSelect.innerHTML = '<option value="" disabled selected hidden>Select your degree</option>';
+            degreeSelect.value = "";
+
+            otherInput.style.display = "none";
+            otherInput.required = false;
+            otherInput.value = "";
+
+            if (type === "other") {
+                degreeSelect.innerHTML = '<option value="other" selected>Other</option>';
+                otherInput.style.display = "block";
+                otherInput.required = true;
+                return;
+            }
+
+            degreeOptions[type].forEach(function(degree) {
+                const option = document.createElement("option");
+                option.value = degree;
+                option.textContent = degree;
+                degreeSelect.appendChild(option);
+            });
+        }
+
         function handleDegreeChange() {
             const degree = document.getElementById("degree").value;
             const otherInput = document.getElementById("other-degree");
@@ -159,4 +324,7 @@
 
 </body>
 </html>
+
+
+
 

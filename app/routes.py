@@ -189,8 +189,39 @@ def profile():
     )
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        email = request.form.get("email", "").strip()
+        username = request.form.get("username", "").strip()
+        degree = request.form.get("degree", "").strip()
+        major = request.form.get("major", "").strip()
+
+        if degree == "other":
+            degree = request.form.get("other_degree", "").strip()
+
+        if User.query.filter_by(email=email).first():
+            return "Email already exists"
+
+        if User.query.filter_by(username=username).first():
+            return "Username already taken"
+
+        new_user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            username=username,
+            degree=degree,
+            major=major,
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for("login"))
+
     return render_template("signup.html")
 
 

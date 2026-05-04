@@ -14,6 +14,7 @@ class User(db.Model):
     sessions_per_week = db.Column(db.Integer, nullable=True)
     preferred_group_size = db.Column(db.String(20), nullable=True)
     study_mode = db.Column(db.String(30), nullable=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
 
     subjects = db.relationship("UserSubject", backref="user", lazy=True, cascade="all, delete-orphan")
     availabilities = db.relationship("UserAvailability", backref="user", lazy=True, cascade="all, delete-orphan")

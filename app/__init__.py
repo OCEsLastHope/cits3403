@@ -26,8 +26,9 @@ def ensure_test_data():
             first_name="Mineth",
             last_name="Perera",
             email="mineth@test.com",
-            degree="Engineering",
+            degree="Bachelor of Engineering",
             major="Software Engineering",
+            username="Mineth1"
         )
         db.session.add(test_user)
         db.session.commit()
