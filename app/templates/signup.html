@@ -76,7 +76,7 @@
                     <div class="form-group">
                         <label>Degree</label>
                         <select name="degree" id="degree" onchange="handleDegreeChange()" required>
-                            <option value="">Select your degree</option>
+                            <option value="" disabled selected hidden>Select your degree</option>
                             <option>Bachelor of Science</option>
                             <option>Bachelor of Commerce</option>
                             <option>Bachelor of Arts</option>
@@ -105,6 +105,11 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Choose a username" required>
+                     </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Password</label>
@@ -118,7 +123,7 @@
                 </div>
 
                 <button type="submit" class="register-btn">
-                    REGISTER →
+                    Continue →
                 </button>
 
                 <p class="login-link">
