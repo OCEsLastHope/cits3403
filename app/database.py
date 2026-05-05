@@ -15,9 +15,11 @@ class User(db.Model):
     preferred_group_size = db.Column(db.String(20), nullable=True)
     study_mode = db.Column(db.String(30), nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    degree_option_id = db.Column(db.Integer, db.ForeignKey("degree_option.id"), nullable=True)
 
     subjects = db.relationship("UserSubject", backref="user", lazy=True, cascade="all, delete-orphan")
     availabilities = db.relationship("UserAvailability", backref="user", lazy=True, cascade="all, delete-orphan")
+    degree_option = db.relationship("DegreeOption", backref="users", lazy=True)
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -81,3 +83,20 @@ class UserAvailability(db.Model):
     day_of_week = db.Column(db.String(20), nullable=False)
     start_time = db.Column(db.String(10), nullable=False)
     end_time = db.Column(db.String(10), nullable=False)
+
+
+class DegreeCategory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    label = db.Column(db.String(100), nullable=False)
+
+
+class DegreeOption(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    category_id = db.Column(db.Integer, db.ForeignKey("degree_category.id"), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    category = db.relationship("DegreeCategory", backref="options", lazy=True)
+
+    __table_args__ = (db.UniqueConstraint("category_id", "name", name="uq_degree_option_category_name"),)
