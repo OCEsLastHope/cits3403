@@ -189,9 +189,114 @@ def profile():
     )
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("signup.html")
+    degree_options = {
+        "bachelors": [
+            "Bachelor of Agribusiness [BP020]",
+            "Bachelor of Agricultural Science [BP019]",
+            "Bachelor of Art History and Curatorial Studies [BP070]",
+            "Bachelor of Arts [BP001]",
+            "Bachelor of Arts (Integrated Professional) [BW001]",
+            "Bachelor of Biological Science [BP025]",
+            "Bachelor of Biomedical Science [BP006]",
+            "Bachelor of Biomedicine (Specialised) [BP056]",
+            "Bachelor of Business [BP009]",
+            "Bachelor of Commerce [BP002]",
+            "Bachelor of Commerce (Integrated Professional) [BW002]",
+            "Bachelor of Criminology and Criminal Justice [BP050]",
+            "Bachelor of Earth Sciences [BP029]",
+            "Bachelor of Economics [BP013]",
+            "Bachelor of Environmental Design [BP011]",
+            "Bachelor of Environmental Science [BP022]",
+            "Bachelor of Geographical and Spatial Science [BP055]",
+            "Bachelor of Human Rights [BP034]",
+            "Bachelor of Human Sciences [BP031]",
+            "Bachelor of International Relations [BP058]",
+            "Bachelor of Letters [BP501]",
+            "Bachelor of Marine Science [BP023]",
+            "Bachelor of Mathematics [BP059]",
+            "Bachelor of Media and Communication [BP069]",
+            "Bachelor of Modern Languages [BP054]",
+            "Bachelor of Molecular Sciences [BP028]",
+            "Bachelor of Music [BP008]",
+            "Bachelor of Philosophy, Politics and Economics [BP012]",
+            "Bachelor of Psychological Studies [BP503]",
+            "Bachelor of Psychology [BP030]",
+            "Bachelor of Science [BP004]",
+            "Bachelor of Science (Integrated Professional) [BW004]",
+            "Bachelor of Science and Technology [BP502]",
+            "Bachelor of Social and Environmental Sustainability [BP062]",
+            "Bachelor of Sport and Exercise Sciences [BP026]"
+        ],
+        "honours": [
+            "Bachelor of Advanced Computer Science [Honours] [BH008]",
+            "Bachelor of Arts (Honours) [BH001]",
+            "Bachelor of Biological Science (Honours) [BH024]",
+            "Bachelor of Biomedical Science (Honours) [BH006]",
+            "Bachelor of Business (Honours) [BH021]",
+            "Bachelor of Commerce (Honours) [BH002]",
+            "Bachelor of Criminology and Criminal Justice (Honours) [BH018]",
+            "Bachelor of Earth Sciences (Honours) [BH026]",
+            "Bachelor of Economics (Honours) [BH013]",
+            "Bachelor of Education (Primary) (Honours) [BH020]",
+            "Bachelor of Engineering (Honours) [BH011]",
+            "Bachelor of Environmental Design (Honours) [BH040]",
+            "Bachelor of Human Rights Honours [BH019]",
+            "Bachelor of Landscape Architecture (Honours) [BH039]",
+            "Bachelor of Marine Science (Honours) [BH025]",
+            "Bachelor of Mathematics (Honours) [BH035]",
+            "Bachelor of Modern Languages Honours [BH016]",
+            "Bachelor of Music (Honours) [BH009]",
+            "Bachelor of Nursing (Honours) [BH028]",
+            "Bachelor of Philosophy (Honours) [BH005]",
+            "Bachelor of Philosophy, Politics, and Economics (Honours) [BH015]",
+            "Bachelor of Psychology (Honours) [BH014]",
+            "Bachelor of Science (Honours) [BH004]",
+            "Bachelor of Social Work (Honours) [BH017]",
+            "Bachelor of Sport and Exercise Sciences (Honours) [BH032]"
+        ],
+        "combined_bachelors": [
+            # paste your full combined_bachelors list here
+        ],
+        "combined_masters": [
+            # paste your full combined_masters list here
+        ]
+    }
+
+    if request.method == "POST":
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        email = request.form.get("email", "").strip()
+        username = request.form.get("username", "").strip()
+        degree = request.form.get("degree", "").strip()
+        major = request.form.get("major", "").strip()
+
+        if degree == "other":
+            degree = request.form.get("other_degree", "").strip()
+
+        if User.query.filter_by(email=email).first():
+            return "Email already exists"
+
+        if User.query.filter_by(username=username).first():
+            return "Username already taken"
+
+        new_user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            username=username,
+            degree=degree,
+            major=major,
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for("login"))
+
+    return render_template("signup.html", degree_options=degree_options)
+
 
 
 @app.route("/notifications")

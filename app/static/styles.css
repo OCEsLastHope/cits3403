@@ -728,9 +728,9 @@ body {
     min-height: 100vh;
     display: grid;
     grid-template-columns: 0.8fr 1.4fr;
-    align-items: center;
+    align-items: center;   /* 🔥 THIS centers vertically */
     gap: 80px;
-    padding: 50px 70px;
+    padding: 0 70px;       /* remove top/bottom padding */
 }
 
 .register-left {
@@ -739,7 +739,7 @@ body {
 
 .register-left h2 {
     font-size: 26px;
-    margin-bottom: 65px;
+    margin-bottom: 55px;
 }
 
 .register-left h2 span {
@@ -765,26 +765,26 @@ body {
     font-size: 16px;
     color: #b8b1d2;
     line-height: 1.6;
-    margin-bottom: 34px;
+    margin-bottom: 28px;
 }
 
 .register-feature {
     display: flex;
     gap: 18px;
     align-items: center;
-    margin-bottom: 28px;
+    margin-bottom: 22px;
 }
 
 .feature-icon {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     border-radius: 14px;
     background: rgba(124, 58, 237, 0.28);
     border: 1px solid rgba(124, 58, 237, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 22px;
     box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
 }
 
@@ -801,9 +801,9 @@ body {
 }
 
 .quote-card {
-    margin-top: 32px;
+    margin-top: 24px;
     max-width: 360px;
-    padding: 26px 30px;
+    padding: 22px 26px;
     border-radius: 16px;
     background: rgba(15, 19, 45, 0.75);
     border: 1px solid rgba(124, 58, 237, 0.4);
@@ -818,7 +818,7 @@ body {
 .register-card {
     max-width: 920px;
     width: 100%;
-    padding: 42px 52px;
+    padding: 30px 45px;
     border-radius: 24px;
     background: rgba(12, 17, 45, 0.75);
     backdrop-filter: blur(6px);
@@ -839,18 +839,20 @@ body {
 .form-group {
     display: flex;
     flex-direction: column;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .form-group label {
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: #eeeaff;
 }
 
 .form-group input,
 .form-group select {
-    height: 58px;
+    width: 100%;
+    max-width: 100%;
+    height: 52px;
     padding: 0 22px;
     border-radius: 10px;
     border: 1.5px solid rgba(130, 120, 190, 0.38);
@@ -858,6 +860,9 @@ body {
     color: #ffffff;
     font-size: 15px;
     outline: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .form-group input::placeholder {
@@ -868,6 +873,10 @@ body {
     color: #9a93b8;
 }
 
+.form-group select option {
+    white-space: normal;
+}
+
 .form-group input:focus,
 .form-group select:focus {
     border-color: #a855f7;
@@ -876,8 +885,8 @@ body {
 
 .register-btn {
     width: 100%;
-    height: 62px;
-    margin-top: 18px;
+    height: 56px;
+    margin-top: 10px;
     border: none;
     border-radius: 10px;
     background: linear-gradient(90deg, #a855f7, #3b82f6, #22a8ff);
@@ -897,7 +906,8 @@ body {
 .login-link {
     text-align: center;
     color: #b8b1d2;
-    margin-top: 20px;
+    margin-top: 14px;
+    margin-bottom: 10px;
 }
 
 .login-link a {
@@ -908,10 +918,23 @@ body {
 
 .privacy-text {
     border-top: 1px solid rgba(130, 120, 190, 0.25);
-    padding-top: 18px;
+    padding-top: 10px;
+    margin-top: 8px;
     text-align: center;
     color: #9f98bb;
-    font-size: 14px;
+    font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+    .register-wrapper {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 30px 24px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Notifications */

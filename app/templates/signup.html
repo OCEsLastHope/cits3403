@@ -74,6 +74,18 @@
 
                 <div class="form-row">
                     <div class="form-group">
+                        <label>Degree Type</label>
+                        <select id="degree-type" onchange="updateDegreeOptions()" required>
+                            <option value="" disabled selected hidden>Select degree type</option>
+                            <option value="bachelors">Bachelor's degree</option>
+                            <option value="honours">Honours</option>
+                            <option value="combined_bachelors">Combined Bachelor's + Bachelor's</option>
+                            <option value="combined_masters">Combined Bachelor's + Master's</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label>Degree</label>
                         
                            <select> <option value="" disabled selected hidden>Select your degree</option>
@@ -86,24 +98,24 @@
                             <option value="other">Other</option>
                         </select>
 
-                        <input 
-                            type="text" 
-                            id="other-degree" 
-                            name="other_degree" 
+                        <input
+                            type="text"
+                            id="other-degree"
+                            name="other_degree"
                             placeholder="Enter your degree"
                             style="display: none; margin-top: 10px;"
                         >
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>Major</label>
-                        <input 
-                            type="text" 
-                            name="major" 
-                            placeholder="Enter your major" 
-                            required
-                        >
-                    </div>
+                <div class="form-group">
+                    <label>Major</label>
+                    <input type="text" name="major" placeholder="Enter your major" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Choose a username" required>
                 </div>
 
                 <div class="form-row">
@@ -119,7 +131,7 @@
                 </div>
 
                 <button type="submit" class="register-btn">
-                    REGISTER →
+                    Register →
                 </button>
 
                 <p class="login-link">
@@ -138,21 +150,51 @@
     </main>
 
     <script>
-        function handleDegreeChange() {
-            const degree = document.getElementById("degree").value;
-            const otherInput = document.getElementById("other-degree");
+    const degreeOptions = {{ degree_options | tojson }};
 
-            if (degree === "other") {
-                otherInput.style.display = "block";
-                otherInput.required = true;
-            } else {
-                otherInput.style.display = "none";
-                otherInput.required = false;
-                otherInput.value = "";
-            }
+    function updateDegreeOptions() {
+        const type = document.getElementById("degree-type").value;
+        const degreeSelect = document.getElementById("degree");
+        const otherInput = document.getElementById("other-degree");
+
+        degreeSelect.innerHTML = '<option value="" disabled selected hidden>Select your degree</option>';
+        degreeSelect.value = "";
+
+        otherInput.style.display = "none";
+        otherInput.required = false;
+        otherInput.value = "";
+
+        if (type === "other") {
+            degreeSelect.innerHTML = '<option value="other" selected>Other</option>';
+            otherInput.style.display = "block";
+            otherInput.required = true;
+            return;
         }
-    </script>
+
+        degreeOptions[type].forEach(function(degree) {
+            const option = document.createElement("option");
+            option.value = degree;
+            option.textContent = degree;
+            degreeSelect.appendChild(option);
+        });
+    }
+
+    function handleDegreeChange() {
+        const degree = document.getElementById("degree").value;
+        const otherInput = document.getElementById("other-degree");
+
+        if (degree === "other") {
+            otherInput.style.display = "block";
+            otherInput.required = true;
+        } else {
+            otherInput.style.display = "none";
+            otherInput.required = false;
+            otherInput.value = "";
+        }
+    }
+</script>
 
 </body>
 </html>
+
 
