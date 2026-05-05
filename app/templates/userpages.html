@@ -241,8 +241,41 @@
                             <label for="emailInput" class="form-label">Email</label>
                             <input id="emailInput" name="email" class="form-control mb-3" placeholder="Email" value="{{ current_user.email if current_user else '' }}">
 
-                            <label for="uniInput" class="form-label">Degree</label>
-                            <input id="uniInput" name="degree" class="form-control mb-3" placeholder="Degree" value="{{ current_user.degree if current_user else '' }}">
+                            <label for="degreeTypeInput" class="form-label">Degree Type</label>
+                            <select
+                                id="degreeTypeInput"
+                                name="degree_type"
+                                class="form-select mb-3"
+                                data-current-degree-type="{{ current_user.degree_option.category.key if current_user and current_user.degree_option else '' }}"
+                                onchange="updateProfileDegreeOptions()"
+                            >
+                                <option value="" disabled {% if not current_user or not current_user.degree_option %}selected{% endif %}>Select degree type</option>
+                                <option value="bachelors">Bachelor's degree</option>
+                                <option value="honours">Honours</option>
+                                <option value="combined_bachelors">Combined Bachelor's + Bachelor's</option>
+                                <option value="combined_masters">Combined Bachelor's + Master's</option>
+                                <option value="other" {% if current_user and not current_user.degree_option and current_user.degree %}selected{% endif %}>Other</option>
+                            </select>
+
+                            <label for="degreeOptionInput" class="form-label">Degree</label>
+                            <select
+                                id="degreeOptionInput"
+                                name="degree_option_id"
+                                class="form-select mb-3"
+                                data-current-degree-id="{{ current_user.degree_option_id if current_user and current_user.degree_option_id else '' }}"
+                                style="display: {% if current_user and not current_user.degree_option_id and current_user.degree %}none{% else %}block{% endif %};"
+                            >
+                                <option value="" disabled selected hidden>Select your degree</option>
+                            </select>
+
+                            <input
+                                id="customDegreeInput"
+                                name="degree"
+                                class="form-control mb-3"
+                                placeholder="Degree"
+                                value="{{ current_user.degree if current_user and not current_user.degree_option_id else '' }}"
+                                style="display: {% if current_user and not current_user.degree_option_id and current_user.degree %}block{% else %}none{% endif %};"
+                            >
 
                             <label for="yearInput" class="form-label">Major</label>
                             <input id="yearInput" name="major" class="form-control mb-3" placeholder="Major" value="{{ current_user.major if current_user else '' }}">
@@ -346,11 +379,53 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const editBtn = document.getElementById("editProfileBtn");
+        const degreeOptions = {{ degree_options | tojson }};
 
         editBtn.addEventListener("click", function () {
             const modal = new bootstrap.Modal(document.getElementById("profileModal"));
             modal.show();
         });
+
+        function updateProfileDegreeOptions() {
+            const degreeType = document.getElementById("degreeTypeInput");
+            const degreeSelect = document.getElementById("degreeOptionInput");
+            const customInput = document.getElementById("customDegreeInput");
+            const selectedType = degreeType.value;
+
+            degreeSelect.innerHTML = '<option value="" disabled selected hidden>Select your degree</option>';
+            degreeSelect.disabled = false;
+
+            if (selectedType === "other") {
+                degreeSelect.disabled = true;
+                degreeSelect.style.display = "none";
+                customInput.style.display = "block";
+                customInput.required = true;
+                return;
+            }
+
+            degreeSelect.style.display = "block";
+            customInput.style.display = "none";
+            customInput.required = false;
+
+            (degreeOptions[selectedType] || []).forEach(function(degree) {
+                const option = document.createElement("option");
+                option.value = degree.id;
+                option.textContent = degree.name;
+                degreeSelect.appendChild(option);
+            });
+
+            const currentDegreeId = degreeSelect.dataset.currentDegreeId;
+            if (currentDegreeId) {
+                degreeSelect.value = currentDegreeId;
+            }
+        }
+
+        const initialDegreeType = document.getElementById("degreeTypeInput").dataset.currentDegreeType;
+        if (initialDegreeType) {
+            document.getElementById("degreeTypeInput").value = initialDegreeType;
+        }
+
+        updateProfileDegreeOptions();
 
         {% if open_profile_modal %}
             const profileModal = new bootstrap.Modal(document.getElementById("profileModal"));
