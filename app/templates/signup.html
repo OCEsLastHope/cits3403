@@ -75,7 +75,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Degree Type</label>
-                        <select id="degree-type" onchange="updateDegreeOptions()" required>
+                        <select id="degree-type" name="degree_type" onchange="updateDegreeOptions()" required>
                             <option value="" disabled selected hidden>Select degree type</option>
                             <option value="bachelors">Bachelor's degree</option>
                             <option value="honours">Honours</option>
@@ -88,21 +88,15 @@
                     <div class="form-group">
                         <label>Degree</label>
                         
-                           <select> <option value="" disabled selected hidden>Select your degree</option>
-                            <option value="">Select your degree</option>
-                            <option>Bachelor of Science</option>
-                            <option>Bachelor of Commerce</option>
-                            <option>Bachelor of Arts</option>
-                            <option>Bachelor of Engineering</option>
-                            <option>Bachelor of Philosophy</option>
-                            <option value="other">Other</option>
+                           <select id="degree" name="degree_option_id" onchange="handleDegreeChange()" required>
+                            <option value="" disabled selected hidden>Select your degree</option>
                         </select>
 
                         <input
                             type="text"
                             id="other-degree"
-                            name="other_degree"
-                            placeholder="Enter your degree"
+                            name="degree"
+                            placeholder="Degree"
                             style="display: none; margin-top: 10px;"
                         >
                     </div>
@@ -165,25 +159,25 @@
         otherInput.value = "";
 
         if (type === "other") {
-            degreeSelect.innerHTML = '<option value="other" selected>Other</option>';
+            degreeSelect.innerHTML = '<option value="" selected>Other (enter below)</option>';
             otherInput.style.display = "block";
             otherInput.required = true;
             return;
         }
 
-        degreeOptions[type].forEach(function(degree) {
+        (degreeOptions[type] || []).forEach(function(degree) {
             const option = document.createElement("option");
-            option.value = degree;
-            option.textContent = degree;
+            option.value = degree.id;
+            option.textContent = degree.name;
             degreeSelect.appendChild(option);
         });
     }
 
     function handleDegreeChange() {
-        const degree = document.getElementById("degree").value;
+        const degreeType = document.getElementById("degree-type").value;
         const otherInput = document.getElementById("other-degree");
 
-        if (degree === "other") {
+        if (degreeType === "other") {
             otherInput.style.display = "block";
             otherInput.required = true;
         } else {
@@ -196,5 +190,3 @@
 
 </body>
 </html>
-
-
