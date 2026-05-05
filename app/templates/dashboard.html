@@ -22,7 +22,7 @@
           <div class="sidebar-title">Navigation</div>
           <a href="{{ url_for('profile') }}">Profile</a>
           <a href="{{ url_for('dashboard') }}" class="active">Dashboard</a>
-          <a href="#">Matches</a>
+          <a href="{{ url_for('matches', user_id=1) }}">Matches</a>
           <a href="{{ url_for('notifications') }}" class="active">Notifications</a>
         </div>
 
