@@ -370,7 +370,7 @@
         const confirmPasswordMessage =
             document.getElementById("confirm-password-message");
 
-        function checkEmail() {
+        async function checkEmail() {
 
             const email =
                 emailInput.value.trim();
@@ -392,13 +392,37 @@
                 return false;
             }
 
-            emailMessage.textContent =
-                "Email looks good.";
+            try {
 
-            return true;
+                const response =
+                    await fetch(`/check_register_details?email=${encodeURIComponent(email)}`);
+
+                const data =
+                    await response.json();
+
+                if (data.email_exists) {
+
+                    emailMessage.textContent =
+                        "This email is already registered.";
+
+                    return false;
+                }
+
+                emailMessage.textContent =
+                    "Email is available.";
+
+                return true;
+
+            } catch (error) {
+
+                emailMessage.textContent =
+                    "Could not check email right now.";
+
+                return false;
+            }
         }
 
-        function checkUsername() {
+        async function checkUsername() {
 
             const username =
                 usernameInput.value.trim();
@@ -425,10 +449,34 @@
                 return false;
             }
 
-            usernameMessage.textContent =
-                "Username looks good.";
+            try {
 
-            return true;
+                const response =
+                    await fetch(`/check_register_details?username=${encodeURIComponent(username)}`);
+
+                const data =
+                    await response.json();
+
+                if (data.username_exists) {
+
+                    usernameMessage.textContent =
+                        "This username is already taken.";
+
+                    return false;
+                }
+
+                usernameMessage.textContent =
+                    "Username is available.";
+
+                return true;
+
+            } catch (error) {
+
+                usernameMessage.textContent =
+                    "Could not check username right now.";
+
+                return false;
+            }
         }
 
         function checkPasswordStrength() {
@@ -486,12 +534,18 @@
 
         emailInput.addEventListener(
             "input",
-            checkEmail
+            function() {
+
+                checkEmail();
+            }
         );
 
         usernameInput.addEventListener(
             "input",
-            checkUsername
+            function() {
+
+                checkUsername();
+            }
         );
 
         passwordInput.addEventListener(
@@ -510,15 +564,17 @@
 
         registerForm.addEventListener(
             "submit",
-            function(event) {
+            async function(event) {
+
+                event.preventDefault();
 
                 formError.textContent = "";
 
                 const emailValid =
-                    checkEmail();
+                    await checkEmail();
 
                 const usernameValid =
-                    checkUsername();
+                    await checkUsername();
 
                 const passwordValid =
                     checkPasswordStrength();
@@ -533,11 +589,13 @@
                     !passwordsMatch
                 ) {
 
-                    event.preventDefault();
-
                     formError.textContent =
                         "Please fix the errors before registering.";
+
+                    return;
                 }
+
+                registerForm.submit();
             }
         );
 
@@ -545,4 +603,5 @@
 
 </body>
 </html>
+
 

@@ -624,3 +624,23 @@ def handle_send_message(data):
         },
         room=f"conversation-{conversation_id}",
     )
+@app.route("/check_register_details")
+def check_register_details():
+    email = request.args.get("email", "").strip()
+    username = request.args.get("username", "").strip()
+
+    email_exists = False
+    username_exists = False
+
+    if email:
+        email_exists = User.query.filter_by(email=email).first() is not None
+
+    if username:
+        username_exists = User.query.filter_by(username=username).first() is not None
+
+    return {
+        "email_exists": email_exists,
+        "username_exists": username_exists
+    }
+    
+    
