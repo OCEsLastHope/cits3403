@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages | StudySync</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="messages-page">
+        <section class="messages-brand-panel" aria-labelledby="messages-heading">
+            <a class="brand" href="{{ url_for('dashboard') }}">Study<span>Sync</span></a>
+
+            <div class="brand-copy">
+                <p class="eyebrow">Live study chat</p>
+                <h1 id="messages-heading">Messages</h1>
+                <p>Keep your study plans moving with real-time conversations.</p>
+            </div>
+
+            <div class="status-card" aria-label="Messaging status">
+                <span class="status-dot"></span>
+                <div>
+                    <strong>Connected</strong>
+                    <p>Messages are saved and shared live.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="chat-panel" aria-labelledby="chat-title">
+            <header class="chat-header">
+                <div>
+                    <p class="chat-kicker">Conversation</p>
+                    <h2 id="chat-title">
+                        {% if conversation.title %}
+                            {{ conversation.title }}
+                        {% else %}
+                            Direct Message
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <a class="back-link" href="{{ url_for('dashboard') }}">Back</a>
+            </header>
+
+            <section
+                id="message-list"
+                class="message-list"
+                aria-label="Message history"
+                data-conversation-id="{{ conversation.id }}"
+                data-current-user-id="{{ current_user.id }}"
+            >
+                {% if messages %}
+                    {% for message in messages %}
+                        <article
+                            class="message-row {% if message.sender_id == current_user.id %}message-own{% else %}message-other{% endif %}"
+                            data-message-id="{{ message.id }}"
+                        >
+                            <div class="message-bubble">
+                                <header class="message-meta">
+                                    <span>{{ message.sender.username }}</span>
+                                    <time datetime="{{ message.created_at.isoformat() }}">
+                                        {{ message.created_at.strftime("%H:%M") }}
+                                    </time>
+                                </header>
+                                <p>{{ message.display_body }}</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p id="empty-message-state" class="empty-state">No messages yet. Start the conversation.</p>
+                {% endif %}
+            </section>
+
+            <form id="message-form" class="message-form" autocomplete="off">
+                <label class="sr-only" for="message-input">Message</label>
+                <textarea
+                    id="message-input"
+                    name="body"
+                    rows="1"
+                    maxlength="1000"
+                    placeholder="Write a message"
+                    required
+                ></textarea>
+                <button type="submit">Send</button>
+            </form>
+
+            <p id="message-error" class="message-error" role="alert" aria-live="polite"></p>
+        </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        const messageList = document.querySelector("#message-list");
+        const messageForm = document.querySelector("#message-form");
+        const messageInput = document.querySelector("#message-input");
+        const messageError = document.querySelector("#message-error");
+        const emptyMessageState = document.querySelector("#empty-message-state");
+
+        const conversationId = Number(messageList.dataset.conversationId);
+        const currentUserId = Number(messageList.dataset.currentUserId);
+        const socket = io();
+
+        socket.emit("join_conversation", {
+            conversation_id: conversationId
+        });
+
+        function scrollToLatestMessage() {
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        function showError(text) {
+            messageError.textContent = text;
+        }
+
+        function clearError() {
+            messageError.textContent = "";
+        }
+
+        function createMessageElement(message) {
+            const row = document.createElement("article");
+            row.classList.add("message-row");
+            row.classList.add(message.sender_id === currentUserId ? "message-own" : "message-other");
+            row.dataset.messageId = message.id;
+
+            const bubble = document.createElement("div");
+            bubble.classList.add("message-bubble");
+
+            const meta = document.createElement("header");
+            meta.classList.add("message-meta");
+
+            const sender = document.createElement("span");
+            sender.textContent = message.sender_name;
+
+            const time = document.createElement("time");
+            time.textContent = message.created_at;
+
+            const body = document.createElement("p");
+            body.textContent = message.body;
+
+            meta.appendChild(sender);
+            meta.appendChild(time);
+            bubble.appendChild(meta);
+            bubble.appendChild(body);
+            row.appendChild(bubble);
+
+            return row;
+        }
+
+        messageForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const body = messageInput.value.trim();
+
+            if (!body) {
+                showError("Message cannot be empty.");
+                return;
+            }
+
+            if (body.length > 1000) {
+                showError("Message must be 1000 characters or fewer.");
+                return;
+            }
+
+            clearError();
+
+            socket.emit("send_message", {
+                conversation_id: conversationId,
+                body: body
+            });
+
+            messageInput.value = "";
+            messageInput.focus();
+        });
+
+        socket.on("receive_message", function (message) {
+            if (message.conversation_id !== conversationId) {
+                return;
+            }
+
+            if (emptyMessageState) {
+                emptyMessageState.remove();
+            }
+
+            messageList.appendChild(createMessageElement(message));
+            scrollToLatestMessage();
+        });
+
+        socket.on("connect_error", function () {
+            showError("Could not connect to live messaging.");
+        });
+
+        scrollToLatestMessage();
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

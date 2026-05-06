@@ -3,6 +3,7 @@ from datetime import datetime
 from app import db
 
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
@@ -20,6 +21,9 @@ class User(db.Model):
     subjects = db.relationship("UserSubject", backref="user", lazy=True, cascade="all, delete-orphan")
     availabilities = db.relationship("UserAvailability", backref="user", lazy=True, cascade="all, delete-orphan")
     degree_option = db.relationship("DegreeOption", backref="users", lazy=True)
+    
+    
+
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -100,3 +104,108 @@ class DegreeOption(db.Model):
     category = db.relationship("DegreeCategory", backref="options", lazy=True)
 
     __table_args__ = (db.UniqueConstraint("category_id", "name", name="uq_degree_option_category_name"),)
+    
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(120), nullable=True)
+    is_group_chat = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    members = db.relationship(
+        "ConversationMember",
+        backref="conversation",
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+
+    messages = db.relationship(
+        "Message",
+        backref="conversation",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="Message.created_at"
+    )
+
+    def __repr__(self):
+        return f"<Conversation {self.id}>"
+
+
+class ConversationMember(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    conversation_id = db.Column(
+        db.Integer,
+        db.ForeignKey("conversation.id"),
+        nullable=False
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", backref="conversation_memberships", lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "conversation_id",
+            "user_id",
+            name="uq_conversation_member"
+        ),
+    )
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    conversation_id = db.Column(
+        db.Integer,
+        db.ForeignKey("conversation.id"),
+        nullable=False
+    )
+
+    sender_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    edited_at = db.Column(db.DateTime, nullable=True)
+    is_deleted = db.Column(db.Boolean, nullable=False, default=False)
+
+    sender = db.relationship("User", backref="sent_messages", lazy=True)
+
+    def __repr__(self):
+        return f"<Message {self.id} from User {self.sender_id}>"
+
+    @property
+    def display_body(self):
+        return "[deleted]" if self.is_deleted else self.body
+
+class MessageRead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey("message.id"),
+        nullable=False
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    read_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    message = db.relationship("Message", backref="read_receipts", lazy=True)
+    user = db.relationship("User", backref="message_reads", lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("message_id", "user_id", name="uq_message_read"),
+    )
+
