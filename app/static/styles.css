@@ -587,6 +587,35 @@ body {
     font-size: 15px;
 }
 
+.auth-flash-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-flash {
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.35;
+    border: 1px solid transparent;
+    backdrop-filter: blur(3px);
+}
+
+.auth-flash-error {
+    color: #ffd7df;
+    background: rgba(196, 40, 72, 0.2);
+    border-color: rgba(255, 120, 146, 0.45);
+    box-shadow: 0 0 0 1px rgba(255, 120, 146, 0.12) inset;
+}
+
+.auth-flash-success {
+    color: #dbffe8;
+    background: rgba(16, 132, 84, 0.22);
+    border-color: rgba(93, 238, 169, 0.45);
+    box-shadow: 0 0 0 1px rgba(93, 238, 169, 0.12) inset;
+}
+
 
 /* Forgot password page */
 
@@ -2072,4 +2101,3 @@ body {
         min-height: 48px;
     }
 }
-

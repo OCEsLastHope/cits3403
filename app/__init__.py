@@ -1,20 +1,35 @@
 from flask import Flask
+from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import inspect
 from flask_socketio import SocketIO
-import secrets
 
 from config import Config
 
 db = SQLAlchemy()
 migrate = Migrate()
+login_manager = LoginManager()
+csrf = CSRFProtect()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = secrets.token_hex(32) 
 app.config.from_object(Config)
 db.init_app(app)
 migrate.init_app(app, db)
+login_manager.init_app(app)
+login_manager.login_view = "login"
+csrf.init_app(app)
 socketio = SocketIO(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    from .database import User
+
+    try:
+        return db.session.get(User, int(user_id))
+    except (TypeError, ValueError):
+        return None
 
 
 
@@ -24,6 +39,10 @@ def ensure_test_data():
     existing_tables = set(inspect(db.engine).get_table_names())
     required_tables = {"user", "notification", "degree_category", "degree_option"}
     if not required_tables.issubset(existing_tables):
+        return
+
+    user_columns = {column["name"] for column in inspect(db.engine).get_columns("user")}
+    if "password_hash" not in user_columns:
         return
     
     engineering_degree = DegreeOption.query.filter(

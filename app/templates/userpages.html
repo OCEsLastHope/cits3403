@@ -152,6 +152,7 @@
 
                 <form id="profileForm" method="POST"
                     action="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="user_id" value="{{ current_user.id if current_user else 1 }}">
 
                     <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">

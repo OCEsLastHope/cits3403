@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block head %}
+<style>
+    .sidebar .sidebar-section:nth-of-type(2) {
+        display: none !important;
+    }
+
+    .sidebar a#editProfileBtn {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Messages</h1>
+        <p>Select a conversation to open live chat.</p>
+    </div>
+</div>
+
+<section class="info-card">
+    {% if conversations %}
+    <div class="list-group list-group-flush">
+        {% for item in conversations %}
+        <a href="{{ url_for('messages', conversation_id=item.conversation.id) }}"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
+            style="background: rgba(255,255,255,0.02); color: #fff; border-color: rgba(255,255,255,0.08);">
+            <div class="me-3">
+                <div class="fw-semibold">{{ item.display_name }}</div>
+                {% if item.latest_message %}
+                <div class="text-light" style="font-size: 13px; opacity: 0.85;">
+                    {{ item.latest_message.display_body[:120] }}{% if item.latest_message.display_body|length > 120 %}...{% endif %}
+                </div>
+                {% else %}
+                <div class="text-light" style="font-size: 13px; opacity: 0.85;">No messages yet.</div>
+                {% endif %}
+            </div>
+            <div class="text-light" style="font-size: 12px; opacity: 0.75; white-space: nowrap;">
+                {% if item.latest_message %}
+                {{ item.latest_message.created_at.strftime("%d %b %H:%M") }}
+                {% else %}
+                {{ item.conversation.created_at.strftime("%d %b %H:%M") }}
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="mb-0 text-light">You do not have any conversations yet. Start one from a profile or matches page.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,7 +1,8 @@
 import re
 from collections import defaultdict
 
-from flask import redirect, render_template, request, url_for, session
+from flask import abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func, or_
 from flask_socketio import emit, join_room
 
@@ -46,10 +47,9 @@ def get_degree_options_by_category():
     return grouped
 
 def get_current_user():
-    user_id = session.get("user_id")
-    if user_id is None:
+    if not current_user.is_authenticated:
         return None
-    return db.session.get(User, user_id)
+    return current_user
 
 
 
@@ -109,8 +109,28 @@ def landing():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
+    if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        identifier = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        remember = bool(request.form.get("remember"))
+
+        user = User.query.filter(
+            or_(
+                User.username == identifier,
+                User.email == identifier,
+            )
+        ).first()
+
+        if user is None or not user.check_password(password):
+            flash("Invalid username/email or password.", "error")
+            return render_template("loginpage.html")
+
+        login_user(user, remember=remember)
+        return redirect(url_for("dashboard"))
+
     return render_template("loginpage.html")
 
 
@@ -119,37 +139,26 @@ def forgot_password():
     return render_template("forgot_password.html")
 
 
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
+
+
 @app.route("/dashboard")
+@login_required
 def dashboard():
     return render_template("dashboard.html")
 
 
 @app.route("/matches")
+@login_required
 def matches():
-    user_id = request.args.get("user_id", type=int)
     selected_degree_option_id = request.args.get("degree_option_id", type=int)
     degree_options = get_degree_options_by_category()
-
-    if user_id is None:
-        return render_template(
-            "matches.html",
-            current_user=None,
-            matches=[],
-            degree_options=degree_options,
-            selected_degree_option_id=None,
-            message="Invalid or missing user_id.",
-        )
-
-    requester = db.session.get(User, user_id)
-    if requester is None:
-        return render_template(
-            "matches.html",
-            current_user=None,
-            matches=[],
-            degree_options=degree_options,
-            selected_degree_option_id=selected_degree_option_id,
-            message="Invalid user_id.",
-        )
+    requester = current_user
 
     requester_availability = UserAvailability.query.filter_by(user_id=requester.id).all()
     if not requester_availability:
@@ -224,18 +233,12 @@ def matches():
 
 
 @app.route("/profile", methods=["GET", "POST"])
+@login_required
 def profile():
     degree_options = get_degree_options_by_category()
-    user_id = request.args.get("user_id", type=int)
-    if user_id is None:
-        user_id = request.form.get("user_id", default=1, type=int)
-
-    user = db.session.get(User, user_id)
+    user = current_user
 
     if request.method == "POST":
-        if user is None:
-            return redirect(url_for("profile", user_id=1))
-
         submitted_email = request.form.get("email", "").strip()
         submitted_degree = request.form.get("degree", "").strip()
         submitted_degree_option_id = request.form.get("degree_option_id", type=int)
@@ -358,20 +361,7 @@ def profile():
             )
 
         db.session.commit()
-        return redirect(url_for("profile", user_id=user.id))
-
-    if user is None:
-        return render_template(
-            "userpages.html",
-            current_user=None,
-            subjects=[],
-            availability_map={},
-            day_names=DAY_NAMES,
-            time_options=TIME_OPTIONS,
-            degree_options=degree_options,
-            profile_errors=[],
-            open_profile_modal=False,
-        )
+        return redirect(url_for("profile"))
 
     subject_codes = [item.subject_code for item in user.subjects]
     availability_map = {day: [] for day in DAY_NAMES}
@@ -408,25 +398,31 @@ def register():
         confirm_password = request.form.get("confirm_password", "").strip()
 
         if not first_name or not last_name or not email or not username or not major:
-            return "All required fields must be filled.", 400
+            flash("All required fields must be filled.", "error")
+            return render_template("signup.html", degree_options=degree_options)
 
         if not password or password != confirm_password:
-            return "Password and confirm password must match.", 400
+            flash("Password and confirm password must match.", "error")
+            return render_template("signup.html", degree_options=degree_options)
 
         selected_degree_option = None
         if degree_type != "other" and degree_option_id:
             selected_degree_option = DegreeOption.query.filter_by(id=degree_option_id, is_active=True).first()
             if selected_degree_option is None:
-                return "Selected degree is invalid", 400
+                flash("Selected degree is invalid.", "error")
+                return render_template("signup.html", degree_options=degree_options)
 
         if selected_degree_option is None and not degree:
-            return "Degree is required", 400
+            flash("Degree is required.", "error")
+            return render_template("signup.html", degree_options=degree_options)
 
         if User.query.filter_by(email=email).first():
-            return "Email already exists"
+            flash("Email already exists.", "error")
+            return render_template("signup.html", degree_options=degree_options)
 
         if User.query.filter_by(username=username).first():
-            return "Username already taken"
+            flash("Username is already taken.", "error")
+            return render_template("signup.html", degree_options=degree_options)
 
         new_user = User(
             first_name=first_name,
@@ -437,10 +433,12 @@ def register():
             degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
         )
+        new_user.set_password(password)
 
         db.session.add(new_user)
         db.session.commit()
 
+        flash("Registration successful. Please log in.", "success")
         return redirect(url_for("login"))
 
     return render_template("signup.html", degree_options=degree_options)
@@ -448,9 +446,10 @@ def register():
 
 
 @app.route("/notifications")
+@login_required
 def notifications():
-    user = User.query.get(1)
-    notifs = Notification.query.filter_by(user_id=1).order_by(Notification.created_at.desc()).all()
+    user = current_user
+    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
     return render_template(
         "notifications.html",
         current_user=user,
@@ -462,26 +461,27 @@ def notifications():
 
 
 @app.route("/notifications/read/<int:notif_id>", methods=["POST"])
+@login_required
 def mark_read(notif_id):
     n = Notification.query.get_or_404(notif_id)
+    if n.user_id != current_user.id:
+        abort(403)
     n.is_read = True
     db.session.commit()
     return "", 204
 
 
 @app.route("/notifications/read/all", methods=["POST"])
+@login_required
 def mark_all_read():
-    Notification.query.filter_by(user_id=1, is_read=False).update({"is_read": True})
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
     db.session.commit()
     return "", 204
 
 
 @app.route("/messages/<int:conversation_id>")
+@login_required
 def messages(conversation_id):
-    current_user = get_current_user()
-    if current_user is None:
-        return redirect(url_for("login"))
-
     membership = ConversationMember.query.filter_by(
         conversation_id=conversation_id,
         user_id=current_user.id,
@@ -507,12 +507,51 @@ def messages(conversation_id):
     )
 
 
-@app.route("/messages/start/<int:receiver_id>", methods=["POST"])
-def start_conversation(receiver_id):
-    current_user = get_current_user()
-    if current_user is None:
-        return redirect(url_for("login"))
+@app.route("/messages")
+@login_required
+def messages_inbox():
+    memberships = (
+        ConversationMember.query.filter_by(user_id=current_user.id)
+        .join(Conversation)
+        .order_by(Conversation.created_at.desc())
+        .all()
+    )
 
+    conversations = []
+    for membership in memberships:
+        conversation = membership.conversation
+        other_members = [member.user for member in conversation.members if member.user_id != current_user.id]
+        latest_message = (
+            Message.query.filter_by(conversation_id=conversation.id)
+            .order_by(Message.created_at.desc())
+            .first()
+        )
+
+        if conversation.title:
+            display_name = conversation.title
+        elif other_members:
+            display_name = ", ".join(member.username for member in other_members)
+        else:
+            display_name = "Direct Message"
+
+        conversations.append(
+            {
+                "conversation": conversation,
+                "display_name": display_name,
+                "latest_message": latest_message,
+            }
+        )
+
+    return render_template(
+        "messages_inbox.html",
+        current_user=current_user,
+        conversations=conversations,
+    )
+
+
+@app.route("/messages/start/<int:receiver_id>", methods=["POST"])
+@login_required
+def start_conversation(receiver_id):
     receiver = db.session.get(User, receiver_id)
     if receiver is None:
         return "User not found.", 404
