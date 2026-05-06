@@ -1,234 +1,177 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <title>User Profile</title>
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    />
-     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
 
-    <div class="app-shell">
-        <aside class="sidebar">
-            <h2><span class="logo-study">Study</span><span class="logo-sync">Sync</span></h2>
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>User Profile</h1>
+        <p>Manage your study details and availability</p>
+    </div>
+</div>
 
-            <div class="sidebar-section">
-                <div class="sidebar-title">Navigation</div>
-                <a href="{{ url_for('landing') }}">
-                    <i class="bi bi-house"></i> Home
-                </a>
-                <a href="{{ url_for('dashboard') }}">
-                    <i class="bi bi-grid"></i> Dashboard
-                </a>
-                <a href="{{ url_for('profile') }}" class="active">
-                    <i class="bi bi-person"></i> Profile
-                </a>
-                <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}">
-                    <i class="bi bi-people"></i> Matches
-                </a>
-                <a href="{{ url_for('notifications') }}">
-                    <i class="bi bi-bell"></i> Notifications
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-title">Settings</div>
-                <a href="#" id="editProfileBtn"><i class="bi bi-pencil"></i> Edit Profile</a>
-                <a href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
-            </div>
-
-            {% if current_user %}
-            <div class="sidebar-user-footer">
-                <div class="sidebar-user-avatar">
-                    {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
-                </div>
-                <div>
-                    <div class="sidebar-user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-                    <div class="sidebar-user-email">{{ current_user.email }}</div>
-                </div>
-            </div>
-            {% endif %}
-        </aside>
-
-        <main class="main-content">
-            <div class="page-header">
-                <div>
-                    <h1>User Profile</h1>
-                    <p>Manage your study details and availability</p>
-                </div>
-            </div>
-
-            <section class="profile-card">
-                <div class="avatar">
-                    {% if current_user %}
-                        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
-                    {% else %}
-                        SS
-                    {% endif %}
-                </div>
-                <div class="profile-name">
-                    {% if current_user %}
-                        {{ current_user.first_name }} {{ current_user.last_name }}
-                    {% else %}
-                        StudySync User
-                    {% endif %}
-                </div>
-                <div class="profile-subtext">
-                    {% if current_user %}
-                        {{ current_user.degree }} • {{ current_user.major }}
-                    {% else %}
-                        Degree and major not available
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <span class="tag">Quiet Study</span>
-                    <span class="tag">Exam Prep</span>
-                    <span class="tag">Library Sessions</span>
-                </div>
-
-                <p class="mb-0 text-light">Looking for people to study with for exams and weekly revision sessions.</p>
-            </section>
-
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <section class="info-card h-100">
-                        <div class="section-heading">Basic Info</div>
-                        <p><strong>Email:</strong> <span id="emailDisplay">{{ current_user.email if current_user else 'Not available' }}</span></p>
-                        <p><strong>Degree:</strong> <span id="uniDisplay">{{ current_user.degree if current_user else 'Not available' }}</span></p>
-                        <p><strong>Major:</strong> <span id="yearDisplay">{{ current_user.major if current_user else 'Not available' }}</span></p>
-                    </section>
-                </div>
-
-                <div class="col-lg-4">
-                    <section class="info-card h-100">
-                        <div class="section-heading">Subjects</div>
-                        <ul class="info-list">
-                            {% if subjects %}
-                                {% for subject in subjects %}
-                                    <li>{{ subject }}</li>
-                                {% endfor %}
-                            {% else %}
-                                <li>No subjects added yet</li>
-                            {% endif %}
-                        </ul>
-                    </section>
-                </div>
-
-                <div class="col-lg-4">
-                    <section class="info-card h-100">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="section-heading">Availability</div>
-                        </div>
-                        <ul class="info-list">
-                            {% for day in day_names %}
-                                {% if availability_map.get(day) %}
-                                    {% for slot in availability_map[day] %}
-                                        <li id="{{ day|lower }}Display{{ loop.index }}">{{ day }}: {{ slot[0] }} - {{ slot[1] }}</li>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if not availability_map.values() | select | list %}
-                                <li>No availability added yet</li>
-                            {% endif %}
-                        </ul>
-                    </section>
-                </div>
-
-                <div class="col-lg-6">
-                    <section class="info-card h-100">
-                        <div class="section-heading">Study Preferences</div>
-                        <div class="row g-3">
-                            <div class="col-sm-4">
-                                <div class="stats-box">
-                                    <div class="stats-label">Sessions / Week</div>
-                                    <div class="stats-value">{{ current_user.sessions_per_week if current_user and current_user.sessions_per_week else '-' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="stats-box">
-                                    <div class="stats-label">Preferred Group Size</div>
-                                    <div class="stats-value">{{ current_user.preferred_group_size if current_user and current_user.preferred_group_size else '-' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="stats-box">
-                                    <div class="stats-label">Mode</div>
-                                    <div class="stats-value">{{ current_user.study_mode if current_user and current_user.study_mode else '-' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
-                <div class="col-lg-6">
-                    <section class="info-card h-100">
-                        <p class="mb-0" id="aboutDisplay">{{ current_user.bio if current_user and current_user.bio else 'Add your study bio in Edit Profile.' }}</p>
-                    </section>
-                </div>
-            </div>
-        </main>
+<section class="profile-card">
+    <div class="avatar">
+        {% if current_user %}
+        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
+        {% else %}
+        SS
+        {% endif %}
+    </div>
+    <div class="profile-name">
+        {% if current_user %}
+        {{ current_user.first_name }} {{ current_user.last_name }}
+        {% else %}
+        StudySync User
+        {% endif %}
+    </div>
+    <div class="profile-subtext">
+        {% if current_user %}
+        {{ current_user.degree }} • {{ current_user.major }}
+        {% else %}
+        Degree and major not available
+        {% endif %}
     </div>
 
-    <div class="modal fade" id="profileModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
+    <div class="mb-3">
+        <span class="tag">Quiet Study</span>
+        <span class="tag">Exam Prep</span>
+        <span class="tag">Library Sessions</span>
+    </div>
 
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Profile</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <p class="mb-0 text-light">Looking for people to study with for exams and weekly revision sessions.</p>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="info-card h-100">
+            <div class="section-heading">Basic Info</div>
+            <p><strong>Email:</strong> <span id="emailDisplay">{{ current_user.email if current_user else
+                    'Not available' }}</span></p>
+            <p><strong>Degree:</strong> <span id="uniDisplay">{{ current_user.degree if current_user else
+                    'Not available' }}</span></p>
+            <p><strong>Major:</strong> <span id="yearDisplay">{{ current_user.major if current_user else
+                    'Not available' }}</span></p>
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <section class="info-card h-100">
+            <div class="section-heading">Subjects</div>
+            <ul class="info-list">
+                {% if subjects %}
+                {% for subject in subjects %}
+                <li>{{ subject }}</li>
+                {% endfor %}
+                {% else %}
+                <li>No subjects added yet</li>
+                {% endif %}
+            </ul>
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <section class="info-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="section-heading">Availability</div>
+            </div>
+            <ul class="info-list">
+                {% for day in day_names %}
+                {% if availability_map.get(day) %}
+                {% for slot in availability_map[day] %}
+                <li id="{{ day|lower }}Display{{ loop.index }}">{{ day }}: {{ slot[0] }} - {{ slot[1] }}
+                </li>
+                {% endfor %}
+                {% endif %}
+                {% endfor %}
+                {% if not availability_map.values() | select | list %}
+                <li>No availability added yet</li>
+                {% endif %}
+            </ul>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="info-card h-100">
+            <div class="section-heading">Study Preferences</div>
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="stats-box">
+                        <div class="stats-label">Sessions / Week</div>
+                        <div class="stats-value">{{ current_user.sessions_per_week if current_user and
+                            current_user.sessions_per_week else '-' }}</div>
+                    </div>
                 </div>
+                <div class="col-sm-4">
+                    <div class="stats-box">
+                        <div class="stats-label">Preferred Group Size</div>
+                        <div class="stats-value">{{ current_user.preferred_group_size if current_user and
+                            current_user.preferred_group_size else '-' }}</div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="stats-box">
+                        <div class="stats-label">Mode</div>
+                        <div class="stats-value">{{ current_user.study_mode if current_user and
+                            current_user.study_mode else '-' }}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 
-                <div class="modal-body">
-                    {% if profile_errors %}
-                        <div class="alert alert-danger" role="alert">
-                            <strong>Please fix these availability issues:</strong>
-                            <ul class="mb-0 mt-2">
-                                {% for error in profile_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
+    <div class="col-lg-6">
+        <section class="info-card h-100">
+            <p class="mb-0" id="aboutDisplay">{{ current_user.bio if current_user and current_user.bio else
+                'Add your study bio in Edit Profile.' }}</p>
+        </section>
+    </div>
+</div>
+{% endblock %}
 
-                    <form id="profileForm" method="POST" action="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}">
+{% block modals %}
+<div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                {% if profile_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <strong>Please fix these availability issues:</strong>
+                    <ul class="mb-0 mt-2">
+                        {% for error in profile_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <form id="profileForm" method="POST"
+                    action="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}">
                     <input type="hidden" name="user_id" value="{{ current_user.id if current_user else 1 }}">
 
                     <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active"
-                                    id="profile-tab"
-                                    data-bs-toggle="tab"
-                                    data-bs-target="#profile-pane"
-                                    type="button"
-                                    role="tab">
+                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab"
+                                data-bs-target="#profile-pane" type="button" role="tab">
                                 Profile
                             </button>
                         </li>
 
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link"
-                                    id="subjects-tab"
-                                    data-bs-toggle="tab"
-                                    data-bs-target="#subjects-pane"
-                                    type="button"
-                                    role="tab">
+                            <button class="nav-link" id="subjects-tab" data-bs-toggle="tab"
+                                data-bs-target="#subjects-pane" type="button" role="tab">
                                 Subjects
                             </button>
                         </li>
 
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link"
-                                    id="availability-tab"
-                                    data-bs-toggle="tab"
-                                    data-bs-target="#availability-pane"
-                                    type="button"
-                                    role="tab">
+                            <button class="nav-link" id="availability-tab" data-bs-toggle="tab"
+                                data-bs-target="#availability-pane" type="button" role="tab">
                                 Availability
                             </button>
                         </li>
@@ -239,211 +182,218 @@
                         <!-- Profile tab -->
                         <div class="tab-pane fade show active" id="profile-pane" role="tabpanel">
                             <label for="emailInput" class="form-label">Email</label>
-                            <input id="emailInput" name="email" class="form-control mb-3" placeholder="Email" value="{{ current_user.email if current_user else '' }}">
+                            <input id="emailInput" name="email" class="form-control mb-3" placeholder="Email"
+                                value="{{ current_user.email if current_user else '' }}">
 
                             <label for="degreeTypeInput" class="form-label">Degree Type</label>
-                            <select
-                                id="degreeTypeInput"
-                                name="degree_type"
-                                class="form-select mb-3"
+                            <select id="degreeTypeInput" name="degree_type" class="form-select mb-3"
                                 data-current-degree-type="{{ current_user.degree_option.category.key if current_user and current_user.degree_option else '' }}"
-                                onchange="updateProfileDegreeOptions()"
-                            >
-                                <option value="" disabled {% if not current_user or not current_user.degree_option %}selected{% endif %}>Select degree type</option>
+                                onchange="updateProfileDegreeOptions()">
+                                <option value="" disabled {% if not current_user or not current_user.degree_option
+                                    %}selected{% endif %}>Select degree type</option>
                                 <option value="bachelors">Bachelor's degree</option>
                                 <option value="honours">Honours</option>
                                 <option value="combined_bachelors">Combined Bachelor's + Bachelor's</option>
                                 <option value="combined_masters">Combined Bachelor's + Master's</option>
-                                <option value="other" {% if current_user and not current_user.degree_option and current_user.degree %}selected{% endif %}>Other</option>
+                                <option value="other" {% if current_user and not current_user.degree_option and
+                                    current_user.degree %}selected{% endif %}>Other</option>
                             </select>
 
                             <label for="degreeOptionInput" class="form-label">Degree</label>
-                            <select
-                                id="degreeOptionInput"
-                                name="degree_option_id"
-                                class="form-select mb-3"
+                            <select id="degreeOptionInput" name="degree_option_id" class="form-select mb-3"
                                 data-current-degree-id="{{ current_user.degree_option_id if current_user and current_user.degree_option_id else '' }}"
-                                style="display: {% if current_user and not current_user.degree_option_id and current_user.degree %}none{% else %}block{% endif %};"
-                            >
+                                style="display: {% if current_user and not current_user.degree_option_id and current_user.degree %}none{% else %}block{% endif %};">
                                 <option value="" disabled selected hidden>Select your degree</option>
                             </select>
 
-                            <input
-                                id="customDegreeInput"
-                                name="degree"
-                                class="form-control mb-3"
-                                placeholder="Degree"
+                            <input id="customDegreeInput" name="degree" class="form-control mb-3" placeholder="Degree"
                                 value="{{ current_user.degree if current_user and not current_user.degree_option_id else '' }}"
-                                style="display: {% if current_user and not current_user.degree_option_id and current_user.degree %}block{% else %}none{% endif %};"
-                            >
+                                style="display: {% if current_user and not current_user.degree_option_id and current_user.degree %}block{% else %}none{% endif %};">
 
                             <label for="yearInput" class="form-label">Major</label>
-                            <input id="yearInput" name="major" class="form-control mb-3" placeholder="Major" value="{{ current_user.major if current_user else '' }}">
+                            <input id="yearInput" name="major" class="form-control mb-3" placeholder="Major"
+                                value="{{ current_user.major if current_user else '' }}">
 
                             <label for="sessionsInput" class="form-label">Sessions / Week</label>
-                            <input id="sessionsInput" name="sessions_per_week" class="form-control mb-3" type="number" min="0" placeholder="Sessions / Week" value="{{ current_user.sessions_per_week if current_user and current_user.sessions_per_week else '' }}">
+                            <input id="sessionsInput" name="sessions_per_week" class="form-control mb-3" type="number"
+                                min="0" placeholder="Sessions / Week"
+                                value="{{ current_user.sessions_per_week if current_user and current_user.sessions_per_week else '' }}">
 
                             <label for="groupSizeInput" class="form-label">Preferred Group Size</label>
-                            <input id="groupSizeInput" name="preferred_group_size" class="form-control mb-3" placeholder="e.g. 2-4" value="{{ current_user.preferred_group_size if current_user and current_user.preferred_group_size else '' }}">
+                            <input id="groupSizeInput" name="preferred_group_size" class="form-control mb-3"
+                                placeholder="e.g. 2-4"
+                                value="{{ current_user.preferred_group_size if current_user and current_user.preferred_group_size else '' }}">
 
                             <label for="studyModeInput" class="form-label">Study Mode</label>
-                            <input id="studyModeInput" name="study_mode" class="form-control mb-3" placeholder="e.g. In Person / Online" value="{{ current_user.study_mode if current_user and current_user.study_mode else '' }}">
+                            <input id="studyModeInput" name="study_mode" class="form-control mb-3"
+                                placeholder="e.g. In Person / Online"
+                                value="{{ current_user.study_mode if current_user and current_user.study_mode else '' }}">
 
                             <label for="aboutInput" class="form-label">About</label>
-                            <textarea id="aboutInput" name="bio" class="form-control" rows="4" placeholder="About">{{ current_user.bio if current_user and current_user.bio else '' }}</textarea>
+                            <textarea id="aboutInput" name="bio" class="form-control" rows="4"
+                                placeholder="About">{{ current_user.bio if current_user and current_user.bio else '' }}</textarea>
                         </div>
 
                         <!-- Subjects tab -->
                         <div class="tab-pane fade" id="subjects-pane" role="tabpanel">
                             <label for="subject1Input" class="form-label">Subject 1</label>
-                            <input id="subject1Input" name="subject1" class="form-control mb-3" placeholder="Subject 1" value="{{ subjects[0] if subjects|length > 0 else '' }}">
+                            <input id="subject1Input" name="subject1" class="form-control mb-3" placeholder="Subject 1"
+                                value="{{ subjects[0] if subjects|length > 0 else '' }}">
 
                             <label for="subject2Input" class="form-label">Subject 2</label>
-                            <input id="subject2Input" name="subject2" class="form-control mb-3" placeholder="Subject 2" value="{{ subjects[1] if subjects|length > 1 else '' }}">
+                            <input id="subject2Input" name="subject2" class="form-control mb-3" placeholder="Subject 2"
+                                value="{{ subjects[1] if subjects|length > 1 else '' }}">
 
                             <label for="subject3Input" class="form-label">Subject 3</label>
-                            <input id="subject3Input" name="subject3" class="form-control" placeholder="Subject 3" value="{{ subjects[2] if subjects|length > 2 else '' }}">
+                            <input id="subject3Input" name="subject3" class="form-control" placeholder="Subject 3"
+                                value="{{ subjects[2] if subjects|length > 2 else '' }}">
                         </div>
 
                         <!-- Availability tab -->
                         <div class="tab-pane fade" id="availability-pane" role="tabpanel">
                             {% for day in day_names %}
-                                {% set day_key = day|lower %}
-                                <div class="mb-3" data-day="{{ day_key }}">
-                                    <label class="form-label">{{ day }}</label>
-                                    <div class="availability-slots" id="{{ day_key }}Slots">
-                                        {% if availability_map.get(day) %}
-                                            {% for slot in availability_map[day] %}
-                                                <div class="row g-2 mb-2 availability-row">
-                                                    <div class="col">
-                                                        <select name="{{ day_key }}_start" class="form-select">
-                                                            <option value="">Unavailable</option>
-                                                            {% for time in time_options %}
-                                                                <option value="{{ time }}" {% if slot[0] == time %}selected{% endif %}>{{ time }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <div class="col">
-                                                        <select name="{{ day_key }}_end" class="form-select">
-                                                            <option value="">Unavailable</option>
-                                                            {% for time in time_options %}
-                                                                <option value="{{ time }}" {% if slot[1] == time %}selected{% endif %}>{{ time }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-auto d-flex align-items-center">
-                                                        <button type="button" class="btn btn-outline-light btn-sm remove-slot">Remove</button>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
-                                        {% else %}
-                                            <div class="row g-2 mb-2 availability-row">
-                                                <div class="col">
-                                                    <select name="{{ day_key }}_start" class="form-select">
-                                                        <option value="">Unavailable</option>
-                                                        {% for time in time_options %}
-                                                            <option value="{{ time }}">{{ time }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <div class="col">
-                                                    <select name="{{ day_key }}_end" class="form-select">
-                                                        <option value="">Unavailable</option>
-                                                        {% for time in time_options %}
-                                                            <option value="{{ time }}">{{ time }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <div class="col-auto d-flex align-items-center">
-                                                    <button type="button" class="btn btn-outline-light btn-sm remove-slot">Remove</button>
-                                                </div>
-                                            </div>
-                                        {% endif %}
+                            {% set day_key = day|lower %}
+                            <div class="mb-3" data-day="{{ day_key }}">
+                                <label class="form-label">{{ day }}</label>
+                                <div class="availability-slots" id="{{ day_key }}Slots">
+                                    {% if availability_map.get(day) %}
+                                    {% for slot in availability_map[day] %}
+                                    <div class="row g-2 mb-2 availability-row">
+                                        <div class="col">
+                                            <select name="{{ day_key }}_start" class="form-select">
+                                                <option value="">Unavailable</option>
+                                                {% for time in time_options %}
+                                                <option value="{{ time }}" {% if slot[0]==time %}selected{% endif %}>{{
+                                                    time }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <select name="{{ day_key }}_end" class="form-select">
+                                                <option value="">Unavailable</option>
+                                                {% for time in time_options %}
+                                                <option value="{{ time }}" {% if slot[1]==time %}selected{% endif %}>{{
+                                                    time }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-auto d-flex align-items-center">
+                                            <button type="button"
+                                                class="btn btn-outline-light btn-sm remove-slot">Remove</button>
+                                        </div>
                                     </div>
-                                    <button type="button" class="btn btn-outline-info btn-sm add-slot" data-day="{{ day_key }}">Add time slot</button>
+                                    {% endfor %}
+                                    {% else %}
+                                    <div class="row g-2 mb-2 availability-row">
+                                        <div class="col">
+                                            <select name="{{ day_key }}_start" class="form-select">
+                                                <option value="">Unavailable</option>
+                                                {% for time in time_options %}
+                                                <option value="{{ time }}">{{ time }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <select name="{{ day_key }}_end" class="form-select">
+                                                <option value="">Unavailable</option>
+                                                {% for time in time_options %}
+                                                <option value="{{ time }}">{{ time }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-auto d-flex align-items-center">
+                                            <button type="button"
+                                                class="btn btn-outline-light btn-sm remove-slot">Remove</button>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
+                                <button type="button" class="btn btn-outline-info btn-sm add-slot"
+                                    data-day="{{ day_key }}">Add time slot</button>
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="profileForm" class="btn btn-primary">Save</button>
-                </div>
-
+                </form>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="profileForm" class="btn btn-primary">Save</button>
+            </div>
+
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const editBtn = document.getElementById("editProfileBtn");
-        const degreeOptions = {{ degree_options | tojson }};
+{% block scripts %}
+<script>
+    const editBtn = document.getElementById("editProfileBtn");
+    const degreeOptions = {{ degree_options | tojson }};
 
-        editBtn.addEventListener("click", function () {
-            const modal = new bootstrap.Modal(document.getElementById("profileModal"));
-            modal.show();
+    editBtn.addEventListener("click", function () {
+        const modal = new bootstrap.Modal(document.getElementById("profileModal"));
+        modal.show();
+    });
+
+    function updateProfileDegreeOptions() {
+        const degreeType = document.getElementById("degreeTypeInput");
+        const degreeSelect = document.getElementById("degreeOptionInput");
+        const customInput = document.getElementById("customDegreeInput");
+        const selectedType = degreeType.value;
+
+        degreeSelect.innerHTML = '<option value="" disabled selected hidden>Select your degree</option>';
+        degreeSelect.disabled = false;
+
+        if (selectedType === "other") {
+            degreeSelect.disabled = true;
+            degreeSelect.style.display = "none";
+            customInput.style.display = "block";
+            customInput.required = true;
+            return;
+        }
+
+        degreeSelect.style.display = "block";
+        customInput.style.display = "none";
+        customInput.required = false;
+
+        (degreeOptions[selectedType] || []).forEach(function (degree) {
+            const option = document.createElement("option");
+            option.value = degree.id;
+            option.textContent = degree.name;
+            degreeSelect.appendChild(option);
         });
 
-        function updateProfileDegreeOptions() {
-            const degreeType = document.getElementById("degreeTypeInput");
-            const degreeSelect = document.getElementById("degreeOptionInput");
-            const customInput = document.getElementById("customDegreeInput");
-            const selectedType = degreeType.value;
-
-            degreeSelect.innerHTML = '<option value="" disabled selected hidden>Select your degree</option>';
-            degreeSelect.disabled = false;
-
-            if (selectedType === "other") {
-                degreeSelect.disabled = true;
-                degreeSelect.style.display = "none";
-                customInput.style.display = "block";
-                customInput.required = true;
-                return;
-            }
-
-            degreeSelect.style.display = "block";
-            customInput.style.display = "none";
-            customInput.required = false;
-
-            (degreeOptions[selectedType] || []).forEach(function(degree) {
-                const option = document.createElement("option");
-                option.value = degree.id;
-                option.textContent = degree.name;
-                degreeSelect.appendChild(option);
-            });
-
-            const currentDegreeId = degreeSelect.dataset.currentDegreeId;
-            if (currentDegreeId) {
-                degreeSelect.value = currentDegreeId;
-            }
+        const currentDegreeId = degreeSelect.dataset.currentDegreeId;
+        if (currentDegreeId) {
+            degreeSelect.value = currentDegreeId;
         }
+    }
 
-        const initialDegreeType = document.getElementById("degreeTypeInput").dataset.currentDegreeType;
-        if (initialDegreeType) {
-            document.getElementById("degreeTypeInput").value = initialDegreeType;
-        }
+    const initialDegreeType = document.getElementById("degreeTypeInput").dataset.currentDegreeType;
+    if (initialDegreeType) {
+        document.getElementById("degreeTypeInput").value = initialDegreeType;
+    }
 
-        updateProfileDegreeOptions();
+    updateProfileDegreeOptions();
 
-        {% if open_profile_modal %}
-            const profileModal = new bootstrap.Modal(document.getElementById("profileModal"));
-            profileModal.show();
-        {% endif %}
+    {% if open_profile_modal %}
+    const profileModal = new bootstrap.Modal(document.getElementById("profileModal"));
+    profileModal.show();
+    {% endif %}
 
-        function buildAvailabilityRow(dayKey) {
-            const row = document.createElement("div");
-            row.className = "row g-2 mb-2 availability-row";
+    function buildAvailabilityRow(dayKey) {
+        const row = document.createElement("div");
+        row.className = "row g-2 mb-2 availability-row";
 
-            const timeOptions = `
+        const timeOptions = `
                 <option value="">Unavailable</option>
                 {% for time in time_options %}
                     <option value="{{ time }}">{{ time }}</option>
                 {% endfor %}
             `;
 
-            row.innerHTML = `
+        row.innerHTML = `
                 <div class="col">
                     <select name="${dayKey}_start" class="form-select">${timeOptions}</select>
                 </div>
@@ -454,34 +404,33 @@
                     <button type="button" class="btn btn-outline-light btn-sm remove-slot">Remove</button>
                 </div>
             `;
-            return row;
+        return row;
+    }
+
+    document.querySelectorAll(".add-slot").forEach((button) => {
+        button.addEventListener("click", function () {
+            const dayKey = this.dataset.day;
+            const container = document.getElementById(`${dayKey}Slots`);
+            container.appendChild(buildAvailabilityRow(dayKey));
+        });
+    });
+
+    document.getElementById("availability-pane").addEventListener("click", function (event) {
+        if (!event.target.classList.contains("remove-slot")) {
+            return;
         }
 
-        document.querySelectorAll(".add-slot").forEach((button) => {
-            button.addEventListener("click", function () {
-                const dayKey = this.dataset.day;
-                const container = document.getElementById(`${dayKey}Slots`);
-                container.appendChild(buildAvailabilityRow(dayKey));
-            });
-        });
+        const dayContainer = event.target.closest("[data-day]");
+        const row = event.target.closest(".availability-row");
+        const slotRows = dayContainer.querySelectorAll(".availability-row");
 
-        document.getElementById("availability-pane").addEventListener("click", function (event) {
-            if (!event.target.classList.contains("remove-slot")) {
-                return;
-            }
+        if (slotRows.length === 1) {
+            row.querySelector(`select[name$="_start"]`).value = "";
+            row.querySelector(`select[name$="_end"]`).value = "";
+            return;
+        }
 
-            const dayContainer = event.target.closest("[data-day]");
-            const row = event.target.closest(".availability-row");
-            const slotRows = dayContainer.querySelectorAll(".availability-row");
-
-            if (slotRows.length === 1) {
-                row.querySelector(`select[name$="_start"]`).value = "";
-                row.querySelector(`select[name$="_end"]`).value = "";
-                return;
-            }
-
-            row.remove();
-        });
+        row.remove();
+    });
 </script>
-</body>
-</html>
+{% endblock %}

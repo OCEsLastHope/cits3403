@@ -1,81 +1,153 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudySync</title>
-
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudySync | Made for UWA Students</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
-<body>
-  <main class="landing-page">
-    <nav class="landing-nav">
-      <h2>StudySync</h2>
+<body class="landing-page">
+    <header class="landing-nav" aria-label="Main navigation">
+        <a class="landing-logo" href="{{ url_for('landing') }}">
+            Study<span>Sync</span>
+        </a>
 
-      <div class="landing-links">
-        <a href="{{ url_for('login') }}">Login</a>
-      </div>
-    </nav>
+        <nav class="landing-actions" aria-label="Account actions">
+            <a class="landing-login" href="{{ url_for('login') }}">Login</a>
+            <a class="landing-signup" href="{{ url_for('register') }}">Sign up</a>
+        </nav>
+    </header>
 
-    <section class="landing-hero">
-      <div class="landing-copy">
-        <p class="landing-tag">Study group matching for UWA students</p>
+    <main>
+        <section class="landing-hero" aria-labelledby="landing-title">
+            <div class="landing-copy">
+                <p class="landing-kicker">Made for UWA students</p>
 
-        <h1>Find people studying the same units as you.</h1>
+                <h1 id="landing-title">
+                    Stop studying alone.
+                    <span>Start achieving together.</span>
+                </h1>
 
-        <p class="landing-text">
-          StudySync helps students find study partners, join group sessions,
-          organise meetings, and keep track of upcoming revision plans.
-        </p>
+                <p class="landing-text">
+                    StudySync helps UWA students find study partners by matching unit codes,
+                    weekly availability, preferred study mode, and group size.
+                </p>
 
-        <div class="landing-actions">
-          <a href="{{ url_for('dashboard') }}" class="custom-btn">Get started</a>
-          <a href="{{ url_for('profile') }}" class="custom-btn secondary">View profile</a>
-        </div>
-      </div>
+                <div class="landing-cta-group" aria-label="Create your study group">
+                    <a class="primary-cta" href="{{ url_for('register') }}">Create my study group</a>
+                </div>
 
-      <div class="landing-card">
-        <h3>Today’s study options</h3>
+                <ul class="unit-chip-list" aria-label="Example matching filters">
+                    <li>CITS3403</li>
+                    <li>CITS1402</li>
+                    <li>STAT1520</li>
+                    <li>Online</li>
+                    <li>Campus</li>
+                    <li>Small groups</li>
+                </ul>
+            </div>
 
-        <div class="landing-mini-card">
-          <strong>CITS1402 Revision</strong>
-          <span>10:00 AM · Reid Library</span>
-        </div>
+            <section class="unit-stack-preview" aria-label="Unit matching preview">
+                <div class="unit-orbit" aria-hidden="true">
+                    <span class="orbit-line orbit-line-one"></span>
+                    <span class="orbit-line orbit-line-two"></span>
+                </div>
 
-        <div class="landing-mini-card">
-          <strong>Database Practice</strong>
-          <span>2:00 PM · Online</span>
-        </div>
+                <article class="unit-card unit-card-side unit-card-left">
+                    <div class="unit-card-top">
+                        <span class="unit-type">Core unit</span>
+                        <span class="unit-star" aria-hidden="true">★</span>
+                    </div>
 
-        <div class="landing-mini-card">
-          <strong>Flask Project Help</strong>
-          <span>4:30 PM · EZONE</span>
-        </div>
-      </div>
-    </section>
+                    <h2>CITS1402</h2>
+                    <p>Database Systems</p>
 
-    <section class="landing-features">
-      <div class="feature-card">
-        <h4>Find study partners</h4>
-        <p>Match with students doing the same units or similar topics.</p>
-      </div>
+                    <ul class="unit-card-tags">
+                        <li>Revision</li>
+                        <li>Theory</li>
+                    </ul>
 
-      <div class="feature-card">
-        <h4>Create groups</h4>
-        <p>Set up study sessions with a subject, time, location, and members.</p>
-      </div>
+                    <footer class="unit-card-footer">
+                        <span>Campus</span>
+                        <span>In-person</span>
+                    </footer>
+                </article>
 
-      <div class="feature-card">
-        <h4>Track meetings</h4>
-        <p>View your upcoming sessions from one dashboard.</p>
-      </div>
-    </section>
-  </main>
+                <article class="unit-card unit-card-main">
+                    <div class="unit-card-top">
+                        <span class="unit-type">Core unit</span>
+                        <span class="unit-star" aria-hidden="true">★</span>
+                    </div>
+
+                    <h2>CITS3403</h2>
+                    <p>Agile Web Development</p>
+
+                    <ul class="unit-card-tags">
+                        <li>Project</li>
+                        <li>In-demand</li>
+                    </ul>
+
+                    <footer class="unit-card-footer">
+                        <span>Campus</span>
+                        <span>Small groups</span>
+                    </footer>
+
+                    <a class="unit-card-action" href="{{ url_for('register') }}" aria-label="Create a study group for CITS3403">
+                        →
+                    </a>
+                </article>
+
+                <article class="unit-card unit-card-side unit-card-right">
+                    <div class="unit-card-top">
+                        <span class="unit-type">Elective</span>
+                        <span class="unit-star" aria-hidden="true">★</span>
+                    </div>
+
+                    <h2>STAT1520</h2>
+                    <p>Statistical Methods</p>
+
+                    <ul class="unit-card-tags">
+                        <li>Revision</li>
+                        <li>Analysis</li>
+                    </ul>
+
+                    <footer class="unit-card-footer">
+                        <span>Online</span>
+                        <span>Small groups</span>
+                    </footer>
+                </article>
+
+                <div class="unit-stack-links" aria-label="StudySync benefits">
+                    <span>Find students</span>
+                    <span>Match by units</span>
+                    <span>Study together</span>
+                </div>
+            </section>
+        </section>
+
+        <section class="landing-feature-grid" aria-label="StudySync features">
+            <article class="landing-feature-card">
+                <span class="feature-mark" aria-hidden="true">01</span>
+                <h2>Match by unit</h2>
+                <p>Find students taking the same or related UWA units.</p>
+            </article>
+
+            <article class="landing-feature-card">
+                <span class="feature-mark" aria-hidden="true">02</span>
+                <h2>Compare availability</h2>
+                <p>See who is free at similar times before forming a group.</p>
+            </article>
+
+            <article class="landing-feature-card">
+                <span class="feature-mark" aria-hidden="true">03</span>
+                <h2>Start a study chat</h2>
+                <p>Coordinate sessions, project work, and revision plans in one place.</p>
+            </article>
+        </section>
+    </main>
 </body>
 </html>
+
+
+
