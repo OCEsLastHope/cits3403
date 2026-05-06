@@ -12,8 +12,10 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+
 app = Flask(__name__)
 app.config.from_object(Config)
+
 db.init_app(app)
 migrate.init_app(app, db)
 login_manager.init_app(app)
@@ -32,22 +34,14 @@ def load_user(user_id):
         return None
 
 
-
 def ensure_test_data():
     from .database import DegreeCategory, DegreeOption, Notification, User
 
     existing_tables = set(inspect(db.engine).get_table_names())
     required_tables = {"user", "notification", "degree_category", "degree_option"}
+
     if not required_tables.issubset(existing_tables):
         return
-
-    user_columns = {column["name"] for column in inspect(db.engine).get_columns("user")}
-    if "password_hash" not in user_columns:
-        return
-    
-    engineering_degree = DegreeOption.query.filter(
-        DegreeOption.name.ilike("%Bachelor of Engineering%")
-    ).first()
 
     degree_seed = {
         "bachelors": {
@@ -121,94 +115,117 @@ def ensure_test_data():
             ],
         },
         "combined_bachelors": {
-    "label": "Combined Bachelor's + Bachelor's",
-    "options": [
-        "Bachelor of Agribusiness and Bachelor of Science [CB001]",
-        "Bachelor of Agricultural Science and Bachelor of Arts [CB009]",
-        "Bachelor of Agricultural Science and Bachelor of Commerce [CB010]",
-        "Bachelor of Agricultural Science and Bachelor of Science [CB003]",
-        "Bachelor of Art History and Curatorial Studies and Bachelor of Arts [CB049]",
-        "Bachelor of Art History and Curatorial Studies and Bachelor of Commerce [CB052]",
-        "Bachelor of Criminology and Criminal Justice and Bachelor of Arts [CB047]",
-        "Bachelor of Criminology and Criminal Justice and Bachelor of Science [CB053]",
-        "Bachelor of Economics / Bachelor of Commerce [CB020]",
-        "Bachelor of Engineering (Honours) and Bachelor of Modern Languages [CB030]",
-        "Bachelor of Engineering (Honours)/ Bachelor of Arts [CB034]",
-        "Bachelor of Engineering (Honours)/ Bachelor of Commerce [CB006]",
-        "Bachelor of Engineering (Honours)/ Bachelor of Philosophy (Honours) [CB014]",
-        "Bachelor of Engineering (Honours)/ Bachelor of Science [CB004]",
-        "Bachelor of Environmental Science and Bachelor of Arts [CB008]",
-        "Bachelor of Environmental Science and Bachelor of Commerce [CB007]",
-        "Bachelor of Environmental Science and Bachelor of Science [CB002]",
-        "Bachelor of Human Rights and Bachelor of Arts [CB022]",
-        "Bachelor of Human Rights and Bachelor of Commerce [CB023]",
-        "Bachelor of International Relations and Bachelor of Arts [CB046]",
-        "Bachelor of International Relations and Bachelor of Commerce [CB054]",
-        "Bachelor of Mathematics and Bachelor of Arts [CB044]",
-        "Bachelor of Media and Communication and Bachelor of Arts [CB021]",
-        "Bachelor of Media and Communication and Bachelor of Commerce [CB048]",
-        "Bachelor of Modern Languages and Bachelor of Arts [CB026]",
-        "Bachelor of Modern Languages and Bachelor of Biomedical Science [CB032]",
-        "Bachelor of Modern Languages and Bachelor of Business [CB028]",
-        "Bachelor of Modern Languages and Bachelor of Commerce [CB027]",
-        "Bachelor of Modern Languages and Bachelor of Science [CB029]",
-        "Bachelor of Music and Bachelor of Arts [CB038]",
-        "Bachelor of Music and Bachelor of Biomedical Science [CB042]",
-        "Bachelor of Music and Bachelor of Business [CB041]",
-        "Bachelor of Music and Bachelor of Science [CB039]",
-        "Bachelor of Philosophy (Honours)/Bachelor of Modern Languages [CB031]",
-        "Bachelor of Philosophy, Politics and Economics and Bachelor of Arts [CB012]",
-        "Bachelor of Philosophy, Politics and Economics and Bachelor of Commerce [CB017]",
-        "Bachelor of Psychology and Bachelor of Arts [CB011]",
-        "Bachelor of Psychology and Bachelor of Commerce [CB013]",
-        "Bachelor of Psychology and Bachelor of Science [CB043]",
-        "Bachelor of Social and Environmental Sustainability and Bachelor of Arts [CB045]",
-    ],
-},
-
-"combined_masters": {
-    "label": "Combined Bachelor's + Master's",
-    "options": [
-        "Bachelor of Biological Science and Master of Biotechnology [CM029]",
-        "Bachelor of Marine Science and Master of Environmental Science [CM011]",
-        "Bachelor of Sport and Exercise Sciences and Master of Public Health [CM017]",
-        "Bachelor of Agribusiness and Master of Agricultural Economics [CM014]",
-        "Bachelor of Agricultural Science and Master of Agricultural Science [CM013]",
-        "Bachelor of Biological Science and Master of Biological Science [CM005]",
-        "Bachelor of Earth Sciences and Master of Geoscience [CM009]",
-        "Bachelor of Earth Sciences and Master of Oceanography [CM012]",
-        "Bachelor of Economics and Master of Economics [CM002]",
-        "Bachelor of Environmental Science and Master of Environmental Science [CM008]",
-        "Bachelor of Geographical and Spatial Science and Master of Environmental Science [CM032]",
-        "Bachelor of Human Sciences (Pharmaceutical Health) and Doctor of Pharmacy [CM039]",
-        "Bachelor of Human Sciences and Master of Bioinformatics [CM021]",
-        "Bachelor of Human Sciences and Master of Biomedical Science [CM030]",
-        "Bachelor of Marine Science and Master of Marine Biology [CM010]",
-        "Bachelor of Marine Sciences and Master of Oceanography [CM038]",
-        "Bachelor of Molecular Sciences and Master of Biomedical Science [CM004]",
-        "Bachelor of Molecular Sciences and Master of Biotechnology [CM007]",
-        "Bachelor of Molecular Sciences and Master of Bioinformatics [CM024]",
-        "Bachelor of Science Frontier Physics and Master of Physics [CM015]",
-        "Bachelor of Science Frontier Physics and Master of Physics - Medical Physics [CM040]",
-        "Bachelor of Sport and Exercise Sciences and Master of Clinical Exercise Physiology [CM018]",
-        "Bachelor of Sport and Exercise Sciences and Master of Applied Human Performance Science [CM019]",
-    ],
-},
+            "label": "Combined Bachelor's + Bachelor's",
+            "options": [
+                "Bachelor of Agribusiness and Bachelor of Science [CB001]",
+                "Bachelor of Agricultural Science and Bachelor of Arts [CB009]",
+                "Bachelor of Agricultural Science and Bachelor of Commerce [CB010]",
+                "Bachelor of Agricultural Science and Bachelor of Science [CB003]",
+                "Bachelor of Art History and Curatorial Studies and Bachelor of Arts [CB049]",
+                "Bachelor of Art History and Curatorial Studies and Bachelor of Commerce [CB052]",
+                "Bachelor of Criminology and Criminal Justice and Bachelor of Arts [CB047]",
+                "Bachelor of Criminology and Criminal Justice and Bachelor of Science [CB053]",
+                "Bachelor of Economics / Bachelor of Commerce [CB020]",
+                "Bachelor of Engineering (Honours) and Bachelor of Modern Languages [CB030]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Arts [CB034]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Commerce [CB006]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Philosophy (Honours) [CB014]",
+                "Bachelor of Engineering (Honours)/ Bachelor of Science [CB004]",
+                "Bachelor of Environmental Science and Bachelor of Arts [CB008]",
+                "Bachelor of Environmental Science and Bachelor of Commerce [CB007]",
+                "Bachelor of Environmental Science and Bachelor of Science [CB002]",
+                "Bachelor of Human Rights and Bachelor of Arts [CB022]",
+                "Bachelor of Human Rights and Bachelor of Commerce [CB023]",
+                "Bachelor of International Relations and Bachelor of Arts [CB046]",
+                "Bachelor of International Relations and Bachelor of Commerce [CB054]",
+                "Bachelor of Mathematics and Bachelor of Arts [CB044]",
+                "Bachelor of Media and Communication and Bachelor of Arts [CB021]",
+                "Bachelor of Media and Communication and Bachelor of Commerce [CB048]",
+                "Bachelor of Modern Languages and Bachelor of Arts [CB026]",
+                "Bachelor of Modern Languages and Bachelor of Biomedical Science [CB032]",
+                "Bachelor of Modern Languages and Bachelor of Business [CB028]",
+                "Bachelor of Modern Languages and Bachelor of Commerce [CB027]",
+                "Bachelor of Modern Languages and Bachelor of Science [CB029]",
+                "Bachelor of Music and Bachelor of Arts [CB038]",
+                "Bachelor of Music and Bachelor of Biomedical Science [CB042]",
+                "Bachelor of Music and Bachelor of Business [CB041]",
+                "Bachelor of Music and Bachelor of Science [CB039]",
+                "Bachelor of Philosophy (Honours)/Bachelor of Modern Languages [CB031]",
+                "Bachelor of Philosophy, Politics and Economics and Bachelor of Arts [CB012]",
+                "Bachelor of Philosophy, Politics and Economics and Bachelor of Commerce [CB017]",
+                "Bachelor of Psychology and Bachelor of Arts [CB011]",
+                "Bachelor of Psychology and Bachelor of Commerce [CB013]",
+                "Bachelor of Psychology and Bachelor of Science [CB043]",
+                "Bachelor of Social and Environmental Sustainability and Bachelor of Arts [CB045]",
+            ],
+        },
+        "combined_masters": {
+            "label": "Combined Bachelor's + Master's",
+            "options": [
+                "Bachelor of Biological Science and Master of Biotechnology [CM029]",
+                "Bachelor of Marine Science and Master of Environmental Science [CM011]",
+                "Bachelor of Sport and Exercise Sciences and Master of Public Health [CM017]",
+                "Bachelor of Agribusiness and Master of Agricultural Economics [CM014]",
+                "Bachelor of Agricultural Science and Master of Agricultural Science [CM013]",
+                "Bachelor of Biological Science and Master of Biological Science [CM005]",
+                "Bachelor of Earth Sciences and Master of Geoscience [CM009]",
+                "Bachelor of Earth Sciences and Master of Oceanography [CM012]",
+                "Bachelor of Economics and Master of Economics [CM002]",
+                "Bachelor of Environmental Science and Master of Environmental Science [CM008]",
+                "Bachelor of Geographical and Spatial Science and Master of Environmental Science [CM032]",
+                "Bachelor of Human Sciences (Pharmaceutical Health) and Doctor of Pharmacy [CM039]",
+                "Bachelor of Human Sciences and Master of Bioinformatics [CM021]",
+                "Bachelor of Human Sciences and Master of Biomedical Science [CM030]",
+                "Bachelor of Marine Science and Master of Marine Biology [CM010]",
+                "Bachelor of Marine Sciences and Master of Oceanography [CM038]",
+                "Bachelor of Molecular Sciences and Master of Biomedical Science [CM004]",
+                "Bachelor of Molecular Sciences and Master of Biotechnology [CM007]",
+                "Bachelor of Molecular Sciences and Master of Bioinformatics [CM024]",
+                "Bachelor of Science Frontier Physics and Master of Physics [CM015]",
+                "Bachelor of Science Frontier Physics and Master of Physics - Medical Physics [CM040]",
+                "Bachelor of Sport and Exercise Sciences and Master of Clinical Exercise Physiology [CM018]",
+                "Bachelor of Sport and Exercise Sciences and Master of Applied Human Performance Science [CM019]",
+            ],
+        },
     }
 
+    # Seed degree categories and options first
     for key, payload in degree_seed.items():
         category = DegreeCategory.query.filter_by(key=key).first()
+
         if category is None:
             category = DegreeCategory(key=key, label=payload["label"])
             db.session.add(category)
             db.session.flush()
+        else:
+            category.label = payload["label"]
 
         for option_name in payload["options"]:
-            exists = DegreeOption.query.filter_by(category_id=category.id, name=option_name).first()
+            exists = DegreeOption.query.filter_by(
+                category_id=category.id,
+                name=option_name
+            ).first()
+
             if exists is None:
-                db.session.add(DegreeOption(category_id=category.id, name=option_name, is_active=True))
+                db.session.add(
+                    DegreeOption(
+                        category_id=category.id,
+                        name=option_name,
+                        is_active=True
+                    )
+                )
 
     db.session.commit()
+
+    # Only seed test users/notifications if the user table has password_hash
+    user_columns = {column["name"] for column in inspect(db.engine).get_columns("user")}
+
+    if "password_hash" not in user_columns:
+        return
+
+    engineering_degree = DegreeOption.query.filter(
+        DegreeOption.name.ilike("%Bachelor of Engineering%")
+    ).first()
 
     if User.query.count() == 0:
         test_user = User(
@@ -256,9 +273,11 @@ from . import routes
 
 with app.app_context():
     ensure_test_data()
-    
+
+
 if __name__ == "__main__":
     socketio.run(app, debug=True)
+    
     
     
     
