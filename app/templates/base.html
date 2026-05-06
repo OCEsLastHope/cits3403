@@ -28,7 +28,7 @@
                 <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}active{% endif %}">
                     <i class="bi bi-person"></i> Profile
                 </a>
-                <a href="#">
+                <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}" class="{% if request.endpoint == 'matches' %}active{% endif %}">
                     <i class="bi bi-people"></i> Matches
                 </a>
                 <a href="{{ url_for('notifications') }}"

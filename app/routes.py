@@ -9,6 +9,7 @@ from . import app, db, socketio
 from .database import (
     Conversation,
     ConversationMember,
+    DegreeOption,
     Message,
     Notification,
     User,
@@ -28,6 +29,21 @@ DAY_NAMES = [
     "Sunday",
 ]
 TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(6, 24)]
+
+
+def get_degree_options_by_category():
+    grouped = {"bachelors": [], "honours": [], "combined_bachelors": [], "combined_masters": []}
+    options = DegreeOption.query.filter_by(is_active=True).all()
+
+    for option in options:
+        category_key = option.category.key if option.category else None
+        if category_key in grouped:
+            grouped[category_key].append({"id": option.id, "name": option.name})
+
+    for key in grouped:
+        grouped[key].sort(key=lambda item: item["name"].lower())
+
+    return grouped
 
 def get_current_user():
     user_id = session.get("user_id")
@@ -91,8 +107,10 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        return redirect(url_for("dashboard"))
     return render_template("loginpage.html")
 
 
@@ -207,6 +225,7 @@ def matches():
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
+    degree_options = get_degree_options_by_category()
     user_id = request.args.get("user_id", type=int)
     if user_id is None:
         user_id = request.form.get("user_id", default=1, type=int)
@@ -219,6 +238,7 @@ def profile():
 
         submitted_email = request.form.get("email", "").strip()
         submitted_degree = request.form.get("degree", "").strip()
+        submitted_degree_option_id = request.form.get("degree_option_id", type=int)
         submitted_major = request.form.get("major", "").strip()
         submitted_bio = request.form.get("bio", "").strip()
         submitted_sessions_per_week = request.form.get("sessions_per_week", "").strip()
@@ -244,7 +264,13 @@ def profile():
             if existing_user and existing_user.id != user.id:
                 profile_errors.append("Email is already in use by another account.")
 
-        if not submitted_degree:
+        selected_degree_option = None
+        if submitted_degree_option_id:
+            selected_degree_option = DegreeOption.query.filter_by(id=submitted_degree_option_id, is_active=True).first()
+            if selected_degree_option is None:
+                profile_errors.append("Selected degree is invalid.")
+
+        if not selected_degree_option and not submitted_degree:
             profile_errors.append("Degree is required.")
         if not submitted_major:
             profile_errors.append("Major is required.")
@@ -297,12 +323,18 @@ def profile():
                 availability_map=submitted_availability_map,
                 day_names=DAY_NAMES,
                 time_options=TIME_OPTIONS,
+                degree_options=degree_options,
                 profile_errors=profile_errors + availability_errors,
                 open_profile_modal=True,
             )
 
         user.email = submitted_email
-        user.degree = submitted_degree
+        if selected_degree_option is not None:
+            user.degree_option_id = selected_degree_option.id
+            user.degree = selected_degree_option.name
+        else:
+            user.degree_option_id = None
+            user.degree = submitted_degree
         user.major = submitted_major
         user.bio = submitted_bio
         user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
@@ -336,6 +368,7 @@ def profile():
             availability_map={},
             day_names=DAY_NAMES,
             time_options=TIME_OPTIONS,
+            degree_options=degree_options,
             profile_errors=[],
             open_profile_modal=False,
         )
@@ -352,6 +385,7 @@ def profile():
         availability_map=availability_map,
         day_names=DAY_NAMES,
         time_options=TIME_OPTIONS,
+        degree_options=degree_options,
         profile_errors=[],
         open_profile_modal=False,
     )
@@ -359,89 +393,34 @@ def profile():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    degree_options = {
-        "bachelors": [
-            "Bachelor of Agribusiness [BP020]",
-            "Bachelor of Agricultural Science [BP019]",
-            "Bachelor of Art History and Curatorial Studies [BP070]",
-            "Bachelor of Arts [BP001]",
-            "Bachelor of Arts (Integrated Professional) [BW001]",
-            "Bachelor of Biological Science [BP025]",
-            "Bachelor of Biomedical Science [BP006]",
-            "Bachelor of Biomedicine (Specialised) [BP056]",
-            "Bachelor of Business [BP009]",
-            "Bachelor of Commerce [BP002]",
-            "Bachelor of Commerce (Integrated Professional) [BW002]",
-            "Bachelor of Criminology and Criminal Justice [BP050]",
-            "Bachelor of Earth Sciences [BP029]",
-            "Bachelor of Economics [BP013]",
-            "Bachelor of Environmental Design [BP011]",
-            "Bachelor of Environmental Science [BP022]",
-            "Bachelor of Geographical and Spatial Science [BP055]",
-            "Bachelor of Human Rights [BP034]",
-            "Bachelor of Human Sciences [BP031]",
-            "Bachelor of International Relations [BP058]",
-            "Bachelor of Letters [BP501]",
-            "Bachelor of Marine Science [BP023]",
-            "Bachelor of Mathematics [BP059]",
-            "Bachelor of Media and Communication [BP069]",
-            "Bachelor of Modern Languages [BP054]",
-            "Bachelor of Molecular Sciences [BP028]",
-            "Bachelor of Music [BP008]",
-            "Bachelor of Philosophy, Politics and Economics [BP012]",
-            "Bachelor of Psychological Studies [BP503]",
-            "Bachelor of Psychology [BP030]",
-            "Bachelor of Science [BP004]",
-            "Bachelor of Science (Integrated Professional) [BW004]",
-            "Bachelor of Science and Technology [BP502]",
-            "Bachelor of Social and Environmental Sustainability [BP062]",
-            "Bachelor of Sport and Exercise Sciences [BP026]"
-        ],
-        "honours": [
-            "Bachelor of Advanced Computer Science [Honours] [BH008]",
-            "Bachelor of Arts (Honours) [BH001]",
-            "Bachelor of Biological Science (Honours) [BH024]",
-            "Bachelor of Biomedical Science (Honours) [BH006]",
-            "Bachelor of Business (Honours) [BH021]",
-            "Bachelor of Commerce (Honours) [BH002]",
-            "Bachelor of Criminology and Criminal Justice (Honours) [BH018]",
-            "Bachelor of Earth Sciences (Honours) [BH026]",
-            "Bachelor of Economics (Honours) [BH013]",
-            "Bachelor of Education (Primary) (Honours) [BH020]",
-            "Bachelor of Engineering (Honours) [BH011]",
-            "Bachelor of Environmental Design (Honours) [BH040]",
-            "Bachelor of Human Rights Honours [BH019]",
-            "Bachelor of Landscape Architecture (Honours) [BH039]",
-            "Bachelor of Marine Science (Honours) [BH025]",
-            "Bachelor of Mathematics (Honours) [BH035]",
-            "Bachelor of Modern Languages Honours [BH016]",
-            "Bachelor of Music (Honours) [BH009]",
-            "Bachelor of Nursing (Honours) [BH028]",
-            "Bachelor of Philosophy (Honours) [BH005]",
-            "Bachelor of Philosophy, Politics, and Economics (Honours) [BH015]",
-            "Bachelor of Psychology (Honours) [BH014]",
-            "Bachelor of Science (Honours) [BH004]",
-            "Bachelor of Social Work (Honours) [BH017]",
-            "Bachelor of Sport and Exercise Sciences (Honours) [BH032]"
-        ],
-        "combined_bachelors": [
-            # paste your full combined_bachelors list here
-        ],
-        "combined_masters": [
-            # paste your full combined_masters list here
-        ]
-    }
+    degree_options = get_degree_options_by_category()
 
     if request.method == "POST":
         first_name = request.form.get("first_name", "").strip()
         last_name = request.form.get("last_name", "").strip()
         email = request.form.get("email", "").strip()
         username = request.form.get("username", "").strip()
+        degree_type = request.form.get("degree_type", "").strip()
+        degree_option_id = request.form.get("degree_option_id", type=int)
         degree = request.form.get("degree", "").strip()
         major = request.form.get("major", "").strip()
+        password = request.form.get("password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
 
-        if degree == "other":
-            degree = request.form.get("other_degree", "").strip()
+        if not first_name or not last_name or not email or not username or not major:
+            return "All required fields must be filled.", 400
+
+        if not password or password != confirm_password:
+            return "Password and confirm password must match.", 400
+
+        selected_degree_option = None
+        if degree_type != "other" and degree_option_id:
+            selected_degree_option = DegreeOption.query.filter_by(id=degree_option_id, is_active=True).first()
+            if selected_degree_option is None:
+                return "Selected degree is invalid", 400
+
+        if selected_degree_option is None and not degree:
+            return "Degree is required", 400
 
         if User.query.filter_by(email=email).first():
             return "Email already exists"
@@ -454,7 +433,8 @@ def register():
             last_name=last_name,
             email=email,
             username=username,
-            degree=degree,
+            degree=selected_degree_option.name if selected_degree_option else degree,
+            degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
         )
 
@@ -644,4 +624,3 @@ def handle_send_message(data):
         },
         room=f"conversation-{conversation_id}",
     )
-
