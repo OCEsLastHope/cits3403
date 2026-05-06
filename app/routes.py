@@ -171,7 +171,21 @@ def forgot_password():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    user = get_current_user()
+    if not user:
+        # Fallback for demo if no session is active
+        user = db.session.get(User, 1)
+
+    suggested_matches = []
+    if user:
+        # Get the top 3 matches for the dashboard preview
+        suggested_matches = find_matches(user.id)[:3]
+
+    return render_template(
+        "dashboard.html",
+        current_user=user,
+        suggested_matches=suggested_matches
+    )
 
 
 @app.route("/matches")
