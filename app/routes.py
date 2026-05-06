@@ -102,6 +102,56 @@ def build_overlap_summary(requester_availability, candidate_availability):
     return overlap_minutes_total, overlap_by_day
 
 
+def find_matches(user_id, selected_degree_option_id=None):
+    requester = db.session.get(User, user_id)
+    if not requester:
+        return []
+
+    requester_availability = UserAvailability.query.filter_by(user_id=requester.id).all()
+    if not requester_availability:
+        return []
+
+    requester_days = sorted({slot.day_of_week for slot in requester_availability})
+    candidate_query = (
+        User.query.join(UserAvailability, UserAvailability.user_id == User.id)
+        .filter(User.id != requester.id)
+        .filter(UserAvailability.day_of_week.in_(requester_days))
+    )
+
+    if selected_degree_option_id is not None:
+        degree_option = DegreeOption.query.filter_by(id=selected_degree_option_id, is_active=True).first()
+        if degree_option:
+            candidate_query = candidate_query.filter(
+                or_(
+                    User.degree_option_id == selected_degree_option_id,
+                    func.lower(func.trim(User.degree)) == degree_option.name.strip().lower(),
+                )
+            )
+
+    candidates = candidate_query.distinct().all()
+    match_results = []
+
+    for candidate in candidates:
+        candidate_availability = UserAvailability.query.filter_by(user_id=candidate.id).all()
+        if not candidate_availability:
+            continue
+
+        overlap_minutes_total, overlap_by_day = build_overlap_summary(requester_availability, candidate_availability)
+        if overlap_minutes_total <= 0:
+            continue
+
+        match_results.append(
+            {
+                "user": candidate,
+                "overlap_minutes_total": overlap_minutes_total,
+                "overlap_by_day": overlap_by_day,
+            }
+        )
+
+    match_results.sort(key=lambda item: item["overlap_minutes_total"], reverse=True)
+    return match_results
+
+
 @app.route("/")
 def landing():
     return render_template("landing.html")
@@ -150,7 +200,21 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    user = get_current_user()
+    if not user:
+        # Fallback for demo if no session is active
+        user = db.session.get(User, 1)
+
+    suggested_matches = []
+    if user:
+        # Get the top 3 matches for the dashboard preview
+        suggested_matches = find_matches(user.id)[:3]
+
+    return render_template(
+        "dashboard.html",
+        current_user=user,
+        suggested_matches=suggested_matches
+    )
 
 
 @app.route("/matches")
@@ -160,63 +224,23 @@ def matches():
     degree_options = get_degree_options_by_category()
     requester = current_user
 
-    requester_availability = UserAvailability.query.filter_by(user_id=requester.id).all()
-    if not requester_availability:
-        return render_template(
-            "matches.html",
-            current_user=requester,
-            matches=[],
-            degree_options=degree_options,
-            selected_degree_option_id=selected_degree_option_id,
-            message="Add your availability in Profile to find matches.",
-        )
+    match_results = find_matches(user_id, selected_degree_option_id)
 
-    requester_days = sorted({slot.day_of_week for slot in requester_availability})
-    candidate_query = (
-        User.query.join(UserAvailability, UserAvailability.user_id == User.id)
-        .filter(User.id != requester.id)
-        .filter(UserAvailability.day_of_week.in_(requester_days))
+    message = ""
+    if not match_results:
+        if not UserAvailability.query.filter_by(user_id=requester.id).first():
+            message = "Add your availability in Profile to find matches."
+        else:
+            message = "No matches found with overlapping availability."
+
+    return render_template(
+        "matches.html",
+        current_user=requester,
+        matches=match_results[:10],
+        degree_options=degree_options,
+        selected_degree_option_id=selected_degree_option_id,
+        message=message,
     )
-
-    if selected_degree_option_id is not None:
-        degree_option = DegreeOption.query.filter_by(id=selected_degree_option_id, is_active=True).first()
-        if degree_option is None:
-            return render_template(
-                "matches.html",
-                current_user=requester,
-                matches=[],
-                degree_options=degree_options,
-                selected_degree_option_id=None,
-                message="Selected degree filter is invalid.",
-            )
-        candidate_query = candidate_query.filter(
-            or_(
-                User.degree_option_id == selected_degree_option_id,
-                func.lower(func.trim(User.degree)) == degree_option.name.strip().lower(),
-            )
-        )
-
-    candidates = candidate_query.distinct().all()
-    match_results = []
-
-    for candidate in candidates:
-        candidate_availability = UserAvailability.query.filter_by(user_id=candidate.id).all()
-        if not candidate_availability:
-            continue
-
-        overlap_minutes_total, overlap_by_day = build_overlap_summary(requester_availability, candidate_availability)
-        if overlap_minutes_total <= 0:
-            continue
-
-        match_results.append(
-            {
-                "user": candidate,
-                "overlap_minutes_total": overlap_minutes_total,
-                "overlap_by_day": overlap_by_day,
-            }
-        )
-
-    match_results.sort(key=lambda item: item["overlap_minutes_total"], reverse=True)
 
     message = ""
     if not match_results:

@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>Dashboard</h1>
-    <p>Welcome back, username!</p>
+    <p>Welcome back, {{ current_user.first_name if current_user else 'User' }}!</p>
   </div>
 </div>
 
@@ -15,19 +15,36 @@
     <div class="row g-4">
       <div class="col-12">
         <div class="info-card">
-          <h3>Search for open study groups.</h3>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="info-card h-100 d-flex align-items-center justify-content-center" style="min-height: 200px">
-          <h4 class="m-0">Find people</h4>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="info-card h-100 d-flex align-items-center justify-content-center" style="min-height: 200px">
-          <h4 class="m-0">Create study group</h4>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="m-0">Suggested Partners</h3>
+            <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}" class="text-decoration-none" style="color: #8b5cf6; font-size: 14px;">View all →</a>
+          </div>
+          
+          {% if suggested_matches %}
+            <div class="row g-2">
+              {% for match in suggested_matches %}
+                <div class="col-md-4">
+                  <div class="p-2 rounded d-flex align-items-center gap-2 h-100" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle flex-shrink-0" 
+                         style="width: 32px; height: 32px; background: linear-gradient(135deg, #d66dff, #41d9ff); font-size: 12px;">
+                      {{ match.user.first_name[0] }}{{ match.user.last_name[0] }}
+                    </div>
+                    <div class="flex-grow-1 min-width-0">
+                      <div class="fw-bold text-truncate" style="font-size: 13px;">{{ match.user.username }}</div>
+                      <div class="text-light opacity-50 text-truncate" style="font-size: 11px;">{{ match.overlap_minutes_total // 60 }}h overlap</div>
+                    </div>
+                    <form action="{{ url_for('start_conversation', receiver_id=match.user.id) }}" method="POST">
+                      <button type="submit" class="p-0 border-0 bg-transparent text-light opacity-50 hover-opacity-100">
+                        <i class="bi bi-chat-dots"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-light opacity-50">No suggestions yet. <a href="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}" style="color: #8b5cf6;">Add your availability</a> to get matched!</p>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -38,7 +55,9 @@
       <h4 class="m-0 text-center">Mini<br />Calendar</h4>
     </div>
   </div>
+</div>
 
+<div class="row g-4 mt-2">
   <div class="col-12">
     <div class="info-card">
       <h4 class="mb-4">Upcoming meetings</h4>
