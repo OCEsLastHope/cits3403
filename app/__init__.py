@@ -2,15 +2,20 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
+from flask_socketio import SocketIO
+import secrets
 
 from config import Config
 
 db = SQLAlchemy()
 migrate = Migrate()
 app = Flask(__name__)
+app.config['SECRET_KEY'] = secrets.token_hex(32) 
 app.config.from_object(Config)
 db.init_app(app)
 migrate.init_app(app, db)
+socketio = SocketIO(app)
+
 
 
 def ensure_test_data():
@@ -160,3 +165,11 @@ from . import routes
 
 with app.app_context():
     ensure_test_data()
+    
+if __name__ == "__main__":
+    socketio.run(app, debug=True)
+    
+    
+    
+    
+    

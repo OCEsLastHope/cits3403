@@ -1,9 +1,20 @@
 import re
 
-from flask import redirect, render_template, request, url_for
+from flask import redirect, render_template, request, url_for, session
+from flask_socketio import emit, join_room
 
-from . import app, db
-from .database import DegreeCategory, DegreeOption, Notification, User, UserAvailability, UserSubject
+from . import app, db, socketio
+from .database import (
+    Conversation,
+    ConversationMember,
+    Message,
+    Notification,
+    User,
+    UserAvailability,
+    UserSubject,
+)
+
+
 
 DAY_NAMES = [
     "Monday",
@@ -16,18 +27,12 @@ DAY_NAMES = [
 ]
 TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(6, 24)]
 
+def get_current_user():
+    user_id = session.get("user_id")
+    if user_id is None:
+        return None
+    return db.session.get(User, user_id)
 
-def get_degree_options_by_category():
-    categories = DegreeCategory.query.order_by(DegreeCategory.id.asc()).all()
-    degree_options = {}
-    for category in categories:
-        options = (
-            DegreeOption.query.filter_by(category_id=category.id, is_active=True)
-            .order_by(DegreeOption.name.asc())
-            .all()
-        )
-        degree_options[category.key] = [{"id": option.id, "name": option.name} for option in options]
-    return degree_options
 
 
 @app.route("/")
@@ -63,11 +68,7 @@ def profile():
             return redirect(url_for("profile", user_id=1))
 
         submitted_email = request.form.get("email", "").strip()
-        submitted_degree_type = request.form.get("degree_type", "").strip()
-        submitted_degree_option_id_raw = request.form.get("degree_option_id", "").strip()
-        submitted_custom_degree = request.form.get("degree", "").strip()
-        submitted_degree = ""
-        submitted_degree_option_id = None
+        submitted_degree = request.form.get("degree", "").strip()
         submitted_major = request.form.get("major", "").strip()
         submitted_bio = request.form.get("bio", "").strip()
         submitted_sessions_per_week = request.form.get("sessions_per_week", "").strip()
@@ -92,18 +93,6 @@ def profile():
             existing_user = User.query.filter_by(email=submitted_email).first()
             if existing_user and existing_user.id != user.id:
                 profile_errors.append("Email is already in use by another account.")
-
-        if submitted_degree_type == "other":
-            submitted_degree = submitted_custom_degree
-            if not submitted_degree and user is not None:
-                submitted_degree = (user.degree or "").strip()
-            if submitted_degree:
-                submitted_degree_option_id = None
-        elif submitted_degree_option_id_raw.isdigit():
-            selected_option = DegreeOption.query.filter_by(id=int(submitted_degree_option_id_raw), is_active=True).first()
-            if selected_option:
-                submitted_degree_option_id = selected_option.id
-                submitted_degree = selected_option.name
 
         if not submitted_degree:
             profile_errors.append("Degree is required.")
@@ -158,14 +147,12 @@ def profile():
                 availability_map=submitted_availability_map,
                 day_names=DAY_NAMES,
                 time_options=TIME_OPTIONS,
-                degree_options=get_degree_options_by_category(),
                 profile_errors=profile_errors + availability_errors,
                 open_profile_modal=True,
             )
 
         user.email = submitted_email
         user.degree = submitted_degree
-        user.degree_option_id = submitted_degree_option_id
         user.major = submitted_major
         user.bio = submitted_bio
         user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
@@ -199,7 +186,6 @@ def profile():
             availability_map={},
             day_names=DAY_NAMES,
             time_options=TIME_OPTIONS,
-            degree_options=get_degree_options_by_category(),
             profile_errors=[],
             open_profile_modal=False,
         )
@@ -216,7 +202,6 @@ def profile():
         availability_map=availability_map,
         day_names=DAY_NAMES,
         time_options=TIME_OPTIONS,
-        degree_options=get_degree_options_by_category(),
         profile_errors=[],
         open_profile_modal=False,
     )
@@ -224,29 +209,89 @@ def profile():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    degree_options = get_degree_options_by_category()
+    degree_options = {
+        "bachelors": [
+            "Bachelor of Agribusiness [BP020]",
+            "Bachelor of Agricultural Science [BP019]",
+            "Bachelor of Art History and Curatorial Studies [BP070]",
+            "Bachelor of Arts [BP001]",
+            "Bachelor of Arts (Integrated Professional) [BW001]",
+            "Bachelor of Biological Science [BP025]",
+            "Bachelor of Biomedical Science [BP006]",
+            "Bachelor of Biomedicine (Specialised) [BP056]",
+            "Bachelor of Business [BP009]",
+            "Bachelor of Commerce [BP002]",
+            "Bachelor of Commerce (Integrated Professional) [BW002]",
+            "Bachelor of Criminology and Criminal Justice [BP050]",
+            "Bachelor of Earth Sciences [BP029]",
+            "Bachelor of Economics [BP013]",
+            "Bachelor of Environmental Design [BP011]",
+            "Bachelor of Environmental Science [BP022]",
+            "Bachelor of Geographical and Spatial Science [BP055]",
+            "Bachelor of Human Rights [BP034]",
+            "Bachelor of Human Sciences [BP031]",
+            "Bachelor of International Relations [BP058]",
+            "Bachelor of Letters [BP501]",
+            "Bachelor of Marine Science [BP023]",
+            "Bachelor of Mathematics [BP059]",
+            "Bachelor of Media and Communication [BP069]",
+            "Bachelor of Modern Languages [BP054]",
+            "Bachelor of Molecular Sciences [BP028]",
+            "Bachelor of Music [BP008]",
+            "Bachelor of Philosophy, Politics and Economics [BP012]",
+            "Bachelor of Psychological Studies [BP503]",
+            "Bachelor of Psychology [BP030]",
+            "Bachelor of Science [BP004]",
+            "Bachelor of Science (Integrated Professional) [BW004]",
+            "Bachelor of Science and Technology [BP502]",
+            "Bachelor of Social and Environmental Sustainability [BP062]",
+            "Bachelor of Sport and Exercise Sciences [BP026]"
+        ],
+        "honours": [
+            "Bachelor of Advanced Computer Science [Honours] [BH008]",
+            "Bachelor of Arts (Honours) [BH001]",
+            "Bachelor of Biological Science (Honours) [BH024]",
+            "Bachelor of Biomedical Science (Honours) [BH006]",
+            "Bachelor of Business (Honours) [BH021]",
+            "Bachelor of Commerce (Honours) [BH002]",
+            "Bachelor of Criminology and Criminal Justice (Honours) [BH018]",
+            "Bachelor of Earth Sciences (Honours) [BH026]",
+            "Bachelor of Economics (Honours) [BH013]",
+            "Bachelor of Education (Primary) (Honours) [BH020]",
+            "Bachelor of Engineering (Honours) [BH011]",
+            "Bachelor of Environmental Design (Honours) [BH040]",
+            "Bachelor of Human Rights Honours [BH019]",
+            "Bachelor of Landscape Architecture (Honours) [BH039]",
+            "Bachelor of Marine Science (Honours) [BH025]",
+            "Bachelor of Mathematics (Honours) [BH035]",
+            "Bachelor of Modern Languages Honours [BH016]",
+            "Bachelor of Music (Honours) [BH009]",
+            "Bachelor of Nursing (Honours) [BH028]",
+            "Bachelor of Philosophy (Honours) [BH005]",
+            "Bachelor of Philosophy, Politics, and Economics (Honours) [BH015]",
+            "Bachelor of Psychology (Honours) [BH014]",
+            "Bachelor of Science (Honours) [BH004]",
+            "Bachelor of Social Work (Honours) [BH017]",
+            "Bachelor of Sport and Exercise Sciences (Honours) [BH032]"
+        ],
+        "combined_bachelors": [
+            # paste your full combined_bachelors list here
+        ],
+        "combined_masters": [
+            # paste your full combined_masters list here
+        ]
+    }
 
     if request.method == "POST":
         first_name = request.form.get("first_name", "").strip()
         last_name = request.form.get("last_name", "").strip()
         email = request.form.get("email", "").strip()
         username = request.form.get("username", "").strip()
-        degree_type = request.form.get("degree_type", "").strip()
-        degree_option_id_raw = request.form.get("degree_option_id", "").strip()
-        degree = ""
-        degree_option_id = None
+        degree = request.form.get("degree", "").strip()
         major = request.form.get("major", "").strip()
 
-        if degree_type == "other":
-            degree = request.form.get("degree", "").strip()
-        elif degree_option_id_raw.isdigit():
-            degree_option = DegreeOption.query.filter_by(id=int(degree_option_id_raw), is_active=True).first()
-            if degree_option is not None:
-                degree_option_id = degree_option.id
-                degree = degree_option.name
-
-        if not degree:
-            return "Please select a valid degree"
+        if degree == "other":
+            degree = request.form.get("other_degree", "").strip()
 
         if User.query.filter_by(email=email).first():
             return "Email already exists"
@@ -260,7 +305,6 @@ def register():
             email=email,
             username=username,
             degree=degree,
-            degree_option_id=degree_option_id,
             major=major,
         )
 
@@ -300,3 +344,154 @@ def mark_all_read():
     Notification.query.filter_by(user_id=1, is_read=False).update({"is_read": True})
     db.session.commit()
     return "", 204
+
+
+@app.route("/messages/<int:conversation_id>")
+def messages(conversation_id):
+    current_user = get_current_user()
+    if current_user is None:
+        return redirect(url_for("login"))
+
+    membership = ConversationMember.query.filter_by(
+        conversation_id=conversation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if membership is None:
+        return "You do not have access to this conversation.", 403
+
+    conversation = db.session.get(Conversation, conversation_id)
+    if conversation is None:
+        return "Conversation not found.", 404
+
+    message_history = Message.query.filter_by(
+        conversation_id=conversation.id,
+        is_deleted=False,
+    ).order_by(Message.created_at.asc()).all()
+
+    return render_template(
+        "messages.html",
+        current_user=current_user,
+        conversation=conversation,
+        messages=message_history,
+    )
+
+
+@app.route("/messages/start/<int:receiver_id>", methods=["POST"])
+def start_conversation(receiver_id):
+    current_user = get_current_user()
+    if current_user is None:
+        return redirect(url_for("login"))
+
+    receiver = db.session.get(User, receiver_id)
+    if receiver is None:
+        return "User not found.", 404
+
+    if receiver.id == current_user.id:
+        return "You cannot start a conversation with yourself.", 400
+
+    existing_conversations = (
+        Conversation.query
+        .join(ConversationMember)
+        .filter(
+            Conversation.is_group_chat.is_(False),
+            ConversationMember.user_id == current_user.id,
+        )
+        .all()
+    )
+
+    for conversation in existing_conversations:
+        member_ids = {member.user_id for member in conversation.members}
+        if member_ids == {current_user.id, receiver.id}:
+            return redirect(url_for("messages", conversation_id=conversation.id))
+
+    conversation = Conversation(is_group_chat=False)
+    db.session.add(conversation)
+    db.session.flush()
+
+    db.session.add(ConversationMember(
+        conversation_id=conversation.id,
+        user_id=current_user.id,
+    ))
+
+    db.session.add(ConversationMember(
+        conversation_id=conversation.id,
+        user_id=receiver.id,
+    ))
+
+    db.session.commit()
+
+    return redirect(url_for("messages", conversation_id=conversation.id))
+
+
+@socketio.on("join_conversation")
+def handle_join_conversation(data):
+    current_user = get_current_user()
+    if current_user is None:
+        return
+
+    try:
+        conversation_id = int(data.get("conversation_id"))
+    except (TypeError, ValueError):
+        return
+
+    membership = ConversationMember.query.filter_by(
+        conversation_id=conversation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if membership is None:
+        return
+
+    join_room(f"conversation-{conversation_id}")
+
+
+@socketio.on("send_message")
+def handle_send_message(data):
+    current_user = get_current_user()
+    if current_user is None:
+        return
+
+    try:
+        conversation_id = int(data.get("conversation_id"))
+    except (TypeError, ValueError):
+        return
+
+    body = data.get("body", "").strip()
+
+    if not body:
+        return
+
+    if len(body) > 1000:
+        return
+
+    membership = ConversationMember.query.filter_by(
+        conversation_id=conversation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if membership is None:
+        return
+
+    message = Message(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        body=body,
+    )
+
+    db.session.add(message)
+    db.session.commit()
+
+    emit(
+        "receive_message",
+        {
+            "id": message.id,
+            "conversation_id": conversation_id,
+            "sender_id": current_user.id,
+            "sender_name": current_user.username,
+            "body": message.body,
+            "created_at": message.created_at.strftime("%H:%M"),
+        },
+        room=f"conversation-{conversation_id}",
+    )
+
