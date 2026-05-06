@@ -40,7 +40,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Settings</div>
                 <a href="#" id="editProfileBtn"><i class="bi bi-pencil"></i> Edit Profile</a>
-                <a href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                <a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
 
             {% if current_user %}

@@ -1,10 +1,13 @@
 from datetime import datetime
 
+from flask_login import UserMixin
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import db
 
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
@@ -16,6 +19,7 @@ class User(db.Model):
     preferred_group_size = db.Column(db.String(20), nullable=True)
     study_mode = db.Column(db.String(30), nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     degree_option_id = db.Column(db.Integer, db.ForeignKey("degree_option.id"), nullable=True)
 
     subjects = db.relationship("UserSubject", backref="user", lazy=True, cascade="all, delete-orphan")
@@ -26,7 +30,13 @@ class User(db.Model):
 
 
     def __repr__(self):
-        return f"<User {self.email}>"
+        return f"<User id={self.id} username={self.username} email={self.email}>"
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 class Notification(db.Model):
@@ -208,4 +218,3 @@ class MessageRead(db.Model):
     __table_args__ = (
         db.UniqueConstraint("message_id", "user_id", name="uq_message_read"),
     )
-
