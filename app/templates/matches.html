@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches - StudySync</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <h2><span class="logo-study">Study</span><span class="logo-sync">Sync</span></h2>
+
+        <div class="sidebar-section">
+            <div class="sidebar-title">Navigation</div>
+
+            <a href="{{ url_for('landing') }}"><i class="bi bi-house"></i> Home</a>
+            <a href="{{ url_for('dashboard') }}"><i class="bi bi-grid"></i> Dashboard</a>
+            <a href="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}"><i class="bi bi-person"></i> Profile</a>
+            <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}" class="active"><i class="bi bi-people"></i> Matches</a>
+            <a href="{{ url_for('notifications') }}"><i class="bi bi-bell"></i> Notifications</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Matches</h1>
+                <p>Top 10 users with overlapping study times.</p>
+            </div>
+        </div>
+
+        <section class="info-card mb-4">
+            <form method="GET" action="{{ url_for('matches') }}" class="row g-3 align-items-end">
+                <input type="hidden" name="user_id" value="{{ current_user.id if current_user else request.args.get('user_id', '') }}">
+                <div class="col-md-6">
+                    <label for="degreeFilter" class="form-label">Filter by Degree (optional)</label>
+                    <select id="degreeFilter" name="degree_option_id" class="form-select">
+                        <option value="">Any degree</option>
+                        {% for category_key, options in degree_options.items() %}
+                            {% if options %}
+                                <optgroup label="{{ category_key.replace('_', ' ') | title }}">
+                                    {% for option in options %}
+                                        <option value="{{ option.id }}" {% if selected_degree_option_id == option.id %}selected{% endif %}>{{ option.name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                </div>
+            </form>
+        </section>
+
+        {% if message %}
+            <section class="alert alert-info" role="alert">{{ message }}</section>
+        {% endif %}
+
+        {% if matches %}
+            {% for item in matches %}
+                <section class="info-card mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">{{ item.user.first_name }}</h5>
+                        <span class="badge text-bg-primary">{{ item.overlap_minutes_total }} mins overlap</span>
+                    </div>
+                    <p class="mb-2"><strong>Degree:</strong> {{ item.user.degree }}</p>
+                    <div>
+                        <strong>Overlap Summary:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for day, segments in item.overlap_by_day.items() %}
+                                <li>{{ day }}:
+                                    {% for segment in segments %}
+                                        {{ segment[0] }}-{{ segment[1] }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </section>
+            {% endfor %}
+        {% endif %}
+    </main>
+</div>
+</body>
+</html>
