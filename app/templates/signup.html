@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | StudySync</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
@@ -12,10 +13,14 @@
     <main class="register-wrapper">
 
         <section class="register-left">
+
             <h2>Study<span>Sync</span></h2>
 
             <h1>Register</h1>
-            <p class="register-subtitle">Create your StudySync account</p>
+
+            <p class="register-subtitle">
+                Create your StudySync account
+            </p>
 
             <p class="register-description">
                 Join a community of students and find the perfect study partners.
@@ -23,32 +28,48 @@
 
             <div class="register-feature">
                 <div class="feature-icon">👥</div>
+
                 <div>
                     <h3>Connect</h3>
-                    <p>Find and connect with students from your university.</p>
+
+                    <p>
+                        Find and connect with students from your university.
+                    </p>
                 </div>
             </div>
 
             <div class="register-feature">
                 <div class="feature-icon">🎓</div>
+
                 <div>
                     <h3>Collaborate</h3>
-                    <p>Study together and achieve better results.</p>
+
+                    <p>
+                        Study together and achieve better results.
+                    </p>
                 </div>
             </div>
 
             <div class="register-feature">
                 <div class="feature-icon">🛡️</div>
+
                 <div>
                     <h3>Secure</h3>
-                    <p>Your data is protected with enterprise-grade security.</p>
+
+                    <p>
+                        Your data is protected with enterprise-grade security.
+                    </p>
                 </div>
             </div>
 
             <div class="quote-card">
-                <p>“Education is the most powerful weapon which you can use to change the world.”</p>
+                <p>
+                    “Education is the most powerful weapon which you can use to change the world.”
+                </p>
+
                 <span>— Nelson Mandela</span>
             </div>
+
         </section>
 
         <section class="register-card">
@@ -58,41 +79,100 @@
                 <p id="form-error" class="form-error"></p>
 
                 <div class="form-row">
+
                     <div class="form-group">
                         <label>First Name</label>
-                        <input type="text" name="first_name" placeholder="First Name" required>
+
+                        <input
+                            type="text"
+                            name="first_name"
+                            placeholder="First Name"
+                            required
+                        >
                     </div>
 
                     <div class="form-group">
                         <label>Last Name</label>
-                        <input type="text" name="last_name" placeholder="Last Name" required>
+
+                        <input
+                            type="text"
+                            name="last_name"
+                            placeholder="Last Name"
+                            required
+                        >
                     </div>
+
                 </div>
 
                 <div class="form-group">
+
                     <label>Email</label>
-                    <input type="email" name="email" placeholder="Email address" required>
+
+                    <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        placeholder="Email address"
+                        autocomplete="email"
+                        required
+                    >
+
                     <small class="input-message" id="email-message"></small>
+
                 </div>
 
                 <div class="form-row">
+
                     <div class="form-group">
+
                         <label>Degree Type</label>
-                        <select id="degree-type" name="degree_type" onchange="updateDegreeOptions()" required>
-                            <option value="" disabled selected hidden>Select degree type</option>
-                            <option value="bachelors">Bachelor's degree</option>
-                            <option value="honours">Honours</option>
-                            <option value="combined_bachelors">Combined Bachelor's + Bachelor's</option>
-                            <option value="combined_masters">Combined Bachelor's + Master's</option>
-                            <option value="other">Other</option>
+
+                        <select
+                            id="degree-type"
+                            name="degree_type"
+                            onchange="updateDegreeOptions()"
+                            required
+                        >
+                            <option value="" disabled selected hidden>
+                                Select degree type
+                            </option>
+
+                            <option value="bachelors">
+                                Bachelor's degree
+                            </option>
+
+                            <option value="honours">
+                                Honours
+                            </option>
+
+                            <option value="combined_bachelors">
+                                Combined Bachelor's + Bachelor's
+                            </option>
+
+                            <option value="combined_masters">
+                                Combined Bachelor's + Master's
+                            </option>
+
+                            <option value="other">
+                                Other
+                            </option>
                         </select>
+
                     </div>
 
                     <div class="form-group">
+
                         <label>Degree</label>
 
-                        <select id="degree" name="degree_option_id" onchange="handleDegreeChange()" required>
-                            <option value="" disabled selected hidden>Select your degree</option>
+                        <select
+                            id="degree"
+                            name="degree_option_id"
+                            onchange="handleDegreeChange()"
+                            required
+                        >
+                            <option value="" disabled selected hidden>
+                                Select your degree
+                            </option>
                         </select>
 
                         <input
@@ -102,32 +182,75 @@
                             placeholder="Degree"
                             style="display: none; margin-top: 10px;"
                         >
+
                     </div>
+
                 </div>
 
                 <div class="form-group">
+
                     <label>Major</label>
-                    <input type="text" name="major" placeholder="Enter your major" required>
+
+                    <input
+                        type="text"
+                        name="major"
+                        placeholder="Enter your major"
+                        required
+                    >
+
                 </div>
 
                 <div class="form-group">
+
                     <label>Username</label>
-                    <input type="text" name="username" id="username" placeholder="Choose a username" required>
+
+                    <input
+                        type="text"
+                        name="username"
+                        id="username"
+                        placeholder="Choose a username"
+                        autocomplete="username"
+                        required
+                    >
+
                     <small class="input-message" id="username-message"></small>
+
                 </div>
 
                 <div class="form-row">
+
                     <div class="form-group">
+
                         <label>Password</label>
-                        <input type="password" name="password" id="password" placeholder="Create a password" required>
+
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            placeholder="Create a password"
+                            required
+                        >
+
                         <small class="input-message" id="password-message"></small>
+
                     </div>
 
                     <div class="form-group">
+
                         <label>Confirm Password</label>
-                        <input type="password" name="confirm_password" id="confirm-password" placeholder="Confirm your password" required>
+
+                        <input
+                            type="password"
+                            name="confirm_password"
+                            id="confirm-password"
+                            placeholder="Confirm your password"
+                            required
+                        >
+
                         <small class="input-message" id="confirm-password-message"></small>
+
                     </div>
+
                 </div>
 
                 <button type="submit" class="register-btn">
@@ -150,14 +273,23 @@
     </main>
 
     <script>
+
         const degreeOptions = {{ degree_options | tojson }};
 
         function updateDegreeOptions() {
-            const type = document.getElementById("degree-type").value;
-            const degreeSelect = document.getElementById("degree");
-            const otherInput = document.getElementById("other-degree");
 
-            degreeSelect.innerHTML = '<option value="" disabled selected hidden>Select your degree</option>';
+            const type =
+                document.getElementById("degree-type").value;
+
+            const degreeSelect =
+                document.getElementById("degree");
+
+            const otherInput =
+                document.getElementById("other-degree");
+
+            degreeSelect.innerHTML =
+                '<option value="" disabled selected hidden>Select your degree</option>';
+
             degreeSelect.value = "";
 
             otherInput.style.display = "none";
@@ -165,115 +297,250 @@
             otherInput.value = "";
 
             if (type === "other") {
-                degreeSelect.innerHTML = '<option value="" selected>Other (enter below)</option>';
+
+                degreeSelect.innerHTML =
+                    '<option value="" selected>Other (enter below)</option>';
+
                 otherInput.style.display = "block";
                 otherInput.required = true;
+
                 return;
             }
 
             (degreeOptions[type] || []).forEach(function(degree) {
-                const option = document.createElement("option");
+
+                const option =
+                    document.createElement("option");
+
                 option.value = degree.id;
                 option.textContent = degree.name;
+
                 degreeSelect.appendChild(option);
             });
         }
 
         function handleDegreeChange() {
-            const degreeType = document.getElementById("degree-type").value;
-            const otherInput = document.getElementById("other-degree");
+
+            const degreeType =
+                document.getElementById("degree-type").value;
+
+            const otherInput =
+                document.getElementById("other-degree");
 
             if (degreeType === "other") {
+
                 otherInput.style.display = "block";
                 otherInput.required = true;
+
             } else {
+
                 otherInput.style.display = "none";
                 otherInput.required = false;
                 otherInput.value = "";
             }
         }
 
-        const registerForm = document.getElementById("register-form");
-        const usernameInput = document.getElementById("username");
-        const passwordInput = document.getElementById("password");
-        const confirmPasswordInput = document.getElementById("confirm-password");
+        const registerForm =
+            document.getElementById("register-form");
 
-        const formError = document.getElementById("form-error");
-        const usernameMessage = document.getElementById("username-message");
-        const passwordMessage = document.getElementById("password-message");
-        const confirmPasswordMessage = document.getElementById("confirm-password-message");
+        const emailInput =
+            document.getElementById("email");
+
+        const usernameInput =
+            document.getElementById("username");
+
+        const passwordInput =
+            document.getElementById("password");
+
+        const confirmPasswordInput =
+            document.getElementById("confirm-password");
+
+        const formError =
+            document.getElementById("form-error");
+
+        const emailMessage =
+            document.getElementById("email-message");
+
+        const usernameMessage =
+            document.getElementById("username-message");
+
+        const passwordMessage =
+            document.getElementById("password-message");
+
+        const confirmPasswordMessage =
+            document.getElementById("confirm-password-message");
+
+        function checkEmail() {
+
+            const email =
+                emailInput.value.trim();
+
+            if (email.length === 0) {
+
+                emailMessage.textContent = "";
+                return false;
+            }
+
+            const emailPattern =
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailPattern.test(email)) {
+
+                emailMessage.textContent =
+                    "Please enter a valid email address.";
+
+                return false;
+            }
+
+            emailMessage.textContent =
+                "Email looks good.";
+
+            return true;
+        }
 
         function checkUsername() {
-            const username = usernameInput.value.trim();
+
+            const username =
+                usernameInput.value.trim();
 
             if (username.length === 0) {
+
                 usernameMessage.textContent = "";
                 return false;
             }
 
-            if (username.length < 5) {
-                usernameMessage.textContent = "Username must be at least 5 characters.";
+            if (username.includes("@")) {
+
+                usernameMessage.textContent =
+                    "Username cannot contain @ symbol.";
+
                 return false;
             }
 
-            usernameMessage.textContent = "Username looks good.";
+            if (username.length < 5) {
+
+                usernameMessage.textContent =
+                    "Username must be at least 5 characters.";
+
+                return false;
+            }
+
+            usernameMessage.textContent =
+                "Username looks good.";
+
             return true;
         }
 
         function checkPasswordStrength() {
-            const password = passwordInput.value;
+
+            const password =
+                passwordInput.value;
 
             if (password.length === 0) {
+
                 passwordMessage.textContent = "";
                 return false;
             }
 
             if (password.length < 6) {
-                passwordMessage.textContent = "Password must be at least 6 characters.";
+
+                passwordMessage.textContent =
+                    "Password must be at least 6 characters.";
+
                 return false;
             }
 
-            passwordMessage.textContent = "Password looks good.";
+            passwordMessage.textContent =
+                "Password looks good.";
+
             return true;
         }
 
         function checkPasswordMatch() {
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
+
+            const password =
+                passwordInput.value;
+
+            const confirmPassword =
+                confirmPasswordInput.value;
 
             if (confirmPassword.length === 0) {
+
                 confirmPasswordMessage.textContent = "";
                 return false;
             }
 
             if (password !== confirmPassword) {
-                confirmPasswordMessage.textContent = "Passwords do not match.";
+
+                confirmPasswordMessage.textContent =
+                    "Passwords do not match.";
+
                 return false;
             }
 
-            confirmPasswordMessage.textContent = "Passwords match.";
+            confirmPasswordMessage.textContent =
+                "Passwords match.";
+
             return true;
         }
 
-        usernameInput.addEventListener("input", checkUsername);
-        passwordInput.addEventListener("input", function() {
-            checkPasswordStrength();
-            checkPasswordMatch();
-        });
-        confirmPasswordInput.addEventListener("input", checkPasswordMatch);
+        emailInput.addEventListener(
+            "input",
+            checkEmail
+        );
 
-        registerForm.addEventListener("submit", function(event) {
-            formError.textContent = "";
+        usernameInput.addEventListener(
+            "input",
+            checkUsername
+        );
 
-            const usernameValid = checkUsername();
-            const passwordValid = checkPasswordStrength();
-            const passwordsMatch = checkPasswordMatch();
+        passwordInput.addEventListener(
+            "input",
+            function() {
 
-            if (!usernameValid || !passwordValid || !passwordsMatch) {
-                event.preventDefault();
-                formError.textContent = "Please fix the errors before registering.";
+                checkPasswordStrength();
+                checkPasswordMatch();
             }
-        });
+        );
+
+        confirmPasswordInput.addEventListener(
+            "input",
+            checkPasswordMatch
+        );
+
+        registerForm.addEventListener(
+            "submit",
+            function(event) {
+
+                formError.textContent = "";
+
+                const emailValid =
+                    checkEmail();
+
+                const usernameValid =
+                    checkUsername();
+
+                const passwordValid =
+                    checkPasswordStrength();
+
+                const passwordsMatch =
+                    checkPasswordMatch();
+
+                if (
+                    !emailValid ||
+                    !usernameValid ||
+                    !passwordValid ||
+                    !passwordsMatch
+                ) {
+
+                    event.preventDefault();
+
+                    formError.textContent =
+                        "Please fix the errors before registering.";
+                }
+            }
+        );
+
     </script>
 
 </body>
