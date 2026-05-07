@@ -75,22 +75,21 @@
         <section class="register-card">
 
             <form method="POST" class="register-form" id="register-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <p id="form-error" class="form-error"></p>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <div class="mb-3 auth-flash-stack">
-                {% for category, message in messages %}
-                <div class="auth-flash {% if category == 'success' %}auth-flash-success{% else %}auth-flash-error{% endif %}" role="alert">
-                    {{ message }}
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="mb-3 auth-flash-stack">
+                    {% for category, message in messages %}
+                    <div class="auth-flash {% if category == 'success' %}auth-flash-success{% else %}auth-flash-error{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
-
-            <form method="POST" class="register-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% endif %}
+                {% endwith %}
 
                 <div class="form-row">
 
