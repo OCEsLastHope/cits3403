@@ -11,7 +11,9 @@ from .database import (
     Conversation,
     ConversationMember,
     DegreeOption,
+    Invitation,
     Message,
+    MessageRead,
     Notification,
     User,
     UserAvailability,
@@ -50,6 +52,26 @@ def get_current_user():
     if not current_user.is_authenticated:
         return None
     return current_user
+
+def parse_mentions(body):
+    """Extract @username mentions from a message body."""
+    return re.findall(r"@(\w+)", body)
+
+def notify_mentions(message, conversation_id):
+    """Create Notification records for @mentioned users."""
+    mentioned_usernames = parse_mentions(message.body)
+    for username in mentioned_usernames:
+        mentioned_user = User.query.filter_by(username=username).first()
+        if mentioned_user and mentioned_user.id != message.sender_id:
+            notif = Notification(
+                user_id=mentioned_user.id,
+                sender_name=message.sender.username,
+                type="mention",
+                message=f"<strong>@{mentioned_user.username}</strong>: {message.body[:80]}",
+                channel=f"conversation:{conversation_id}",
+            )
+
+            db.session.add(notif)
 
 
 
@@ -224,7 +246,7 @@ def matches():
     degree_options = get_degree_options_by_category()
     requester = current_user
 
-    match_results = find_matches(user_id, selected_degree_option_id)
+    match_results = find_matches(requester.id, selected_degree_option_id)
 
     message = ""
     if not match_results:
@@ -474,10 +496,12 @@ def register():
 def notifications():
     user = current_user
     notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    pending_invites = Invitation.queryy.filter_by(receiver_id=current_user.iod, status"pending").all()
     return render_template(
         "notifications.html",
         current_user=user,
         notifications=notifs,
+        pending_invites=pending_invites,
         unread_count=sum(1 for n in notifs if not n.is_read),
         dm_count=sum(1 for n in notifs if n.type == "dm" and not n.is_read),
         mention_count=sum(1 for n in notifs if n.type == "mention" and not n.is_read),
@@ -502,6 +526,124 @@ def mark_all_read():
     db.session.commit()
     return "", 204
 
+@app.route("/invitations/send<int:receiver_id>", methods=["POST"])
+@login_required
+def send_invitation(receiver_id):
+    receiver = db.session.get(User, receiver_id)
+    if receiver is None:
+        return "User not found", 404
+
+    if receiver.id == current_user.id:
+        return "You are unable to invite yourself.", 400
+
+    existing = Invitation.query.filter_by(
+        sender_id=current_user,id,
+        receiver_id=receiver_id,
+        status="pending",
+    ).first()
+
+    if existing:
+        flash("Invitation already sent.", "info")
+        return redirect(request.referrer or url_for("matches"))
+
+    message_text = request.form.get("message", "").strip()
+
+    invite = Invitation(
+        sender_id=current_user.id,
+        receiver_id=receiver_id,
+        message=message_text or None,
+    )
+
+    db.session.add(invite)
+
+    notif = Notification(
+        user_id=receiver_id,
+        sender_name=current_user.username,
+        type="mention"
+        message=f"<strong>{current_user.username}</strong> sent you a study invite.",
+        channel="Invitations"
+    )
+
+    db.session.add(notif)
+    db.session.commit()
+
+    flash("Invitation sent!", "success")
+    return redirect(request.referrer or url_for("matches"))
+
+@app.route("/invitations/<int:invite_id>/accept", methods=["POST"])
+@login_required
+def accept_invitation(invite_id):
+    invite = Invitation.query.get_or_404(invite_id)
+
+    if invite.receiver_id != current_user.id:
+        abort(403)
+
+    if invite.status != "pending":
+        flash("This invitation has already been responded to." "info")
+        return redirect(url_for("notifications"))
+
+    invite.status != "accepted"
+    invite.responded_at = datetime.utcnow()
+
+    existing_conversations = (
+        Conversation.query
+        .join(ConversationMember)
+        .filter(
+            Conversation.is_group_chat.is_(False),
+            ConversationMember.user_id == current_user.id
+        )
+        .all()
+    )
+
+    conversation = None
+    for conv in existing_conversations:
+        member_ids = {member.user_id for member in conv.members}
+        if member_ids == {current_user.id, invite.sender_id}:
+            conversation = conv
+            break
+
+    if conversation is None:
+        conversation = Conversation(is_group_chat=False)
+        db.session.add(conversation)
+        db.session.flush()
+        db.session.add(ConversationMember(conversation_id=conversation.id, user_id=current_user.id))
+        db.session.add(ConversationMmeber(conversation_id=conversation.id, user_id=invite.sender_id))
+
+    notif = Notification(
+        user_id=invite.sender_id,
+        sender_name= current_user.username,
+        type="dm"
+        message=f"<strong>{current_user,username}</strong> accepted your study invite!",
+        channel="Invitations",
+    )
+
+    db.session.add(notif)
+    db.session.commit()
+
+    flash("Invitation acceted!", "success")
+    return redirect(url_for("messages", conversation_id=conversation.id))
+
+@app.route("/invitations/<int:invite_id>/reject", methods=["POST"])
+@login_required
+def reject_invitation(invite_id):
+    invite = Invitation.query.get_or_404(invite_id)
+
+    if invite.receiver_id != current_user.id:
+        abort(403)
+
+    if invite.status != "pending":
+        flash("This invitation has already been responded to.", "info")
+        return redirect(url_for("notifications"))
+
+    invite_status= "rejected"
+    invite.responded_at = datetime.utcnow()
+    db.session.commit()
+
+    flash("Invitation rejected.", "info")
+    return redirect(url_for("notifications"))
+
+
+
 
 @app.route("/messages/<int:conversation_id>")
 @login_required
@@ -522,6 +664,17 @@ def messages(conversation_id):
         conversation_id=conversation.id,
         is_deleted=False,
     ).order_by(Message.created_at.asc()).all()
+
+    #Mark messages as read when opening
+    already_read_ids = {
+        mr.message_id
+        for mr in MessageRead.query.filter_by(user_id=current_user.id).all()
+    }
+
+    for msg in message_history:
+        if msg.id not in already_read_ids and msg.sender_id != current_user.id:
+            db.session.add(MessageRead(message_id=msg,id, user_id=current_user.id))
+    db.session.commit()
 
     return render_template(
         "messages.html",
@@ -558,11 +711,23 @@ def messages_inbox():
         else:
             display_name = "Direct Message"
 
+        read_ids = {
+            mr.message_id
+            for mr in MessageRead.query.filter_by(user_id=current_user.id).all()
+        }
+        unread_count = Message.query.filter(
+            Message.conversation_id == conversation.id,
+            Message.sender_id != current_user.id,
+            Message.id.notin_(read_ids),
+            Message.is_deleted.is_(False),
+        ).count()
+        
         conversations.append(
             {
                 "conversation": conversation,
                 "display_name": display_name,
                 "latest_message": latest_message,
+                "unread_count": unread_count,
             }
         )
 
@@ -616,6 +781,24 @@ def start_conversation(receiver_id):
 
     return redirect(url_for("messages", conversation_id=conversation.id))
 
+@app.route("/messages/delete/<int:message_id>", methods=["POST"])
+login_required
+def delete_message(message_id):
+    message = Message.query.get_or_404(message_id)
+
+    if message_sender_id != current_user.id:
+        abort(403)
+
+    message.is_deleted = True
+    db.session.commit()
+
+    socketio.emit(
+        "messafe_deleted",
+        {"message_id": message_id},
+        room=f"conversation-{message.conversation_id}",
+    )
+
+    return "", 204
 
 @socketio.on("join_conversation")
 def handle_join_conversation(data):
@@ -673,6 +856,12 @@ def handle_send_message(data):
     )
 
     db.session.add(message)
+    db.session.flush()
+
+    db.session.add(MessageRead(message_id=message.id, user_id=current_user.id))
+
+    notify_mentions(message, conversation_id)
+
     db.session.commit()
 
     emit(
