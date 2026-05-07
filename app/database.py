@@ -218,3 +218,43 @@ class MessageRead(db.Model):
     __table_args__ = (
         db.UniqueConstraint("message_id", "user_id", name="uq_message_read"),
     )
+
+class Invitation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    sender_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id")
+        nullable=False
+    )
+
+    receiver_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user_id"),
+        nullable=False
+    )
+
+    /* LINKING INVITE TO MESSAGES */
+
+    conversation_id = db.Column(
+        db.Integer,
+        db.ForeignKey("conversation.id")
+        nullable=True
+    )
+
+    message = db.Column(db.Text, nullable=True) #invite message
+    status = db.Column(db.String(20), nullable=False, default="pending") #reject, accept, or pending
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    responded_at = db.Column(db.DateTime, nullable=True)
+
+    sender = db.relationship("User", foreign_keys=[sender_id], backref="sent_invitation", lazy=True)
+    receiver = db.relationship("User","User", foreign_keys=[receiver_id], backref="received_invitation", lazy=True)
+    conversation = db.relationship("Conversation", backref="invitations", lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("sender_id", "receiver_id", "conversation_id", name="uq_invitation"),
+    )
+
+    def __repr__(self):
+        return f"<Invitation {self.id} from {self.sender_id} to {self.receiver_id} [{self.status}]>"
