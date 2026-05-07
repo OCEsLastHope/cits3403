@@ -224,21 +224,21 @@ class Invitation(db.Model):
 
     sender_id = db.Column(
         db.Integer,
-        db.ForeignKey("user.id")
+        db.ForeignKey("user.id"),
         nullable=False
     )
 
     receiver_id = db.Column(
         db.Integer,
-        db.ForeignKey("user_id"),
+        db.ForeignKey("user.id"),
         nullable=False
     )
 
-    /* LINKING INVITE TO MESSAGES */
+    # LINKING INVITE TO MESSAGES
 
     conversation_id = db.Column(
         db.Integer,
-        db.ForeignKey("conversation.id")
+        db.ForeignKey("conversation.id"),
         nullable=True
     )
 
@@ -249,7 +249,7 @@ class Invitation(db.Model):
     responded_at = db.Column(db.DateTime, nullable=True)
 
     sender = db.relationship("User", foreign_keys=[sender_id], backref="sent_invitation", lazy=True)
-    receiver = db.relationship("User","User", foreign_keys=[receiver_id], backref="received_invitation", lazy=True)
+    receiver = db.relationship("User", foreign_keys=[receiver_id], backref="received_invitation", lazy=True)
     conversation = db.relationship("Conversation", backref="invitations", lazy=True)
 
     __table_args__ = (

@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from collections import defaultdict
 
 from flask import abort, flash, redirect, render_template, request, url_for
@@ -496,7 +497,7 @@ def register():
 def notifications():
     user = current_user
     notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
-    pending_invites = Invitation.queryy.filter_by(receiver_id=current_user.iod, status"pending").all()
+    pending_invites = Invitation.query.filter_by(receiver_id=current_user.id, status="pending").all()
     return render_template(
         "notifications.html",
         current_user=user,
@@ -537,7 +538,7 @@ def send_invitation(receiver_id):
         return "You are unable to invite yourself.", 400
 
     existing = Invitation.query.filter_by(
-        sender_id=current_user,id,
+        sender_id=current_user.id,
         receiver_id=receiver_id,
         status="pending",
     ).first()
@@ -559,9 +560,9 @@ def send_invitation(receiver_id):
     notif = Notification(
         user_id=receiver_id,
         sender_name=current_user.username,
-        type="mention"
+        type="mention",
         message=f"<strong>{current_user.username}</strong> sent you a study invite.",
-        channel="Invitations"
+        channel="Invitations",
     )
 
     db.session.add(notif)
@@ -579,10 +580,10 @@ def accept_invitation(invite_id):
         abort(403)
 
     if invite.status != "pending":
-        flash("This invitation has already been responded to." "info")
+        flash("This invitation has already been responded to.", "info")
         return redirect(url_for("notifications"))
 
-    invite.status != "accepted"
+    invite.status = "accepted"
     invite.responded_at = datetime.utcnow()
 
     existing_conversations = (
@@ -607,20 +608,20 @@ def accept_invitation(invite_id):
         db.session.add(conversation)
         db.session.flush()
         db.session.add(ConversationMember(conversation_id=conversation.id, user_id=current_user.id))
-        db.session.add(ConversationMmeber(conversation_id=conversation.id, user_id=invite.sender_id))
+        db.session.add(ConversationMember(conversation_id=conversation.id, user_id=invite.sender_id))
 
     notif = Notification(
         user_id=invite.sender_id,
         sender_name= current_user.username,
-        type="dm"
-        message=f"<strong>{current_user,username}</strong> accepted your study invite!",
+        type="dm",
+        message=f"<strong>{current_user.username}</strong> accepted your study invite!",
         channel="Invitations",
     )
 
     db.session.add(notif)
     db.session.commit()
 
-    flash("Invitation acceted!", "success")
+    flash("Invitation accepted!", "success")
     return redirect(url_for("messages", conversation_id=conversation.id))
 
 @app.route("/invitations/<int:invite_id>/reject", methods=["POST"])
@@ -635,7 +636,7 @@ def reject_invitation(invite_id):
         flash("This invitation has already been responded to.", "info")
         return redirect(url_for("notifications"))
 
-    invite_status= "rejected"
+    invite.status = "rejected"
     invite.responded_at = datetime.utcnow()
     db.session.commit()
 
@@ -673,7 +674,7 @@ def messages(conversation_id):
 
     for msg in message_history:
         if msg.id not in already_read_ids and msg.sender_id != current_user.id:
-            db.session.add(MessageRead(message_id=msg,id, user_id=current_user.id))
+            db.session.add(MessageRead(message_id=msg.id, user_id=current_user.id))
     db.session.commit()
 
     return render_template(
@@ -782,18 +783,18 @@ def start_conversation(receiver_id):
     return redirect(url_for("messages", conversation_id=conversation.id))
 
 @app.route("/messages/delete/<int:message_id>", methods=["POST"])
-login_required
+@login_required
 def delete_message(message_id):
     message = Message.query.get_or_404(message_id)
 
-    if message_sender_id != current_user.id:
+    if message.sender_id != current_user.id:
         abort(403)
 
     message.is_deleted = True
     db.session.commit()
 
     socketio.emit(
-        "messafe_deleted",
+        "message_deleted",
         {"message_id": message_id},
         room=f"conversation-{message.conversation_id}",
     )
