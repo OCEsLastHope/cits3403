@@ -54,8 +54,13 @@
             <div class="login-icon">🔒</div>
 
             <h1>Login</h1>
-            <p class="login-subtitle">Enter your credentials to access your account</p>
+            <p class="login-subtitle">
+                Enter your username/email and password
+            </p>
 
+            <form method="POST" class="login-form" id="login-form">
+
+                <p id="login-error" class="form-error"></p>
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             <div class="mb-3 text-start auth-flash-stack">
@@ -73,12 +78,31 @@
 
                 <div class="login-input">
                     <span>👤</span>
-                    <input type="text" name="username" placeholder="Username" required>
+
+                    <input
+                        type="text"
+                        id="login-input"
+                        name="login"
+                        placeholder="Username or Email"
+                        autocomplete="username"
+                        required
+                    >
+
+                    <small class="input-message" id="login-message"></small>
                 </div>
 
                 <div class="login-input">
                     <span>🔐</span>
-                    <input type="password" name="password" placeholder="Password" required>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Password"
+                        required
+                    >
+
+                    <small class="input-message" id="password-message"></small>
                 </div>
 
                 <div class="login-options">
@@ -87,7 +111,9 @@
                         Remember me
                     </label>
 
-                    <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+                    <a href="{{ url_for('forgot_password') }}">
+                        Forgot password?
+                    </a>
                 </div>
 
                 <button type="submit" class="login-btn">
@@ -104,6 +130,64 @@
         </section>
 
     </main>
+
+    <script>
+
+        const loginForm = document.getElementById("login-form");
+
+        const loginInput = document.getElementById("login-input");
+
+        const loginMessage = document.getElementById("login-message");
+
+        const loginError = document.getElementById("login-error");
+
+        function validateLogin() {
+
+            const value = loginInput.value.trim();
+
+            if (value.length === 0) {
+                loginMessage.textContent = "";
+                return false;
+            }
+
+            if (value.includes("@")) {
+
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!emailPattern.test(value)) {
+
+                    loginMessage.textContent =
+                        "Please enter a valid email address.";
+
+                    return false;
+                }
+
+                loginMessage.textContent = "Email looks good.";
+                return true;
+            }
+
+            loginMessage.textContent = "";
+            return true;
+        }
+
+        loginInput.addEventListener("input", validateLogin);
+
+        loginForm.addEventListener("submit", function(event) {
+
+            loginError.textContent = "";
+
+            const loginValid = validateLogin();
+
+            if (!loginValid) {
+
+                event.preventDefault();
+
+                loginError.textContent =
+                    "Please fix the errors before logging in.";
+            }
+        });
+
+    </script>
 
 </body>
 </html>
