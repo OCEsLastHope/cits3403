@@ -34,6 +34,7 @@
                       <div class="text-light opacity-50 text-truncate" style="font-size: 11px;">{{ match.overlap_minutes_total // 60 }}h overlap</div>
                     </div>
                     <form action="{{ url_for('start_conversation', receiver_id=match.user.id) }}" method="POST">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit" class="p-0 border-0 bg-transparent text-light opacity-50 hover-opacity-100">
                         <i class="bi bi-chat-dots"></i>
                       </button>
