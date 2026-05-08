@@ -258,3 +258,42 @@ class Invitation(db.Model):
 
     def __repr__(self):
         return f"<Invitation {self.id} from {self.sender_id} to {self.receiver_id} [{self.status}]>"
+
+
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    creator_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    title = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    location_or_link = db.Column(db.String(255), nullable=True)
+    visibility_mode = db.Column(db.String(20), nullable=False, default="invite_only")
+    max_attendees = db.Column(db.Integer, nullable=True)
+    start_at = db.Column(db.DateTime, nullable=False)
+    end_at = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="scheduled")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    creator = db.relationship("User", backref="created_events", lazy=True)
+    attendees = db.relationship("EventAttendee", backref="event", lazy=True, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Event {self.id} {self.title}>"
+
+
+class EventAttendee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("event.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    invite_status = db.Column(db.String(20), nullable=False, default="invited")
+    responded_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", backref="event_attendances", lazy=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("event_id", "user_id", name="uq_event_attendee"),
+    )
+
+    def __repr__(self):
+        return f"<EventAttendee event={self.event_id} user={self.user_id} status={self.invite_status}>"

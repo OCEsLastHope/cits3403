@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
+from datetime import datetime, timedelta
 from sqlalchemy import inspect
 from flask_socketio import SocketIO
 
@@ -33,7 +34,7 @@ def load_user(user_id):
 
 
 def ensure_test_data():
-    from .database import DegreeCategory, DegreeOption, Notification, User
+    from .database import DegreeCategory, DegreeOption, Event, EventAttendee, Notification, User
 
     existing_tables = set(inspect(db.engine).get_table_names())
     required_tables = {"user", "notification", "degree_category", "degree_option"}
@@ -228,6 +229,7 @@ def ensure_test_data():
             major="Software Engineering",
             username="Mineth1",
         )
+        test_user.set_password("Mineth1@123")
         db.session.add(test_user)
         db.session.commit()
 
@@ -258,6 +260,95 @@ def ensure_test_data():
             ]
         )
         db.session.commit()
+
+    if {"event", "event_attendee"}.issubset(existing_tables):
+        creator = User.query.filter_by(username="Mineth1").first() or User.query.first()
+        participant = None
+        if creator is not None:
+            participant = User.query.filter_by(username="alice1").first() or User.query.filter(User.id != creator.id).first()
+
+        if creator and Event.query.filter(Event.title.like("[DEMO] %")).count() == 0:
+            start_base = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+
+            invite_event = Event(
+                creator_user_id=creator.id,
+                title="[DEMO] CITS Revision Group",
+                description="Weekly exam revision planning.",
+                location_or_link="Reid Library Room 2",
+                visibility_mode="invite_only",
+                max_attendees=6,
+                start_at=start_base + timedelta(days=1),
+                end_at=start_base + timedelta(days=1, hours=2),
+                status="scheduled",
+            )
+            db.session.add(invite_event)
+            db.session.flush()
+            db.session.add(
+                EventAttendee(
+                    event_id=invite_event.id,
+                    user_id=creator.id,
+                    invite_status="accepted",
+                    responded_at=datetime.utcnow(),
+                )
+            )
+
+            if participant:
+                db.session.add(EventAttendee(event_id=invite_event.id, user_id=participant.id, invite_status="invited"))
+
+            open_event = Event(
+                creator_user_id=creator.id,
+                title="[DEMO] Open Study Sprint",
+                description="Drop-in problem solving session.",
+                location_or_link="EZONE common area",
+                visibility_mode="open",
+                max_attendees=4,
+                start_at=start_base + timedelta(days=2),
+                end_at=start_base + timedelta(days=2, hours=2),
+                status="scheduled",
+            )
+            db.session.add(open_event)
+            db.session.flush()
+            db.session.add(
+                EventAttendee(
+                    event_id=open_event.id,
+                    user_id=creator.id,
+                    invite_status="accepted",
+                    responded_at=datetime.utcnow(),
+                )
+            )
+            if participant:
+                db.session.add(
+                    EventAttendee(
+                        event_id=open_event.id,
+                        user_id=participant.id,
+                        invite_status="accepted",
+                        responded_at=datetime.utcnow(),
+                    )
+                )
+
+            past_event = Event(
+                creator_user_id=creator.id,
+                title="[DEMO] Past Project Debrief",
+                description="Retro and next steps.",
+                location_or_link="Online",
+                visibility_mode="invite_only",
+                max_attendees=5,
+                start_at=start_base - timedelta(days=2, hours=2),
+                end_at=start_base - timedelta(days=2),
+                status="scheduled",
+            )
+            db.session.add(past_event)
+            db.session.flush()
+            db.session.add(
+                EventAttendee(
+                    event_id=past_event.id,
+                    user_id=creator.id,
+                    invite_status="accepted",
+                    responded_at=datetime.utcnow(),
+                )
+            )
+
+            db.session.commit()
 
 
 from . import routes
