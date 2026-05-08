@@ -31,6 +31,9 @@
                 <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}" class="{% if request.endpoint == 'matches' %}active{% endif %}">
                     <i class="bi bi-people"></i> Matches
                 </a>
+                <a href="{{ url_for('events_page') }}" class="{% if request.endpoint == 'events_page' %}active{% endif %}">
+                    <i class="bi bi-calendar-event"></i> Events
+                </a>
                 <a href="{{ url_for('notifications') }}"
                     class="{% if request.endpoint == 'notifications' %}active{% endif %}">
                     <i class="bi bi-bell"></i> Notifications
