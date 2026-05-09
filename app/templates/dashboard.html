@@ -17,34 +17,40 @@
         <div class="info-card">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="m-0">Suggested Partners</h3>
-            <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}" class="text-decoration-none" style="color: #8b5cf6; font-size: 14px;">View all →</a>
+            <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}"
+              class="text-decoration-none" style="color: #8b5cf6; font-size: 14px;">View all →</a>
           </div>
-          
+
           {% if suggested_matches %}
-            <div class="row g-2">
-              {% for match in suggested_matches %}
-                <div class="col-md-4">
-                  <div class="p-2 rounded d-flex align-items-center gap-2 h-100" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);">
-                    <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle flex-shrink-0" 
-                         style="width: 32px; height: 32px; background: linear-gradient(135deg, #d66dff, #41d9ff); font-size: 12px;">
-                      {{ match.user.first_name[0] }}{{ match.user.last_name[0] }}
-                    </div>
-                    <div class="flex-grow-1 min-width-0">
-                      <div class="fw-bold text-truncate" style="font-size: 13px;">{{ match.user.username }}</div>
-                      <div class="text-light opacity-50 text-truncate" style="font-size: 11px;">{{ match.overlap_minutes_total // 60 }}h overlap</div>
-                    </div>
-                    <form action="{{ url_for('start_conversation', receiver_id=match.user.id) }}" method="POST">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit" class="p-0 border-0 bg-transparent text-light opacity-50 hover-opacity-100">
-                        <i class="bi bi-chat-dots"></i>
-                      </button>
-                    </form>
-                  </div>
+          <div class="row g-2">
+            {% for match in suggested_matches %}
+            <div class="col-md-4">
+              <div class="p-2 rounded d-flex align-items-center gap-2 h-100"
+                style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div
+                  class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle flex-shrink-0"
+                  style="width: 32px; height: 32px; background: linear-gradient(135deg, #d66dff, #41d9ff); font-size: 12px;">
+                  {{ match.user.first_name[0] }}{{ match.user.last_name[0] }}
                 </div>
-              {% endfor %}
+                <div class="flex-grow-1 min-width-0">
+                  <div class="fw-bold text-truncate" style="font-size: 13px;">{{ match.user.username }}</div>
+                  <div class="text-light opacity-50 text-truncate" style="font-size: 11px;">{{
+                    match.overlap_minutes_total // 60 }}h overlap</div>
+                </div>
+                <form action="{{ url_for('start_conversation', receiver_id=match.user.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="p-0 border-0 bg-transparent text-light opacity-50 hover-opacity-100">
+                    <i class="bi bi-chat-dots"></i>
+                  </button>
+                </form>
+              </div>
             </div>
+            {% endfor %}
+          </div>
           {% else %}
-            <p class="text-light opacity-50">No suggestions yet. <a href="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}" style="color: #8b5cf6;">Add your availability</a> to get matched!</p>
+          <p class="text-light opacity-50">No suggestions yet. <a
+              href="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}"
+              style="color: #8b5cf6;">Add your availability</a> to get matched!</p>
           {% endif %}
         </div>
       </div>
@@ -63,134 +69,56 @@
     <div class="info-card">
       <h4 class="mb-4">Upcoming meetings</h4>
 
-      <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style="
-                  background: rgba(255, 255, 255, 0.05);
-                  border: 1px solid rgba(255, 255, 255, 0.05);
-                ">
-        <div class="d-flex align-items-center gap-3">
-          <div class="text-center p-2 rounded" style="
-                      background: rgba(197, 92, 255, 0.15);
-                      min-width: 65px;
-                    ">
-            <div class="fw-bold" style="
-                        color: #d56cff;
-                        font-size: 12px;
-                        text-transform: uppercase;
+      <div class="meetings-scroll-area" style="max-height: 380px; overflow-y: auto; padding-right: 8px;">
+        {% if upcoming_events %}
+          {% for event in upcoming_events %}
+            <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style="
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
                       ">
-              Oct
+              <div class="d-flex align-items-center gap-3">
+                {% set badge_color = '#d56cff' if loop.index0 % 2 == 0 else '#4cd8ff' %}
+                {% set badge_bg = 'rgba(197, 92, 255, 0.15)' if loop.index0 % 2 == 0 else 'rgba(65, 217, 255, 0.15)' %}
+                
+                <div class="text-center p-2 rounded" style="
+                            background: {{ badge_bg }};
+                            min-width: 65px;
+                          ">
+                  <div class="fw-bold" style="
+                              color: {{ badge_color }};
+                              font-size: 12px;
+                              text-transform: uppercase;
+                            ">
+                    {{ event.start_at.strftime('%b') }}
+                  </div>
+                  <div class="fs-4 fw-bold">{{ event.start_at.strftime('%d') }}</div>
+                </div>
+
+                <div>
+                  <h5 class="m-0 mb-1">{{ event.title }}</h5>
+                  <div class="text-light" style="font-size: 14px">
+                    {{ event.start_at.strftime('%I:%M %p') }} - {{ event.end_at.strftime('%I:%M %p') }}
+                    {% if event.location_or_link %}
+                      <span class="mx-2" style="color: #aab3d9">|</span>
+                      {{ event.location_or_link }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-4">
+                <a href="{{ url_for('events_page') }}" class="custom-btn secondary py-1 px-3 text-decoration-none" style="font-size: 13px;">
+                  Details
+                </a>
+              </div>
             </div>
-            <div class="fs-4 fw-bold">24</div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-5" style="background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+            <p class="text-light opacity-50 m-0">No upcoming meetings scheduled.</p>
+            <a href="{{ url_for('events_page') }}" class="text-decoration-none" style="color: #8b5cf6; font-size: 14px; margin-top: 8px; display: inline-block;">Schedule one now →</a>
           </div>
-
-          <div>
-            <h5 class="m-0 mb-1">CITS1402 Revision</h5>
-            <div class="text-light" style="font-size: 14px">
-              10:00 AM - 12:00 PM
-              <span class="mx-2" style="color: #aab3d9">|</span>
-              Reid Library, Ground Floor
-            </div>
-          </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-4">
-          <div class="d-flex">
-            <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle" style="
-                        width: 36px;
-                        height: 36px;
-                        background: linear-gradient(135deg, #d66dff, #41d9ff);
-                        border: 2px solid #131b36;
-                        z-index: 3;
-                      ">
-              MP
-            </div>
-
-            <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle" style="
-                        width: 36px;
-                        height: 36px;
-                        background: #4cd8ff;
-                        border: 2px solid #131b36;
-                        margin-left: -12px;
-                        z-index: 2;
-                      ">
-              JD
-            </div>
-
-            <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle" style="
-                        width: 36px;
-                        height: 36px;
-                        background: #c55cff;
-                        border: 2px solid #131b36;
-                        margin-left: -12px;
-                        z-index: 1;
-                        font-size: 12px;
-                      ">
-              +2
-            </div>
-          </div>
-
-          <button class="custom-btn secondary py-1 px-3">
-            Details
-          </button>
-        </div>
-      </div>
-
-      <div class="d-flex align-items-center justify-content-between p-3 rounded" style="
-                  background: rgba(255, 255, 255, 0.05);
-                  border: 1px solid rgba(255, 255, 255, 0.05);
-                ">
-        <div class="d-flex align-items-center gap-3">
-          <div class="text-center p-2 rounded" style="
-                      background: rgba(65, 217, 255, 0.15);
-                      min-width: 65px;
-                    ">
-            <div class="fw-bold" style="
-                        color: #4cd8ff;
-                        font-size: 12px;
-                        text-transform: uppercase;
-                      ">
-              Oct
-            </div>
-            <div class="fs-4 fw-bold">28</div>
-          </div>
-
-          <div>
-            <h5 class="m-0 mb-1">Math Exam Prep</h5>
-            <div class="text-light" style="font-size: 14px">
-              2:00 PM - 4:00 PM
-              <span class="mx-2" style="color: #aab3d9">|</span>
-              Online (Zoom)
-            </div>
-          </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-4">
-          <div class="d-flex">
-            <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle" style="
-                        width: 36px;
-                        height: 36px;
-                        background: linear-gradient(135deg, #d66dff, #41d9ff);
-                        border: 2px solid #131b36;
-                        z-index: 3;
-                      ">
-              MP
-            </div>
-
-            <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle" style="
-                        width: 36px;
-                        height: 36px;
-                        background: #c55cff;
-                        border: 2px solid #131b36;
-                        margin-left: -12px;
-                        z-index: 2;
-                      ">
-              SK
-            </div>
-          </div>
-
-          <button class="custom-btn secondary py-1 px-3">
-            Details
-          </button>
-        </div>
+        {% endif %}
       </div>
     </div>
   </div>
