@@ -2166,3 +2166,31 @@ body {
         min-height: 48px;
     }
 }
+
+/* Dashboard Upcoming Meetings Scrollbar */
+.meetings-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.meetings-scroll-area::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.meetings-scroll-area::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.meetings-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+/* Ensure smooth scrolling */
+.meetings-scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.3) rgba(255, 255, 255, 0.02);
+    scroll-behavior: smooth;
+}
+
