@@ -15,6 +15,16 @@ document.addEventListener('DOMContentLoaded', function() {
         "July", "August", "September", "October", "November", "December"
     ];
 
+    const eventsData = [
+        {% for event in upcoming_events %}
+        {
+            id: "{{ event.id }}",
+            date: "{{ event.start_at.strftime('%Y-%m-%d') }}",
+            title: "{{ event.title|escape }}"
+        },
+        {% endfor %}
+    ];
+
     function renderCalendar() {
         const year = displayedDate.getFullYear();
         const month = displayedDate.getMonth();
@@ -45,9 +55,17 @@ document.addEventListener('DOMContentLoaded', function() {
             dayDiv.className = 'calendar-day';
             dayDiv.textContent = day;
 
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            dayDiv.setAttribute('data-date', dateStr);
+
             // Check if it's today
             if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
                 dayDiv.classList.add('today');
+            }
+
+            // Check for events
+            if (eventsData.some(e => e.date === dateStr)) {
+                dayDiv.classList.add('has-event');
             }
 
             calendarGrid.appendChild(dayDiv);
@@ -160,7 +178,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="meetings-scroll-area" style="max-height: 380px; overflow-y: auto; padding-right: 8px;">
         {% if upcoming_events %}
           {% for event in upcoming_events %}
-            <div class="meeting-card d-flex align-items-center justify-content-between p-3 mb-3 rounded" style="
+            <div class="meeting-card d-flex align-items-center justify-content-between p-3 mb-3 rounded" 
+                 data-event-date="{{ event.start_at.strftime('%Y-%m-%d') }}"
+                 style="
                         background: rgba(255, 255, 255, 0.05);
                         border: 1px solid rgba(255, 255, 255, 0.1);
                       ">
