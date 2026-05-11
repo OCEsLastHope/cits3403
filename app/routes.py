@@ -6,6 +6,7 @@ from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func, or_
 from flask_socketio import emit, join_room
+from email_validator import validate_email, EmailNotValidError
 
 from . import app, db, socketio
 from .database import (
@@ -897,13 +898,24 @@ def register():
             flash("All required fields must be filled.", "error")
             return render_template("signup.html", degree_options=degree_options)
 
+        try:
+            validate_email(email, check_deliverability=False)
+        except EmailNotValidError:
+            flash("Invalid email address", "error")
+            return render_template("signup.html", degree_options=degree_options)
+
         if not password or password != confirm_password:
             flash("Password and confirm password must match.", "error")
             return render_template("signup.html", degree_options=degree_options)
 
         selected_degree_option = None
+
         if degree_type != "other" and degree_option_id:
-            selected_degree_option = DegreeOption.query.filter_by(id=degree_option_id, is_active=True).first()
+            selected_degree_option = DegreeOption.query.filter_by(
+                id=degree_option_id,
+                is_active=True
+            ).first()
+
             if selected_degree_option is None:
                 flash("Selected degree is invalid.", "error")
                 return render_template("signup.html", degree_options=degree_options)
@@ -929,6 +941,7 @@ def register():
             degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
         )
+
         new_user.set_password(password)
 
         db.session.add(new_user)
@@ -938,7 +951,6 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("signup.html", degree_options=degree_options)
-
 
 
 @app.route("/notifications")
