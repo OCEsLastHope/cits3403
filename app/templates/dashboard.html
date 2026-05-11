@@ -66,11 +66,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check for events
             if (eventsData.some(e => e.date === dateStr)) {
                 dayDiv.classList.add('has-event');
+                
+                // Interaction: Hover day -> Highlight meetings
+                dayDiv.addEventListener('mouseenter', () => {
+                    document.querySelectorAll(`.meeting-card[data-event-date="${dateStr}"]`).forEach(card => {
+                        card.classList.add('highlighted');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
+                });
+                dayDiv.addEventListener('mouseleave', () => {
+                    document.querySelectorAll('.meeting-card.highlighted').forEach(card => {
+                        card.classList.remove('highlighted');
+                    });
+                });
             }
 
             calendarGrid.appendChild(dayDiv);
         }
     }
+
+    // Interaction: Hover meeting -> Highlight calendar day
+    document.addEventListener('mouseover', (e) => {
+        const card = e.target.closest('.meeting-card');
+        if (card) {
+            const dateStr = card.getAttribute('data-event-date');
+            document.querySelectorAll(`.calendar-day[data-date="${dateStr}"]`).forEach(day => {
+                day.classList.add('selected');
+            });
+        }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.meeting-card');
+        if (card) {
+            document.querySelectorAll('.calendar-day.selected').forEach(day => {
+                day.classList.remove('selected');
+            });
+        }
+    });
 
     prevBtn.addEventListener('click', (e) => {
         e.preventDefault();
