@@ -32,12 +32,6 @@
         {% endif %}
     </div>
 
-    <div class="mb-3">
-        <span class="tag">Quiet Study</span>
-        <span class="tag">Exam Prep</span>
-        <span class="tag">Library Sessions</span>
-    </div>
-
     <p class="mb-0 text-light">Looking for people to study with for exams and weekly revision sessions.</p>
 </section>
 
@@ -56,14 +50,14 @@
 
     <div class="col-lg-4">
         <section class="info-card h-100">
-            <div class="section-heading">Subjects</div>
-            <ul class="info-list">
-                {% if subjects %}
-                {% for subject in subjects %}
-                <li>{{ subject }}</li>
+            <div class="section-heading">Units</div>
+            <ul class="info-list list-unstyled mb-0">
+                {% if units %}
+                {% for unit in units %}
+                <li class="py-1 border-bottom border-secondary-subtle">{{ unit }}</li>
                 {% endfor %}
                 {% else %}
-                <li>No subjects added yet</li>
+                <li class="text-light" style="opacity: 0.7;">No units added yet</li>
                 {% endif %}
             </ul>
         </section>
@@ -74,17 +68,17 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div class="section-heading">Availability</div>
             </div>
-            <ul class="info-list">
+            <ul class="info-list list-unstyled mb-0">
                 {% for day in day_names %}
                 {% if availability_map.get(day) %}
                 {% for slot in availability_map[day] %}
-                <li id="{{ day|lower }}Display{{ loop.index }}">{{ day }}: {{ slot[0] }} - {{ slot[1] }}
+                <li class="py-1 border-bottom border-secondary-subtle" id="{{ day|lower }}Display{{ loop.index }}">{{ day }}: {{ slot[0] }} - {{ slot[1] }}
                 </li>
                 {% endfor %}
                 {% endif %}
                 {% endfor %}
                 {% if not availability_map.values() | select | list %}
-                <li>No availability added yet</li>
+                <li class="text-light" style="opacity: 0.7;">No availability added yet</li>
                 {% endif %}
             </ul>
         </section>
@@ -166,7 +160,14 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="subjects-tab" data-bs-toggle="tab"
                                 data-bs-target="#subjects-pane" type="button" role="tab">
-                                Subjects
+                                Units
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="preferences-tab" data-bs-toggle="tab"
+                                data-bs-target="#preferences-pane" type="button" role="tab">
+                                Study Preferences
                             </button>
                         </li>
 
@@ -214,7 +215,35 @@
                             <label for="yearInput" class="form-label">Major</label>
                             <input id="yearInput" name="major" class="form-control mb-3" placeholder="Major"
                                 value="{{ current_user.major if current_user else '' }}">
+                        </div>
 
+                        <!-- Units tab -->
+                        <div class="tab-pane fade" id="subjects-pane" role="tabpanel">
+                            <label for="unit1Input" class="form-label">Unit 1</label>
+                            <input id="unit1Input" name="unit1" class="form-control mb-3 unit-input" placeholder="e.g. CITS3403"
+                                list="unitSuggestions"
+                                value="{{ units[0] if units|length > 0 else '' }}" maxlength="8">
+
+                            <label for="unit2Input" class="form-label">Unit 2</label>
+                            <input id="unit2Input" name="unit2" class="form-control mb-3 unit-input" placeholder="e.g. MATH1012"
+                                list="unitSuggestions"
+                                value="{{ units[1] if units|length > 1 else '' }}" maxlength="8">
+
+                            <label for="unit3Input" class="form-label">Unit 3</label>
+                            <input id="unit3Input" name="unit3" class="form-control mb-3 unit-input" placeholder="e.g. STAT1520"
+                                list="unitSuggestions"
+                                value="{{ units[2] if units|length > 2 else '' }}" maxlength="8">
+
+                            <label for="unit4Input" class="form-label">Unit 4</label>
+                            <input id="unit4Input" name="unit4" class="form-control unit-input" placeholder="e.g. PHYS1001"
+                                list="unitSuggestions"
+                                value="{{ units[3] if units|length > 3 else '' }}" maxlength="8">
+                            <datalist id="unitSuggestions"></datalist>
+                            <small class="text-light d-block mt-2" style="opacity: 0.75;">Use UWA 2026 unit codes only (4 letters + 4 numbers).</small>
+                        </div>
+
+                        <!-- Study Preferences tab -->
+                        <div class="tab-pane fade" id="preferences-pane" role="tabpanel">
                             <label for="sessionsInput" class="form-label">Sessions / Week</label>
                             <input id="sessionsInput" name="sessions_per_week" class="form-control mb-3" type="number"
                                 min="0" placeholder="Sessions / Week"
@@ -233,21 +262,6 @@
                             <label for="aboutInput" class="form-label">About</label>
                             <textarea id="aboutInput" name="bio" class="form-control" rows="4"
                                 placeholder="About">{{ current_user.bio if current_user and current_user.bio else '' }}</textarea>
-                        </div>
-
-                        <!-- Subjects tab -->
-                        <div class="tab-pane fade" id="subjects-pane" role="tabpanel">
-                            <label for="subject1Input" class="form-label">Subject 1</label>
-                            <input id="subject1Input" name="subject1" class="form-control mb-3" placeholder="Subject 1"
-                                value="{{ subjects[0] if subjects|length > 0 else '' }}">
-
-                            <label for="subject2Input" class="form-label">Subject 2</label>
-                            <input id="subject2Input" name="subject2" class="form-control mb-3" placeholder="Subject 2"
-                                value="{{ subjects[1] if subjects|length > 1 else '' }}">
-
-                            <label for="subject3Input" class="form-label">Subject 3</label>
-                            <input id="subject3Input" name="subject3" class="form-control" placeholder="Subject 3"
-                                value="{{ subjects[2] if subjects|length > 2 else '' }}">
                         </div>
 
                         <!-- Availability tab -->
@@ -432,6 +446,45 @@
         }
 
         row.remove();
+    });
+
+    let unitSearchTimer = null;
+    const unitSuggestionList = document.getElementById("unitSuggestions");
+
+    function renderUnitSuggestions(codes) {
+        unitSuggestionList.innerHTML = "";
+        codes.forEach((code) => {
+            const option = document.createElement("option");
+            option.value = code;
+            unitSuggestionList.appendChild(option);
+        });
+    }
+
+    function fetchUnitSuggestions(query) {
+        fetch(`/units/search?q=${encodeURIComponent(query)}`)
+            .then((response) => response.json())
+            .then((data) => renderUnitSuggestions(data.units || []))
+            .catch(() => renderUnitSuggestions([]));
+    }
+
+    document.querySelectorAll(".unit-input").forEach((input) => {
+        input.addEventListener("input", function () {
+            const sanitized = this.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+            this.value = sanitized;
+
+            if (unitSearchTimer) {
+                clearTimeout(unitSearchTimer);
+            }
+
+            if (sanitized.length < 2) {
+                renderUnitSuggestions([]);
+                return;
+            }
+
+            unitSearchTimer = setTimeout(() => {
+                fetchUnitSuggestions(sanitized);
+            }, 150);
+        });
     });
 </script>
 {% endblock %}

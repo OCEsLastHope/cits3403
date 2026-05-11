@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from collections import defaultdict
+from pathlib import Path
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
@@ -39,6 +40,22 @@ TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(6, 24)]
 EVENT_VISIBILITY_MODES = {"invite_only", "open"}
 EVENT_STATUSES = {"scheduled", "cancelled"}
 ATTENDEE_STATUSES = {"invited", "accepted", "declined", "left"}
+MAX_PROFILE_UNITS = 4
+UNIT_CODE_PATTERN = re.compile(r"^[A-Z]{4}[0-9]{4}$")
+
+
+def load_valid_uwa_2026_unit_codes():
+    data_path = Path(app.root_path).parent / "data" / "uwa_2026_unit_codes.txt"
+    if not data_path.exists():
+        return set()
+    return {
+        line.strip().upper()
+        for line in data_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+
+
+VALID_UWA_2026_UNIT_CODES = load_valid_uwa_2026_unit_codes()
 
 
 def get_degree_options_by_category():
@@ -745,10 +762,11 @@ def profile():
         submitted_group_size = request.form.get("preferred_group_size", "").strip()
         submitted_study_mode = request.form.get("study_mode", "").strip()
 
-        subject_values = [
-            request.form.get("subject1", "").strip(),
-            request.form.get("subject2", "").strip(),
-            request.form.get("subject3", "").strip(),
+        unit_values = [
+            request.form.get("unit1", "").strip().upper(),
+            request.form.get("unit2", "").strip().upper(),
+            request.form.get("unit3", "").strip().upper(),
+            request.form.get("unit4", "").strip().upper(),
         ]
         profile_errors = []
         availability_errors = []
@@ -776,6 +794,20 @@ def profile():
             profile_errors.append("Major is required.")
         if submitted_sessions_per_week and not submitted_sessions_per_week.isdigit():
             profile_errors.append("Sessions per week must be a valid number.")
+
+        non_empty_units = [value for value in unit_values if value]
+        if len(non_empty_units) > MAX_PROFILE_UNITS:
+            profile_errors.append("You can add a maximum of 4 units.")
+
+        if len(non_empty_units) != len(set(non_empty_units)):
+            profile_errors.append("Units must be unique.")
+
+        for value in non_empty_units:
+            if not UNIT_CODE_PATTERN.match(value):
+                profile_errors.append(f"{value} is invalid. Use 4 letters followed by 4 numbers.")
+                continue
+            if VALID_UWA_2026_UNIT_CODES and value not in VALID_UWA_2026_UNIT_CODES:
+                profile_errors.append(f"{value} is not a valid UWA 2026 unit code.")
 
         for day in DAY_NAMES:
             day_key = day.lower()
@@ -819,7 +851,7 @@ def profile():
             return render_template(
                 "userpages.html",
                 current_user=user,
-                subjects=[value for value in subject_values if value],
+                units=non_empty_units,
                 availability_map=submitted_availability_map,
                 day_names=DAY_NAMES,
                 time_options=TIME_OPTIONS,
@@ -842,7 +874,7 @@ def profile():
         user.study_mode = submitted_study_mode or None
 
         UserSubject.query.filter_by(user_id=user.id).delete()
-        for value in subject_values:
+        for value in non_empty_units:
             if value:
                 db.session.add(UserSubject(user_id=user.id, subject_code=value))
 
@@ -860,7 +892,7 @@ def profile():
         db.session.commit()
         return redirect(url_for("profile"))
 
-    subject_codes = [item.subject_code for item in user.subjects]
+    unit_codes = [item.subject_code.upper() for item in user.subjects]
     availability_map = {day: [] for day in DAY_NAMES}
     for item in user.availabilities:
         availability_map.setdefault(item.day_of_week, []).append((item.start_time, item.end_time))
@@ -868,7 +900,7 @@ def profile():
     return render_template(
         "userpages.html",
         current_user=user,
-        subjects=subject_codes,
+        units=unit_codes,
         availability_map=availability_map,
         day_names=DAY_NAMES,
         time_options=TIME_OPTIONS,
@@ -876,6 +908,24 @@ def profile():
         profile_errors=[],
         open_profile_modal=False,
     )
+
+
+@app.route("/units/search")
+@login_required
+def search_units():
+    query = request.args.get("q", "").strip().upper()
+    if not query:
+        return {"units": []}
+
+    if not re.match(r"^[A-Z0-9]+$", query):
+        return {"units": []}
+
+    matches = [
+        code for code in VALID_UWA_2026_UNIT_CODES
+        if code.startswith(query)
+    ]
+    matches.sort()
+    return {"units": matches[:12]}
 
 
 @app.route("/register", methods=["GET", "POST"])
