@@ -1,6 +1,127 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarGrid = document.getElementById('calendarGrid');
+    const monthYearDisplay = document.getElementById('currentMonthYear');
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+
+    let displayedDate = new Date(); // Current date
+
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const eventsData = [
+        {% for event in upcoming_events %}
+        {
+            id: "{{ event.id }}",
+            date: "{{ event.start_at.strftime('%Y-%m-%d') }}",
+            title: "{{ event.title|escape }}"
+        },
+        {% endfor %}
+    ];
+
+    function renderCalendar() {
+        const year = displayedDate.getFullYear();
+        const month = displayedDate.getMonth();
+        
+        // Update header
+        monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+
+        // Clear existing days (keep weekdays)
+        const weekdays = Array.from(calendarGrid.querySelectorAll('.calendar-weekday'));
+        calendarGrid.innerHTML = '';
+        weekdays.forEach(wd => calendarGrid.appendChild(wd));
+
+        // Get first day of month (0 = Sunday) and total days
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Padding for the first week
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'calendar-day other-month';
+            calendarGrid.appendChild(emptyDiv);
+        }
+
+        // Current month days
+        const today = new Date();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            dayDiv.textContent = day;
+
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            dayDiv.setAttribute('data-date', dateStr);
+
+            // Check if it's today
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                dayDiv.classList.add('today');
+            }
+
+            // Check for events
+            if (eventsData.some(e => e.date === dateStr)) {
+                dayDiv.classList.add('has-event');
+                
+                // Interaction: Hover day -> Highlight meetings
+                dayDiv.addEventListener('mouseenter', () => {
+                    document.querySelectorAll(`.meeting-card[data-event-date="${dateStr}"]`).forEach(card => {
+                        card.classList.add('highlighted');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
+                });
+                dayDiv.addEventListener('mouseleave', () => {
+                    document.querySelectorAll('.meeting-card.highlighted').forEach(card => {
+                        card.classList.remove('highlighted');
+                    });
+                });
+            }
+
+            calendarGrid.appendChild(dayDiv);
+        }
+    }
+
+    // Interaction: Hover meeting -> Highlight calendar day
+    document.addEventListener('mouseover', (e) => {
+        const card = e.target.closest('.meeting-card');
+        if (card) {
+            const dateStr = card.getAttribute('data-event-date');
+            document.querySelectorAll(`.calendar-day[data-date="${dateStr}"]`).forEach(day => {
+                day.classList.add('selected');
+            });
+        }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.meeting-card');
+        if (card) {
+            document.querySelectorAll('.calendar-day.selected').forEach(day => {
+                day.classList.remove('selected');
+            });
+        }
+    });
+
+    prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        displayedDate.setMonth(displayedDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        displayedDate.setMonth(displayedDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    renderCalendar();
+});
+</script>
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header">
@@ -58,8 +179,26 @@
   </div>
 
   <div class="col-lg-4">
-    <div class="info-card h-100 d-flex align-items-center justify-content-center">
-      <h4 class="m-0 text-center">Mini<br />Calendar</h4>
+    <div class="info-card h-100">
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <h5 id="currentMonthYear">May 2026</h5>
+          <div class="d-flex gap-2">
+            <button class="calendar-nav-btn" id="prevMonth"><i class="bi bi-chevron-left"></i></button>
+            <button class="calendar-nav-btn" id="nextMonth"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+          <div class="calendar-weekday">S</div>
+          <div class="calendar-weekday">M</div>
+          <div class="calendar-weekday">T</div>
+          <div class="calendar-weekday">W</div>
+          <div class="calendar-weekday">T</div>
+          <div class="calendar-weekday">F</div>
+          <div class="calendar-weekday">S</div>
+          <!-- Days will be generated by JS -->
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -72,7 +211,9 @@
       <div class="meetings-scroll-area" style="max-height: 380px; overflow-y: auto; padding-right: 8px;">
         {% if upcoming_events %}
           {% for event in upcoming_events %}
-            <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style="
+            <div class="meeting-card d-flex align-items-center justify-content-between p-3 mb-3 rounded" 
+                 data-event-date="{{ event.start_at.strftime('%Y-%m-%d') }}"
+                 style="
                         background: rgba(255, 255, 255, 0.05);
                         border: 1px solid rgba(255, 255, 255, 0.1);
                       ">
