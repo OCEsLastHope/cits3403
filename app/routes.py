@@ -399,14 +399,29 @@ def dashboard():
         user = db.session.get(User, 1)
 
     suggested_matches = []
+    upcoming_events = []
+    
     if user:
         # Get the top 3 matches for the dashboard preview
         suggested_matches = find_matches(user.id)[:3]
+        
+        # Get all upcoming accepted meetings for the scrollbox
+        now = datetime.utcnow()
+        upcoming_events = (
+            Event.query.join(EventAttendee, EventAttendee.event_id == Event.id)
+            .filter(Event.status == "scheduled")
+            .filter(Event.end_at >= now)
+            .filter(EventAttendee.user_id == user.id)
+            .filter(EventAttendee.invite_status == "accepted")
+            .order_by(Event.start_at.asc())
+            .all()
+        )
 
     return render_template(
         "dashboard.html",
         current_user=user,
-        suggested_matches=suggested_matches
+        suggested_matches=suggested_matches,
+        upcoming_events=upcoming_events
     )
 
 

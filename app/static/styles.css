@@ -2314,3 +2314,144 @@ body {
     }
 }
 
+/* Dashboard Upcoming Meetings Scrollbar */
+.meetings-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.meetings-scroll-area::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.meetings-scroll-area::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.meetings-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+/* Ensure smooth scrolling */
+.meetings-scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.3) rgba(255, 255, 255, 0.02);
+    scroll-behavior: smooth;
+}
+
+/* Mini Calendar Widget */
+.calendar-container {
+    width: 100%;
+    color: #ffffff;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-header h5 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.calendar-nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.calendar-nav-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+.calendar-weekday {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8b5cf6;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, rgba(197, 92, 255, 0.2), rgba(76, 216, 255, 0.2));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    font-weight: 700;
+}
+
+.calendar-day.has-event {
+    color: #ffffff;
+}
+
+.calendar-day.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #d56cff;
+    box-shadow: 0 0 8px #d56cff;
+}
+
+.calendar-day.other-month {
+    opacity: 0.2;
+    cursor: default;
+}
+
+.calendar-day.selected {
+    background: #8b5cf6;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+/* Meeting Highlight Animation */
+.meeting-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.meeting-card.highlighted {
+    transform: translateX(10px);
+    border-color: #8b5cf6 !important;
+    background: rgba(139, 92, 246, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
