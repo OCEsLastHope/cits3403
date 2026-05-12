@@ -8,7 +8,9 @@ from sqlalchemy import func, or_
 from flask_socketio import emit, join_room
 from email_validator import validate_email, EmailNotValidError
 
-from . import app, db, socketio
+from . import app, db, socketio, mail
+from flask_mail import Message as MailMessage
+from itsdangerous import URLSafeTimedSerializer
 from .database import (
     Conversation,
     ConversationMember,
@@ -39,6 +41,59 @@ TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(6, 24)]
 EVENT_VISIBILITY_MODES = {"invite_only", "open"}
 EVENT_STATUSES = {"scheduled", "cancelled"}
 ATTENDEE_STATUSES = {"invited", "accepted", "declined", "left"}
+serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+
+def generate_reset_token(email):
+    return serializer.dumps(email, salt="password-reset-salt")
+
+
+def verify_reset_token(token, expiration=1800):
+    try:
+        email = serializer.loads(
+            token,
+            salt="password-reset-salt",
+            max_age=expiration
+        )
+
+        return email
+
+    except Exception:
+        return None
+    
+def send_reset_email(user):
+
+    token = generate_reset_token(user.email)
+
+    reset_link = url_for(
+        "reset_password",
+        token=token,
+        _external=True
+    )
+
+    msg = MailMessage(
+        subject="Reset your StudySync password",
+
+        recipients=[user.email],
+
+        body=f"""
+Hi {user.first_name},
+
+We received a request to reset your StudySync password.
+
+Click the link below to reset your password:
+
+{reset_link}
+
+This link expires in 30 minutes.
+
+If you did not request this, you can safely ignore this email.
+
+StudySync
+"""
+    )
+
+    mail.send(msg)
 
 
 def get_degree_options_by_category():
@@ -265,7 +320,66 @@ def login():
 
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
+
+    if request.method == "POST":
+
+        identifier = request.form.get("identifier", "").strip()
+
+        user = User.query.filter(
+            or_(
+                User.email == identifier,
+                User.username == identifier
+            )
+        ).first()
+
+        if user:
+            send_reset_email(user)
+
+        flash(
+            "If an account exists with that email or username, a reset link has been sent.",
+            "info"
+        )
+
+        return redirect(url_for("login"))
+
     return render_template("forgot_password.html")
+
+@app.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+
+    email = verify_reset_token(token)
+
+    if not email:
+        flash("Invalid or expired reset link.", "error")
+        return redirect(url_for("forgot_password"))
+
+    user = User.query.filter_by(email=email).first()
+
+    if user is None:
+        flash("User not found.", "error")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+
+        password = request.form.get("password", "").strip()
+
+        confirm_password = request.form.get("confirm_password", "").strip()
+
+        if not password or password != confirm_password:
+            flash("Passwords must match.", "error")
+            return redirect(request.url)
+
+        user.set_password(password)
+
+        db.session.commit()
+
+        flash("Password reset successful. Please log in.", "success")
+
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html")
+
+
 
 
 @app.route("/logout")
