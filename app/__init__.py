@@ -6,6 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 from datetime import datetime, timedelta
 from sqlalchemy import inspect
 from flask_socketio import SocketIO
+from flask_mail import Mail
 
 from config import Config
 
@@ -13,11 +14,13 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+mail = Mail()
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 migrate.init_app(app, db)
 login_manager.init_app(app)
+mail.init_app(app)
 login_manager.login_view = "login"
 csrf.init_app(app)
 socketio = SocketIO(app)
@@ -359,6 +362,8 @@ with app.app_context():
 if __name__ == "__main__":
     socketio.run(app, debug=True)
     
+    
+
     
     
     
