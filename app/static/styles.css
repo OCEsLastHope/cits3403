@@ -366,6 +366,11 @@ body {
     color: #ffffff;
 }
 
+.form-select option {
+    background: #131b36;
+    color: #ffffff;
+}
+
 .form-control:focus,
 .form-select:focus {
     background: rgba(255, 255, 255, 0.1);
