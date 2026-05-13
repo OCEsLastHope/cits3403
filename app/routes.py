@@ -3,15 +3,16 @@ from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func, or_
 from flask_socketio import emit, join_room
 from email_validator import validate_email, EmailNotValidError
 
-from . import app, db, socketio, mail
+from . import db, socketio, mail
 from flask_mail import Message as MailMessage
 from itsdangerous import URLSafeTimedSerializer
+from .blueprints import main_bp
 from .database import (
     Conversation,
     ConversationMember,
@@ -47,7 +48,7 @@ UNIT_CODE_PATTERN = re.compile(r"^[A-Z]{4}[0-9]{4}$")
 
 
 def load_valid_uwa_2026_unit_codes():
-    data_path = Path(app.root_path).parent / "data" / "uwa_2026_unit_codes.txt"
+    data_path = Path(current_app.root_path).parent / "data" / "uwa_2026_unit_codes.txt"
     if not data_path.exists():
         return set()
     return {
@@ -58,16 +59,19 @@ def load_valid_uwa_2026_unit_codes():
 
 
 VALID_UWA_2026_UNIT_CODES = load_valid_uwa_2026_unit_codes()
-serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+
+def get_serializer():
+    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
 
 
 def generate_reset_token(email):
-    return serializer.dumps(email, salt="password-reset-salt")
+    return get_serializer().dumps(email, salt="password-reset-salt")
 
 
 def verify_reset_token(token, expiration=1800):
     try:
-        email = serializer.loads(
+        email = get_serializer().loads(
             token,
             salt="password-reset-salt",
             max_age=expiration
@@ -83,7 +87,7 @@ def send_reset_email(user):
     token = generate_reset_token(user.email)
 
     reset_link = url_for(
-        "reset_password",
+        "main.reset_password",
         token=token,
         _external=True
     )
@@ -694,15 +698,15 @@ def build_event_card_data(event, user_id):
     }
 
 
-@app.route("/")
+@main_bp.route("/")
 def landing():
     return render_template("landing.html")
 
 
-@app.route("/login", methods=["GET", "POST"])
+@main_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("main.dashboard"))
 
     if request.method == "POST":
         identifier = request.form.get("username", "").strip()
@@ -721,12 +725,12 @@ def login():
             return render_template("loginpage.html")
 
         login_user(user, remember=remember)
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("main.dashboard"))
 
     return render_template("loginpage.html")
 
 
-@app.route("/forgot_password", methods=["GET", "POST"])
+@main_bp.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
 
     if request.method == "POST":
@@ -748,24 +752,24 @@ def forgot_password():
             "info"
         )
 
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     return render_template("forgot_password.html")
 
-@app.route("/reset_password/<token>", methods=["GET", "POST"])
+@main_bp.route("/reset_password/<token>", methods=["GET", "POST"])
 def reset_password(token):
 
     email = verify_reset_token(token)
 
     if not email:
         flash("Invalid or expired reset link.", "error")
-        return redirect(url_for("forgot_password"))
+        return redirect(url_for("main.forgot_password"))
 
     user = User.query.filter_by(email=email).first()
 
     if user is None:
         flash("User not found.", "error")
-        return redirect(url_for("forgot_password"))
+        return redirect(url_for("main.forgot_password"))
 
     if request.method == "POST":
 
@@ -783,22 +787,22 @@ def reset_password(token):
 
         flash("Password reset successful. Please log in.", "success")
 
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     return render_template("reset_password.html")
 
 
 
 
-@app.route("/logout")
+@main_bp.route("/logout")
 @login_required
 def logout():
     logout_user()
     flash("You have been logged out.", "success")
-    return redirect(url_for("login"))
+    return redirect(url_for("main.login"))
 
 
-@app.route("/dashboard")
+@main_bp.route("/dashboard")
 @login_required
 def dashboard():
     user = get_current_user()
@@ -845,7 +849,7 @@ def dashboard():
     )
 
 
-@app.route("/events")
+@main_bp.route("/events")
 @login_required
 def events_page():
     now = datetime.utcnow()
@@ -900,7 +904,7 @@ def events_page():
     )
 
 
-@app.route("/events/create", methods=["POST"])
+@main_bp.route("/events/create", methods=["POST"])
 @login_required
 def create_event():
     title = request.form.get("title", "").strip()
@@ -913,37 +917,37 @@ def create_event():
 
     if not title or len(title) < 3 or len(title) > 120:
         flash("Event title must be between 3 and 120 characters.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if visibility_mode not in EVENT_VISIBILITY_MODES:
         flash("Invalid event type.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if start_at is None or end_at is None:
         flash("Valid start and end times are required.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if end_at <= start_at:
         flash("Event end time must be after start time.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if (end_at - start_at).total_seconds() > 12 * 3600:
         flash("Event duration cannot exceed 12 hours.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     max_attendees = None
     if max_attendees_raw:
         if not max_attendees_raw.isdigit():
             flash("Max attendees must be a number.", "error")
-            return redirect(url_for("events_page"))
+            return redirect(url_for("main.events_page"))
         max_attendees = int(max_attendees_raw)
         if max_attendees < 2 or max_attendees > 100:
             flash("Max attendees must be between 2 and 100.", "error")
-            return redirect(url_for("events_page"))
+            return redirect(url_for("main.events_page"))
 
     if visibility_mode == "open" and max_attendees is None:
         flash("Open events must include a max attendee limit.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     event = Event(
         creator_user_id=current_user.id,
@@ -970,10 +974,10 @@ def create_event():
 
     db.session.commit()
     flash("Event created successfully.", "success")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
-@app.route("/events/<int:event_id>/edit", methods=["POST"])
+@main_bp.route("/events/<int:event_id>/edit", methods=["POST"])
 @login_required
 def edit_event(event_id):
     event = Event.query.get_or_404(event_id)
@@ -981,7 +985,7 @@ def edit_event(event_id):
         abort(403)
     if event.status != "scheduled":
         flash("Only scheduled events can be edited.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     title = request.form.get("title", "").strip()
     description = request.form.get("description", "").strip()
@@ -993,35 +997,35 @@ def edit_event(event_id):
 
     if not title or len(title) < 3 or len(title) > 120:
         flash("Event title must be between 3 and 120 characters.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
     if visibility_mode not in EVENT_VISIBILITY_MODES:
         flash("Invalid event type.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
     if start_at is None or end_at is None:
         flash("Valid start and end times are required.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
     if end_at <= start_at:
         flash("Event end time must be after start time.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     max_attendees = None
     if max_attendees_raw:
         if not max_attendees_raw.isdigit():
             flash("Max attendees must be a number.", "error")
-            return redirect(url_for("events_page"))
+            return redirect(url_for("main.events_page"))
         max_attendees = int(max_attendees_raw)
         if max_attendees < 2 or max_attendees > 100:
             flash("Max attendees must be between 2 and 100.", "error")
-            return redirect(url_for("events_page"))
+            return redirect(url_for("main.events_page"))
 
     if visibility_mode == "open" and max_attendees is None:
         flash("Open events must include a max attendee limit.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     accepted_count = count_event_accepted_attendees(event)
     if max_attendees is not None and accepted_count > max_attendees:
         flash("Max attendees cannot be below current accepted attendee count.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     event.title = title
     event.description = description or None
@@ -1045,10 +1049,10 @@ def edit_event(event_id):
 
     db.session.commit()
     flash("Event updated.", "success")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
-@app.route("/events/<int:event_id>/cancel", methods=["POST"])
+@main_bp.route("/events/<int:event_id>/cancel", methods=["POST"])
 @login_required
 def cancel_event(event_id):
     event = Event.query.get_or_404(event_id)
@@ -1056,7 +1060,7 @@ def cancel_event(event_id):
         abort(403)
     if event.status != "scheduled":
         flash("Event is already cancelled.", "info")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     event.status = "cancelled"
 
@@ -1075,10 +1079,10 @@ def cancel_event(event_id):
 
     db.session.commit()
     flash("Event cancelled.", "success")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
-@app.route("/events/<int:event_id>/invite", methods=["POST"])
+@main_bp.route("/events/<int:event_id>/invite", methods=["POST"])
 @login_required
 def invite_to_event(event_id):
     event = Event.query.get_or_404(event_id)
@@ -1086,17 +1090,17 @@ def invite_to_event(event_id):
         abort(403)
     if event.status != "scheduled":
         flash("Cannot invite attendees to a cancelled event.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     identifiers = request.form.get("invite_identifiers", "")
     raw_items = [item.strip() for item in identifiers.split(",") if item.strip()]
     if not raw_items:
         flash("Enter at least one username or email to invite.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if len(raw_items) > 20:
         flash("You can invite up to 20 users per event at a time.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     invited_count = 0
     skipped_count = 0
@@ -1133,18 +1137,18 @@ def invite_to_event(event_id):
     return redirect(url_for("events_page"))
 
 
-@app.route("/events/<int:event_id>/join", methods=["POST"])
+@main_bp.route("/events/<int:event_id>/join", methods=["POST"])
 @login_required
 def join_open_event(event_id):
     event = Event.query.get_or_404(event_id)
     if event.status != "scheduled" or event.visibility_mode != "open":
         flash("This event is not open for joining.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     attendee = EventAttendee.query.filter_by(event_id=event.id, user_id=current_user.id).first()
     if attendee and attendee.invite_status == "accepted":
         flash("You already joined this event.", "info")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if is_event_full(event):
         flash("Event is full.", "error")
@@ -1158,10 +1162,10 @@ def join_open_event(event_id):
     attendee.responded_at = datetime.utcnow()
     db.session.commit()
     flash("You joined the event.", "success")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
-@app.route("/events/<int:event_id>/respond", methods=["POST"])
+@main_bp.route("/events/<int:event_id>/respond", methods=["POST"])
 @login_required
 def respond_to_event_invite(event_id):
     event = Event.query.get_or_404(event_id)
@@ -1174,7 +1178,7 @@ def respond_to_event_invite(event_id):
 
     if action not in {"accept", "decline"}:
         flash("Invalid invite response.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if event.status != "scheduled":
         flash("This event is no longer active.", "error")
@@ -1203,10 +1207,10 @@ def respond_to_event_invite(event_id):
     attendee.responded_at = datetime.utcnow()
     db.session.commit()
     flash("Invitation accepted.", "success")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
-@app.route("/events/<int:event_id>/leave", methods=["POST"])
+@main_bp.route("/events/<int:event_id>/leave", methods=["POST"])
 @login_required
 def leave_event(event_id):
     event = Event.query.get_or_404(event_id)
@@ -1224,7 +1228,7 @@ def leave_event(event_id):
     return redirect(url_for("events_page"))
 
 
-@app.route("/matches")
+@main_bp.route("/matches")
 @login_required
 def matches():
     selected_degree_option_id = request.args.get("degree_option_id", type=int)
@@ -1250,7 +1254,7 @@ def matches():
     )
 
 
-@app.route("/profile", methods=["GET", "POST"])
+@main_bp.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
     degree_options = get_degree_options_by_category()
@@ -1398,7 +1402,7 @@ def profile():
             )
 
         db.session.commit()
-        return redirect(url_for("profile"))
+        return redirect(url_for("main.profile"))
 
     unit_codes = [item.subject_code.upper() for item in user.subjects]
     availability_map = {day: [] for day in DAY_NAMES}
@@ -1418,7 +1422,7 @@ def profile():
     )
 
 
-@app.route("/units/search")
+@main_bp.route("/units/search")
 @login_required
 def search_units():
     query = request.args.get("q", "").strip().upper()
@@ -1436,7 +1440,7 @@ def search_units():
     return {"units": matches[:12]}
 
 
-@app.route("/register", methods=["GET", "POST"])
+@main_bp.route("/register", methods=["GET", "POST"])
 def register():
     degree_options = get_degree_options_by_category()
 
@@ -1510,12 +1514,12 @@ def register():
         db.session.commit()
 
         flash("Registration successful. Please log in.", "success")
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     return render_template("signup.html", degree_options=degree_options)
 
 
-@app.route("/notifications")
+@main_bp.route("/notifications")
 @login_required
 def notifications():
     user = current_user
@@ -1532,7 +1536,7 @@ def notifications():
     )
 
 
-@app.route("/notifications/read/<int:notif_id>", methods=["POST"])
+@main_bp.route("/notifications/read/<int:notif_id>", methods=["POST"])
 @login_required
 def mark_read(notif_id):
     n = Notification.query.get_or_404(notif_id)
@@ -1543,14 +1547,14 @@ def mark_read(notif_id):
     return "", 204
 
 
-@app.route("/notifications/read/all", methods=["POST"])
+@main_bp.route("/notifications/read/all", methods=["POST"])
 @login_required
 def mark_all_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
     db.session.commit()
     return "", 204
 
-@app.route("/invitations/send<int:receiver_id>", methods=["POST"])
+@main_bp.route("/invitations/send<int:receiver_id>", methods=["POST"])
 @login_required
 def send_invitation(receiver_id):
     receiver = db.session.get(User, receiver_id)
@@ -1568,7 +1572,7 @@ def send_invitation(receiver_id):
 
     if existing:
         flash("Invitation already sent.", "info")
-        return redirect(request.referrer or url_for("matches"))
+        return redirect(request.referrer or url_for("main.matches"))
 
     message_text = request.form.get("message", "").strip()
 
@@ -1592,9 +1596,9 @@ def send_invitation(receiver_id):
     db.session.commit()
 
     flash("Invitation sent!", "success")
-    return redirect(request.referrer or url_for("matches"))
+    return redirect(request.referrer or url_for("main.matches"))
 
-@app.route("/invitations/<int:invite_id>/accept", methods=["POST"])
+@main_bp.route("/invitations/<int:invite_id>/accept", methods=["POST"])
 @login_required
 def accept_invitation(invite_id):
     invite = Invitation.query.get_or_404(invite_id)
@@ -1604,7 +1608,7 @@ def accept_invitation(invite_id):
 
     if invite.status != "pending":
         flash("This invitation has already been responded to.", "info")
-        return redirect(url_for("notifications"))
+        return redirect(url_for("main.notifications"))
 
     invite.status = "accepted"
     invite.responded_at = datetime.utcnow()
@@ -1645,9 +1649,9 @@ def accept_invitation(invite_id):
     db.session.commit()
 
     flash("Invitation accepted!", "success")
-    return redirect(url_for("messages", conversation_id=conversation.id))
+    return redirect(url_for("main.messages", conversation_id=conversation.id))
 
-@app.route("/invitations/<int:invite_id>/reject", methods=["POST"])
+@main_bp.route("/invitations/<int:invite_id>/reject", methods=["POST"])
 @login_required
 def reject_invitation(invite_id):
     invite = Invitation.query.get_or_404(invite_id)
@@ -1657,19 +1661,19 @@ def reject_invitation(invite_id):
 
     if invite.status != "pending":
         flash("This invitation has already been responded to.", "info")
-        return redirect(url_for("notifications"))
+        return redirect(url_for("main.notifications"))
 
     invite.status = "rejected"
     invite.responded_at = datetime.utcnow()
     db.session.commit()
 
     flash("Invitation rejected.", "info")
-    return redirect(url_for("notifications"))
+    return redirect(url_for("main.notifications"))
 
 
 
 
-@app.route("/messages/<int:conversation_id>")
+@main_bp.route("/messages/<int:conversation_id>")
 @login_required
 def messages(conversation_id):
     membership = ConversationMember.query.filter_by(
@@ -1708,7 +1712,7 @@ def messages(conversation_id):
     )
 
 
-@app.route("/messages")
+@main_bp.route("/messages")
 @login_required
 def messages_inbox():
     memberships = (
@@ -1762,7 +1766,7 @@ def messages_inbox():
     )
 
 
-@app.route("/messages/start/<int:receiver_id>", methods=["POST"])
+@main_bp.route("/messages/start/<int:receiver_id>", methods=["POST"])
 @login_required
 def start_conversation(receiver_id):
     receiver = db.session.get(User, receiver_id)
@@ -1785,7 +1789,7 @@ def start_conversation(receiver_id):
     for conversation in existing_conversations:
         member_ids = {member.user_id for member in conversation.members}
         if member_ids == {current_user.id, receiver.id}:
-            return redirect(url_for("messages", conversation_id=conversation.id))
+            return redirect(url_for("main.messages", conversation_id=conversation.id))
 
     conversation = Conversation(is_group_chat=False)
     db.session.add(conversation)
@@ -1803,9 +1807,9 @@ def start_conversation(receiver_id):
 
     db.session.commit()
 
-    return redirect(url_for("messages", conversation_id=conversation.id))
+    return redirect(url_for("main.messages", conversation_id=conversation.id))
 
-@app.route("/messages/delete/<int:message_id>", methods=["POST"])
+@main_bp.route("/messages/delete/<int:message_id>", methods=["POST"])
 @login_required
 def delete_message(message_id):
     message = Message.query.get_or_404(message_id)
@@ -1900,7 +1904,7 @@ def handle_send_message(data):
         },
         room=f"conversation-{conversation_id}",
     )
-@app.route("/check_register_details")
+@main_bp.route("/check_register_details")
 def check_register_details():
     email = request.args.get("email", "").strip()
     username = request.args.get("username", "").strip()

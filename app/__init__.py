@@ -15,15 +15,8 @@ migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 mail = Mail()
-app = Flask(__name__)
-app.config.from_object(Config)
-db.init_app(app)
-migrate.init_app(app, db)
-login_manager.init_app(app)
-mail.init_app(app)
-login_manager.login_view = "login"
-csrf.init_app(app)
-socketio = SocketIO(app)
+socketio = SocketIO()
+app = None
 
 
 @login_manager.user_loader
@@ -382,11 +375,31 @@ def ensure_test_data():
             db.session.commit()
 
 
-from . import routes
+def create_app(config_object=Config):
+    global app
+    app = Flask(__name__)
+    app.config.from_object(config_object)
 
-with app.app_context():
-    # keep this as pass while fixing the migration
-    pass
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    mail.init_app(app)
+    csrf.init_app(app)
+    socketio.init_app(app)
+    login_manager.login_view = "main.login"
+
+    with app.app_context():
+        from .routes import main_bp
+        app.register_blueprint(main_bp)
+
+    with app.app_context():
+        # keep this as pass while fixing the migration
+        pass
+
+    return app
+
+
+app = create_app()
 
 
 if __name__ == "__main__":

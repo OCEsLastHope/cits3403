@@ -1,38 +1,28 @@
 import unittest
+import os
+
+os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", "sqlite:///:memory:")
 
 from app import app, db
 from app.database import User
+from config import TestConfig
 
 
 class AuthUnitTests(unittest.TestCase):
 
     def setUp(self):
-        app.config["TESTING"] = True
-        app.config["WTF_CSRF_ENABLED"] = False
+        app.config.from_object(TestConfig)
         self.client = app.test_client()
 
         with app.app_context():
-            User.query.filter_by(email="unit@example.com").delete()
-            User.query.filter_by(email="duplicate@example.com").delete()
-            User.query.filter_by(email="new@example.com").delete()
-
-            User.query.filter_by(username="unituser").delete()
-            User.query.filter_by(username="duplicateuser").delete()
-            User.query.filter_by(username="newuser123").delete()
-
-            db.session.commit()
+            db.session.remove()
+            db.drop_all()
+            db.create_all()
 
     def tearDown(self):
         with app.app_context():
-            User.query.filter_by(email="unit@example.com").delete()
-            User.query.filter_by(email="duplicate@example.com").delete()
-            User.query.filter_by(email="new@example.com").delete()
-
-            User.query.filter_by(username="unituser").delete()
-            User.query.filter_by(username="duplicateuser").delete()
-            User.query.filter_by(username="newuser123").delete()
-
-            db.session.commit()
+            db.session.remove()
+            db.drop_all()
 
     def create_test_user(self, email="unit@example.com", username="unituser"):
         user = User(

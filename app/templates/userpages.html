@@ -330,7 +330,7 @@
                 </div>
                 {% endif %}
 
-                <form id="profileForm" method="POST" action="{{ url_for('profile') }}">
+                <form id="profileForm" method="POST" action="{{ url_for('main.profile') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">

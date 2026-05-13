@@ -9,13 +9,13 @@
 
 <body class="landing-page">
     <header class="landing-nav" aria-label="Main navigation">
-        <a class="landing-logo" href="{{ url_for('landing') }}">
+        <a class="landing-logo" href="{{ url_for('main.landing') }}">
             Study<span>Sync</span>
         </a>
 
         <nav class="landing-actions" aria-label="Account actions">
-            <a class="landing-login" href="{{ url_for('login') }}">Login</a>
-            <a class="landing-signup" href="{{ url_for('register') }}">Sign up</a>
+            <a class="landing-login" href="{{ url_for('main.login') }}">Login</a>
+            <a class="landing-signup" href="{{ url_for('main.register') }}">Sign up</a>
         </nav>
     </header>
 
@@ -35,7 +35,7 @@
                 </p>
 
                 <div class="landing-cta-group" aria-label="Create your study group">
-                    <a class="primary-cta" href="{{ url_for('register') }}">Create my study group</a>
+                    <a class="primary-cta" href="{{ url_for('main.register') }}">Create my study group</a>
                 </div>
 
                 <ul class="unit-chip-list" aria-label="Example matching filters">
@@ -93,7 +93,7 @@
                         <span>Small groups</span>
                     </footer>
 
-                    <a class="unit-card-action" href="{{ url_for('register') }}" aria-label="Create a study group for CITS3403">
+                    <a class="unit-card-action" href="{{ url_for('main.register') }}" aria-label="Create a study group for CITS3403">
                         →
                     </a>
                 </article>
@@ -148,6 +148,5 @@
     </main>
 </body>
 </html>
-
 
 
