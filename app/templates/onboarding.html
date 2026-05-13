@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Onboarding{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Welcome to StudySync</h1>
+        <p>Quick setup in {{ total_steps }} steps.</p>
+    </div>
+</div>
+
+<section class="info-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="section-heading mb-0">Step {{ step }} of {{ total_steps }}</div>
+        <span class="badge text-bg-info">{{ ((step / total_steps) * 100) | int }}% complete</span>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Onboarding progress" aria-valuenow="{{ ((step / total_steps) * 100) | int }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" style="width: {{ ((step / total_steps) * 100) | int }}%"></div>
+    </div>
+</section>
+
+<section class="info-card">
+    {% if onboarding_errors %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in onboarding_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('onboarding') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="step" value="{{ step }}">
+
+        {% if step != 2 %}
+            {% for subject in subjects %}
+            <input type="hidden" name="unit{{ loop.index }}" value="{{ subject }}">
+            {% endfor %}
+        {% endif %}
+
+        {% if step != 3 %}
+            {% for day in day_names %}
+            {% set day_key = day|lower %}
+            {% if availability_map.get(day) %}
+                {% for slot in availability_map[day] %}
+                <input type="hidden" name="{{ day_key }}_start" value="{{ slot[0] }}">
+                <input type="hidden" name="{{ day_key }}_end" value="{{ slot[1] }}">
+                {% endfor %}
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {% if step == 1 %}
+        <div class="section-heading">Welcome</div>
+        <p class="mb-3">This short tour will set up your profile and show where to start.</p>
+        <ul class="info-list mb-0">
+            <li>Set your units so the matching engine can find relevant peers.</li>
+            <li>Add availability so matches are based on real overlapping times.</li>
+            <li>See where messages, events, and notifications live in the app.</li>
+        </ul>
+        {% endif %}
+
+        {% if step == 2 %}
+        <div class="section-heading">Step 2: Add Your Units</div>
+        <p class="mb-3">Use valid UWA unit codes (example: CITS3403).</p>
+        <div class="mb-3">
+            <label for="unit1" class="form-label">Unit 1</label>
+            <input id="unit1" name="unit1" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[0] if subjects|length > 0 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label for="unit2" class="form-label">Unit 2</label>
+            <input id="unit2" name="unit2" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[1] if subjects|length > 1 else '' }}">
+        </div>
+        <div class="mb-3">
+            <label for="unit3" class="form-label">Unit 3</label>
+            <input id="unit3" name="unit3" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[2] if subjects|length > 2 else '' }}">
+        </div>
+        <div class="mb-1">
+            <label for="unit4" class="form-label">Unit 4</label>
+            <input id="unit4" name="unit4" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[3] if subjects|length > 3 else '' }}">
+        </div>
+        {% endif %}
+
+        {% if step == 3 %}
+        <div class="section-heading">Step 3: Set Availability</div>
+        <p class="mb-3">Add one or more time slots for each day.</p>
+        
+        {% for day in day_names %}
+        {% set day_key = day|lower %}
+        <div class="mb-3" data-day="{{ day_key }}">
+            <label class="form-label"><strong>{{ day }}</strong></label>
+            <div class="availability-slots" id="{{ day_key }}Slots">
+                {% if availability_map.get(day) %}
+                {% for slot in availability_map[day] %}
+                <div class="row g-2 mb-2 availability-row">
+                    <div class="col-md-5">
+                        <select name="{{ day_key }}_start" class="form-select">
+                            <option value="">Unavailable</option>
+                            {% for time in time_options %}
+                            <option value="{{ time }}" {% if slot[0] == time %}selected{% endif %}>{{ time }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-center justify-content-center">to</div>
+                    <div class="col-md-5">
+                        <select name="{{ day_key }}_end" class="form-select">
+                            <option value="">Unavailable</option>
+                            {% for time in time_options %}
+                            <option value="{{ time }}" {% if slot[1] == time %}selected{% endif %}>{{ time }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-center">
+                        <button type="button" class="btn btn-outline-light btn-sm remove-slot">-</button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="row g-2 mb-2 availability-row">
+                    <div class="col-md-5">
+                        <select name="{{ day_key }}_start" class="form-select">
+                            <option value="">Unavailable</option>
+                            {% for time in time_options %}
+                            <option value="{{ time }}">{{ time }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-center justify-content-center">to</div>
+                    <div class="col-md-5">
+                        <select name="{{ day_key }}_end" class="form-select">
+                            <option value="">Unavailable</option>
+                            {% for time in time_options %}
+                            <option value="{{ time }}">{{ time }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-center">
+                        <button type="button" class="btn btn-outline-light btn-sm remove-slot">-</button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="btn btn-outline-info btn-sm add-slot" data-day="{{ day_key }}">Add time slot</button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if step == 4 %}
+        <div class="section-heading">Step 4: Quick App Tour</div>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="p-3 rounded border"><strong>Dashboard:</strong> upcoming meetings and suggested matches.</div></div>
+            <div class="col-md-6"><div class="p-3 rounded border"><strong>Matches:</strong> ranks users by overlapping availability.</div></div>
+            <div class="col-md-6"><div class="p-3 rounded border"><strong>Messages:</strong> study invites and chat threads.</div></div>
+            <div class="col-md-6"><div class="p-3 rounded border"><strong>Events:</strong> create or join study sessions.</div></div>
+        </div>
+        {% endif %}
+
+        {% if step == 5 %}
+        <div class="section-heading">Step 5: Confirm and Finish</div>
+        <p class="mb-3">You are ready to start. Click finish to save your setup and enter the app.</p>
+        <ul class="info-list mb-0">
+            <li>Units entered: {{ subjects | select | list | length }}</li>
+            <li>Availability slots entered: {{ availability_map.values() | map('length') | sum }}</li>
+        </ul>
+        {% endif %}
+
+        <div class="mt-4 d-flex gap-2">
+            {% if step > 1 %}
+            <button type="submit" name="action" value="back" class="btn btn-outline-light">Back</button>
+            {% endif %}
+            {% if step < total_steps %}
+            <button type="submit" name="action" value="next" class="btn btn-primary">Next</button>
+            {% else %}
+            <button type="submit" name="action" value="finish" class="btn btn-primary">Finish setup</button>
+            {% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.add-slot').forEach((button) => {
+    button.addEventListener('click', () => {
+        const day = button.dataset.day;
+        const container = document.getElementById(`${day}Slots`);
+        const row = container.querySelector('.availability-row');
+        if (!row) return;
+        const clone = row.cloneNode(true);
+        clone.querySelectorAll('select').forEach((select) => {
+            select.value = '';
+        });
+        container.appendChild(clone);
+    });
+});
+
+document.addEventListener('click', (event) => {
+    if (!event.target.classList.contains('remove-slot')) return;
+    const row = event.target.closest('.availability-row');
+    const container = row.parentElement;
+    if (container.querySelectorAll('.availability-row').length === 1) {
+        row.querySelectorAll('select').forEach((select) => {
+            select.value = '';
+        });
+        return;
+    }
+    row.remove();
+});
+</script>
+{% endblock %}

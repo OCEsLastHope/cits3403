@@ -44,6 +44,20 @@ EVENT_STATUSES = {"scheduled", "cancelled"}
 ATTENDEE_STATUSES = {"invited", "accepted", "declined", "left"}
 MAX_PROFILE_UNITS = 4
 UNIT_CODE_PATTERN = re.compile(r"^[A-Z]{4}[0-9]{4}$")
+ONBOARDING_STEP_ENDPOINTS = {
+    1: "dashboard",
+    2: "matches",
+    3: "messages_inbox",
+    4: "events_page",
+    5: "profile",
+}
+ONBOARDING_STEP_COPY = {
+    1: "This is your dashboard. You can track upcoming meetings and suggested matches here.",
+    2: "This is matches. StudySync ranks people by overlapping availability and profile fit.",
+    3: "This is messages. Use it to chat and coordinate study sessions.",
+    4: "This is events. Create or join sessions to plan study time.",
+    5: "This is profile. Add at least one unit and one availability slot, then finish onboarding.",
+}
 
 
 def load_valid_uwa_2026_unit_codes():
@@ -131,6 +145,56 @@ def get_current_user():
     if not current_user.is_authenticated:
         return None
     return current_user
+
+
+def get_onboarding_step_for_user(user):
+    step = user.onboarding_step or 1
+    if step not in ONBOARDING_STEP_ENDPOINTS:
+        return 1
+    return step
+
+
+def get_onboarding_target_endpoint(user):
+    return ONBOARDING_STEP_ENDPOINTS[get_onboarding_step_for_user(user)]
+
+
+def can_finish_onboarding(user):
+    has_subject = UserSubject.query.filter_by(user_id=user.id).first() is not None
+    has_availability = UserAvailability.query.filter_by(user_id=user.id).first() is not None
+    return has_subject and has_availability
+
+
+@app.context_processor
+def inject_onboarding_guide():
+    if not current_user.is_authenticated or current_user.onboarding_completed:
+        return {"onboarding_guide": None}
+    step = get_onboarding_step_for_user(current_user)
+    target_endpoint = ONBOARDING_STEP_ENDPOINTS[step]
+    if request.endpoint != target_endpoint:
+        return {"onboarding_guide": None}
+    return {
+        "onboarding_guide": {
+            "step": step,
+            "total_steps": len(ONBOARDING_STEP_ENDPOINTS),
+            "message": ONBOARDING_STEP_COPY.get(step, ""),
+            "show_finish": step == len(ONBOARDING_STEP_ENDPOINTS),
+        }
+    }
+
+
+@app.before_request
+def require_onboarding_completion():
+    if not current_user.is_authenticated or current_user.onboarding_completed:
+        return None
+    if request.endpoint is None:
+        return None
+    allowed_endpoints = {"onboarding", "onboarding_advance", "logout", "static"}
+    if request.endpoint in allowed_endpoints:
+        return None
+    target_endpoint = get_onboarding_target_endpoint(current_user)
+    if request.endpoint != target_endpoint:
+        return redirect(url_for(target_endpoint))
+    return None
 
 def parse_mentions(body):
     """Extract @username mentions from a message body."""
@@ -330,6 +394,8 @@ def login():
             return render_template("loginpage.html")
 
         login_user(user, remember=remember)
+        if not user.onboarding_completed:
+            return redirect(url_for("onboarding"))
         return redirect(url_for("dashboard"))
 
     return render_template("loginpage.html")
@@ -440,6 +506,43 @@ def dashboard():
         suggested_matches=suggested_matches,
         upcoming_events=upcoming_events
     )
+
+
+@app.route("/onboarding", methods=["GET"])
+@login_required
+def onboarding():
+    if current_user.onboarding_completed:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for(get_onboarding_target_endpoint(current_user)))
+
+
+@app.route("/onboarding/advance", methods=["POST"])
+@login_required
+def onboarding_advance():
+    if current_user.onboarding_completed:
+        return redirect(url_for("dashboard"))
+
+    action = request.form.get("action", "next")
+    step = get_onboarding_step_for_user(current_user)
+    max_step = len(ONBOARDING_STEP_ENDPOINTS)
+
+    if action == "back":
+        current_user.onboarding_step = max(1, step - 1)
+    elif action == "finish":
+        if not can_finish_onboarding(current_user):
+            flash("Before finishing, add at least one unit and one availability slot in Profile.", "error")
+            current_user.onboarding_step = max_step
+            db.session.commit()
+            return redirect(url_for("profile"))
+        current_user.onboarding_completed = True
+        db.session.commit()
+        flash("Onboarding complete. Welcome to StudySync!", "success")
+        return redirect(url_for("dashboard"))
+    else:
+        current_user.onboarding_step = min(max_step, step + 1)
+
+    db.session.commit()
+    return redirect(url_for(get_onboarding_target_endpoint(current_user)))
 
 
 @app.route("/events")
@@ -1104,6 +1207,7 @@ def register():
             degree=selected_degree_option.name if selected_degree_option else degree,
             degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
+            onboarding_step=1,
         )
 
         new_user.set_password(password)
@@ -1111,8 +1215,9 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash("Registration successful. Please log in.", "success")
-        return redirect(url_for("login"))
+        login_user(new_user)
+        flash("Registration successful. Let's finish setup.", "success")
+        return redirect(url_for("onboarding"))
 
     return render_template("signup.html", degree_options=degree_options)
 

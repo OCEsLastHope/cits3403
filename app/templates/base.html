@@ -60,6 +60,45 @@
         </aside>
 
         <main class="main-content">
+            {% if onboarding_guide %}
+            <section class="onboarding-guide" role="status" aria-live="polite">
+                <div class="onboarding-guide__header">
+                    <div class="onboarding-guide__title-wrap">
+                        <span class="onboarding-guide__badge">Onboarding</span>
+                        <h3 class="onboarding-guide__title">Step {{ onboarding_guide.step }} of {{ onboarding_guide.total_steps }}</h3>
+                    </div>
+                    <p class="onboarding-guide__message">{{ onboarding_guide.message }}</p>
+                </div>
+
+                <div class="onboarding-guide__progress">
+                    <span class="onboarding-guide__progress-label">Progress</span>
+                    <div class="onboarding-guide__track">
+                        <span class="onboarding-guide__fill" style="width: {{ (onboarding_guide.step / onboarding_guide.total_steps) * 100 }}%"></span>
+                    </div>
+                </div>
+
+                <ol class="onboarding-guide__steps" aria-label="Onboarding steps">
+                    {% for label in ["Dashboard", "Matches", "Messages", "Events", "Profile"] %}
+                    <li class="onboarding-guide__step {% if loop.index == onboarding_guide.step %}is-current{% elif loop.index < onboarding_guide.step %}is-complete{% endif %}">
+                        <span class="onboarding-guide__dot"></span>
+                        <span class="onboarding-guide__label">{{ label }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+
+                <form method="POST" action="{{ url_for('onboarding_advance') }}" class="onboarding-guide__actions">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if onboarding_guide.step > 1 %}
+                    <button type="submit" name="action" value="back" class="btn btn-outline-secondary btn-sm onboarding-btn onboarding-btn--secondary">Back</button>
+                    {% endif %}
+                    {% if onboarding_guide.show_finish %}
+                    <button type="submit" name="action" value="finish" class="btn btn-primary btn-sm onboarding-btn onboarding-btn--primary">Finish Setup</button>
+                    {% else %}
+                    <button type="submit" name="action" value="next" class="btn btn-primary btn-sm onboarding-btn onboarding-btn--primary">Next Step</button>
+                    {% endif %}
+                </form>
+            </section>
+            {% endif %}
             {% block content %}{% endblock %}
         </main>
     </div>

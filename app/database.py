@@ -21,6 +21,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     degree_option_id = db.Column(db.Integer, db.ForeignKey("degree_option.id"), nullable=True)
+    onboarding_completed = db.Column(db.Boolean, nullable=False, default=False)
+    onboarding_step = db.Column(db.Integer, nullable=False, default=1)
 
     subjects = db.relationship("UserSubject", backref="user", lazy=True, cascade="all, delete-orphan")
     availabilities = db.relationship("UserAvailability", backref="user", lazy=True, cascade="all, delete-orphan")
