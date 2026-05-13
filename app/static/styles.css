@@ -344,6 +344,187 @@ body {
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
 }
 
+.onboarding-guide {
+    position: relative;
+    margin-bottom: 22px;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(117, 226, 255, 0.22);
+    background:
+        radial-gradient(circle at 88% 15%, rgba(59, 193, 255, 0.22), transparent 42%),
+        linear-gradient(140deg, rgba(15, 31, 70, 0.96), rgba(10, 22, 54, 0.96));
+    box-shadow: 0 14px 30px rgba(5, 10, 24, 0.42);
+    animation: onboarding-fade-up 260ms ease-out;
+}
+
+.onboarding-guide__header {
+    margin-bottom: 14px;
+}
+
+.onboarding-guide__title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.onboarding-guide__badge {
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #c8f5ff;
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(151, 243, 255, 0.44);
+    background: rgba(29, 158, 210, 0.22);
+}
+
+.onboarding-guide__title {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: #f4faff;
+}
+
+.onboarding-guide__message {
+    margin: 0;
+    color: #c4ddf7;
+    font-size: 14px;
+}
+
+.onboarding-guide__progress {
+    margin-bottom: 14px;
+}
+
+.onboarding-guide__progress-label {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #8fb8da;
+}
+
+.onboarding-guide__track {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.onboarding-guide__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #49d7ff, #3ca4ff 62%, #5ec2ff);
+}
+
+.onboarding-guide__steps {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.onboarding-guide__step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.onboarding-guide__step.is-current {
+    border-color: rgba(113, 228, 255, 0.55);
+    background: rgba(58, 165, 229, 0.24);
+}
+
+.onboarding-guide__step.is-complete {
+    border-color: rgba(99, 229, 189, 0.44);
+    background: rgba(49, 172, 130, 0.18);
+}
+
+.onboarding-guide__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(210, 230, 255, 0.7);
+    flex-shrink: 0;
+}
+
+.onboarding-guide__step.is-current .onboarding-guide__dot {
+    background: #b7eeff;
+}
+
+.onboarding-guide__step.is-complete .onboarding-guide__dot {
+    background: #77efc1;
+}
+
+.onboarding-guide__label {
+    font-size: 12px;
+    color: #d8e7fb;
+    white-space: nowrap;
+}
+
+.onboarding-guide__actions {
+    display: flex;
+    gap: 9px;
+}
+
+.onboarding-btn {
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-weight: 600;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.onboarding-btn:hover {
+    transform: translateY(-1px);
+}
+
+.onboarding-btn--primary {
+    box-shadow: 0 10px 18px rgba(54, 156, 255, 0.33);
+}
+
+.onboarding-btn--secondary {
+    color: #d8eaff;
+    border-color: rgba(173, 204, 241, 0.4);
+}
+
+@keyframes onboarding-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 960px) {
+    .onboarding-guide__steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .onboarding-guide {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .onboarding-guide__title {
+        font-size: 17px;
+    }
+
+    .onboarding-guide__actions {
+        flex-wrap: wrap;
+    }
+}
+
 .page-header {
     display: flex;
     justify-content: space-between;
