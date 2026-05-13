@@ -14,6 +14,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     degree = db.Column(db.String(100), nullable=False)
     major = db.Column(db.String(100), nullable=False)
+    second_major = db.Column(db.String(120), nullable=True)
+    minor = db.Column(db.String(120), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     sessions_per_week = db.Column(db.Integer, nullable=True)
     preferred_group_size = db.Column(db.String(20), nullable=True)

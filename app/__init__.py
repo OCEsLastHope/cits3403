@@ -41,11 +41,17 @@ def ensure_test_data():
 
     existing_tables = set(inspect(db.engine).get_table_names())
     required_tables = {"user", "notification", "degree_category", "degree_option"}
+
     if not required_tables.issubset(existing_tables):
         return
 
     user_columns = {column["name"] for column in inspect(db.engine).get_columns("user")}
-    if "password_hash" not in user_columns:
+
+    if (
+        "password_hash" not in user_columns
+        or "second_major" not in user_columns
+        or "minor" not in user_columns
+    ):
         return
 
     engineering_degree = DegreeOption.query.filter(
@@ -200,6 +206,7 @@ def ensure_test_data():
 
     for key, payload in degree_seed.items():
         category = DegreeCategory.query.filter_by(key=key).first()
+
         if category is None:
             category = DegreeCategory(key=key, label=payload["label"])
             db.session.add(category)
@@ -208,7 +215,7 @@ def ensure_test_data():
         for option_name in payload["options"]:
             exists = DegreeOption.query.filter_by(
                 category_id=category.id,
-                name=option_name
+                name=option_name,
             ).first()
 
             if exists is None:
@@ -216,7 +223,7 @@ def ensure_test_data():
                     DegreeOption(
                         category_id=category.id,
                         name=option_name,
-                        is_active=True
+                        is_active=True,
                     )
                 )
 
@@ -230,8 +237,11 @@ def ensure_test_data():
             degree=engineering_degree.name if engineering_degree else "Bachelor of Engineering",
             degree_option_id=engineering_degree.id if engineering_degree else None,
             major="Software Engineering",
+            second_major=None,
+            minor=None,
             username="Mineth1",
         )
+
         test_user.set_password("Mineth1@123")
         db.session.add(test_user)
         db.session.commit()
@@ -262,13 +272,18 @@ def ensure_test_data():
                 ),
             ]
         )
+
         db.session.commit()
 
     if {"event", "event_attendee"}.issubset(existing_tables):
         creator = User.query.filter_by(username="Mineth1").first() or User.query.first()
         participant = None
+
         if creator is not None:
-            participant = User.query.filter_by(username="alice1").first() or User.query.filter(User.id != creator.id).first()
+            participant = (
+                User.query.filter_by(username="alice1").first()
+                or User.query.filter(User.id != creator.id).first()
+            )
 
         if creator and Event.query.filter(Event.title.like("[DEMO] %")).count() == 0:
             start_base = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
@@ -284,8 +299,10 @@ def ensure_test_data():
                 end_at=start_base + timedelta(days=1, hours=2),
                 status="scheduled",
             )
+
             db.session.add(invite_event)
             db.session.flush()
+
             db.session.add(
                 EventAttendee(
                     event_id=invite_event.id,
@@ -296,7 +313,13 @@ def ensure_test_data():
             )
 
             if participant:
-                db.session.add(EventAttendee(event_id=invite_event.id, user_id=participant.id, invite_status="invited"))
+                db.session.add(
+                    EventAttendee(
+                        event_id=invite_event.id,
+                        user_id=participant.id,
+                        invite_status="invited",
+                    )
+                )
 
             open_event = Event(
                 creator_user_id=creator.id,
@@ -309,8 +332,10 @@ def ensure_test_data():
                 end_at=start_base + timedelta(days=2, hours=2),
                 status="scheduled",
             )
+
             db.session.add(open_event)
             db.session.flush()
+
             db.session.add(
                 EventAttendee(
                     event_id=open_event.id,
@@ -319,6 +344,7 @@ def ensure_test_data():
                     responded_at=datetime.utcnow(),
                 )
             )
+
             if participant:
                 db.session.add(
                     EventAttendee(
@@ -340,8 +366,10 @@ def ensure_test_data():
                 end_at=start_base - timedelta(days=2),
                 status="scheduled",
             )
+
             db.session.add(past_event)
             db.session.flush()
+
             db.session.add(
                 EventAttendee(
                     event_id=past_event.id,
@@ -357,7 +385,9 @@ def ensure_test_data():
 from . import routes
 
 with app.app_context():
-    ensure_test_data()
+    # keep this as pass while fixing the migration
+    pass
+
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
