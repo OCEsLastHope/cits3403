@@ -1089,9 +1089,12 @@ body {
     padding: 10px 16px;
     border-radius: 12px;
     border: none;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: none;
     background: transparent;
     color: #aab3d9;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
@@ -1820,7 +1823,11 @@ body {
         display: flex;
         flex-direction: column;
         gap: 16px;
-        padding: 20px;
+        padding: 12px 20px;
+    }
+
+    .stats-card {
+        padding: 12px 20px;
     }
 
     .unit-orbit {
@@ -2483,7 +2490,7 @@ body {
 }
 
 .dashboard-stat-value {
-    font-size: 2.2rem; /* Slightly larger */
+    font-size: 1.8rem; /* Scaled down slightly */
     font-weight: 800; /* Extra bold */
     margin-bottom: 0;
     line-height: 1;
@@ -2515,12 +2522,16 @@ body {
     text-transform: uppercase;
     font-weight: 700;
     letter-spacing: 2px; /* More breathing room */
-    margin-top: 6px;
+    margin-top: 2px;
     transition: color 0.3s ease;
 }
 
 .stat-column:hover .dashboard-stat-label {
     color: rgba(255, 255, 255, 0.8);
+}
+
+.info-card.stats-card {
+    padding: 12px 24px; /* Even more compact */
 }
 
 /* Responsive adjustments for stats */
