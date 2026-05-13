@@ -806,13 +806,18 @@ def dashboard():
         # Fallback for demo if no session is active
         user = db.session.get(User, 1)
 
-    suggested_matches = []
-    upcoming_events = []
-    
+    stats = {
+        "total_matches": 0,
+        "active_sessions": 0,
+        "pending_requests": 0,
+    }
+
     if user:
         # Get the top 3 matches for the dashboard preview
-        suggested_matches = find_matches(user.id)[:3]
-        
+        all_matches = find_matches(user.id)
+        stats["total_matches"] = len(all_matches)
+        suggested_matches = all_matches[:3]
+
         # Get all upcoming accepted meetings for the scrollbox
         now = datetime.utcnow()
         upcoming_events = (
@@ -824,12 +829,19 @@ def dashboard():
             .order_by(Event.start_at.asc())
             .all()
         )
+        stats["active_sessions"] = len(upcoming_events)
+
+        # Count pending invitations and event invites
+        pending_study_invites = Invitation.query.filter_by(receiver_id=user.id, status="pending").count()
+        pending_event_invites = EventAttendee.query.filter_by(user_id=user.id, invite_status="invited").count()
+        stats["pending_requests"] = pending_study_invites + pending_event_invites
 
     return render_template(
         "dashboard.html",
         current_user=user,
         suggested_matches=suggested_matches,
-        upcoming_events=upcoming_events
+        upcoming_events=upcoming_events,
+        stats=stats,
     )
 
 
