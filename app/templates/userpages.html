@@ -2,6 +2,7 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
+
 <div class="page-header">
     <div>
         <h1>User Profile</h1>
@@ -9,7 +10,8 @@
     </div>
 </div>
 
-<section class="profile-card">
+<section class="profile-card profile-hero">
+
     <div class="avatar">
         {% if current_user %}
         {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
@@ -43,68 +45,90 @@
     <p class="mb-0 text-light">
         Looking for people to study with for exams and weekly revision sessions.
     </p>
+
 </section>
 
 <div class="row g-4">
 
+    <!-- BASIC INFO -->
     <div class="col-lg-4">
-        <section class="info-card h-100">
+
+        <section class="info-card basic-info-card h-100">
 
             <div class="section-heading">
+                <i class="bi bi-person"></i>
                 Basic Info
             </div>
 
             <p>
-                <strong>Email:</strong>
-                <span id="emailDisplay">
-                    {{ current_user.email if current_user else 'Not available' }}
-                </span>
+                <strong>Email:</strong><br>
+                {{ current_user.email if current_user else 'Not available' }}
             </p>
 
             <p>
-                <strong>Degree:</strong>
-                <span id="uniDisplay">
-                    {{ current_user.degree if current_user else 'Not available' }}
-                </span>
+                <strong>Degree:</strong><br>
+                {{ current_user.degree if current_user else 'Not available' }}
             </p>
 
             <p>
-                <strong>Major:</strong>
-                <span id="yearDisplay">
-                    {{ current_user.major if current_user else 'Not available' }}
-                </span>
+                <strong>Major:</strong><br>
+                {{ current_user.major if current_user else 'Not available' }}
             </p>
 
         </section>
+
     </div>
 
+    <!-- SUBJECTS -->
     <div class="col-lg-4">
-        <section class="info-card h-100">
+
+        <section class="info-card subjects-card h-100">
 
             <div class="section-heading">
+                <i class="bi bi-book"></i>
                 Subjects
             </div>
 
-            <ul class="info-list">
+            <div class="subject-container">
+
                 {% if subjects %}
-                {% for subject in subjects %}
-                <li>{{ subject }}</li>
-                {% endfor %}
+
+                    {% for subject in subjects %}
+                        <span class="subject-chip">{{ subject }}</span>
+                    {% endfor %}
+
                 {% else %}
-                <li>No subjects added yet</li>
+
+                    <div class="empty-subject-state">
+
+                        <div class="empty-subject-icon">
+                            <i class="bi bi-book"></i>
+                        </div>
+
+                        <p>No subjects added yet</p>
+
+                        <button class="add-subject-btn">
+                            + Add Subject
+                        </button>
+
+                    </div>
+
                 {% endif %}
-            </ul>
+
+            </div>
 
         </section>
+
     </div>
 
+    <!-- AVAILABILITY -->
     <div class="col-lg-4">
-        <section class="info-card h-100">
 
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="section-heading">
-                    Availability
-                </div>
+        <section class="info-card availability-card h-100">
+
+            <div class="section-heading">
+                <i class="bi bi-calendar-week"></i>
+                Availability
             </div>
 
             <ul class="info-list">
@@ -113,9 +137,12 @@
                 {% if availability_map.get(day) %}
 
                 {% for slot in availability_map[day] %}
-                <li id="{{ day|lower }}Display{{ loop.index }}">
-                    {{ day }}: {{ slot[0] }} - {{ slot[1] }}
+
+                <li>
+                    {{ day }}:
+                    {{ slot[0] }} - {{ slot[1] }}
                 </li>
+
                 {% endfor %}
 
                 {% endif %}
@@ -128,18 +155,23 @@
             </ul>
 
         </section>
+
     </div>
 
+    <!-- STUDY PREFERENCES -->
     <div class="col-lg-6">
-        <section class="info-card h-100">
+
+        <section class="info-card study-pref-card h-100">
 
             <div class="section-heading">
+                <i class="bi bi-gear"></i>
                 Study Preferences
             </div>
 
             <div class="row g-3">
 
                 <div class="col-sm-4">
+
                     <div class="stats-box">
 
                         <div class="stats-label">
@@ -151,9 +183,11 @@
                         </div>
 
                     </div>
+
                 </div>
 
                 <div class="col-sm-4">
+
                     <div class="stats-box">
 
                         <div class="stats-label">
@@ -165,9 +199,11 @@
                         </div>
 
                     </div>
+
                 </div>
 
                 <div class="col-sm-4">
+
                     <div class="stats-box">
 
                         <div class="stats-label">
@@ -179,70 +215,43 @@
                         </div>
 
                     </div>
+
                 </div>
 
             </div>
 
         </section>
+
     </div>
 
+    <!-- ABOUT -->
     <div class="col-lg-6">
 
-        <section class="info-card about-me-card h-100">
+        <section class="info-card about-card h-100">
 
-            <div class="about-overlay"></div>
-
-            <div class="about-content">
-
-                <div class="section-heading about-heading">
-                    <i class="bi bi-person-circle"></i>
-                    About Me
-                </div>
-
-                <div class="about-line"></div>
-
-                <p class="about-text" id="aboutDisplay">
-                    {{ current_user.bio if current_user and current_user.bio else
-                    'Passionate about technology, productivity and continuous learning. I believe great things happen when great minds study together.' }}
-                </p>
-
-                <div class="about-stats">
-
-                    <div class="about-stat">
-                        <i class="bi bi-book"></i>
-
-                        <div>
-                            <strong>{{ current_user.major if current_user and current_user.major else 'Student' }}</strong>
-                            <span>Major</span>
-                        </div>
-                    </div>
-
-                    <div class="about-stat">
-                        <i class="bi bi-people"></i>
-
-                        <div>
-                            <strong>{{ current_user.preferred_group_size if current_user and current_user.preferred_group_size else 'Flexible' }}</strong>
-                            <span>Group Size</span>
-                        </div>
-                    </div>
-
-                    <div class="about-stat">
-                        <i class="bi bi-stars"></i>
-
-                        <div>
-                            <strong>{{ current_user.study_mode if current_user and current_user.study_mode else 'Mixed' }}</strong>
-                            <span>Study Mode</span>
-                        </div>
-                    </div>
-
-                </div>
-
+            <div class="section-heading">
+                <i class="bi bi-person-circle"></i>
+                About Me
             </div>
+
+            <p class="mb-0 about-text">
+
+                {% if current_user and current_user.bio %}
+                    {{ current_user.bio }}
+                {% else %}
+                    I'm a focused and consistent learner who loves solving problems and helping others.
+                {% endif %}
+
+            </p>
 
         </section>
 
     </div>
 
 </div>
+
 {% endblock %}
+
+
+
 
