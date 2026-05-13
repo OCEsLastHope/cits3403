@@ -205,14 +205,27 @@ def build_overlap_summary(requester_availability, candidate_availability):
 
 def find_matches(user_id, selected_degree_option_id=None):
     requester = db.session.get(User, user_id)
+
     if not requester:
         return []
 
-    requester_availability = UserAvailability.query.filter_by(user_id=requester.id).all()
+    requester_availability = UserAvailability.query.filter_by(
+        user_id=requester.id
+    ).all()
+
     if not requester_availability:
         return []
 
-    requester_days = sorted({slot.day_of_week for slot in requester_availability})
+    requester_units = {
+        subject.subject_code.upper()
+        for subject in UserSubject.query.filter_by(user_id=requester.id).all()
+    }
+
+    requester_days = sorted({
+        slot.day_of_week
+        for slot in requester_availability
+    })
+
     candidate_query = (
         User.query.join(UserAvailability, UserAvailability.user_id == User.id)
         .filter(User.id != requester.id)
@@ -220,7 +233,11 @@ def find_matches(user_id, selected_degree_option_id=None):
     )
 
     if selected_degree_option_id is not None:
-        degree_option = DegreeOption.query.filter_by(id=selected_degree_option_id, is_active=True).first()
+        degree_option = DegreeOption.query.filter_by(
+            id=selected_degree_option_id,
+            is_active=True
+        ).first()
+
         if degree_option:
             candidate_query = candidate_query.filter(
                 or_(
@@ -233,23 +250,59 @@ def find_matches(user_id, selected_degree_option_id=None):
     match_results = []
 
     for candidate in candidates:
-        candidate_availability = UserAvailability.query.filter_by(user_id=candidate.id).all()
+        candidate_availability = UserAvailability.query.filter_by(
+            user_id=candidate.id
+        ).all()
+
         if not candidate_availability:
             continue
 
-        overlap_minutes_total, overlap_by_day = build_overlap_summary(requester_availability, candidate_availability)
+        overlap_minutes_total, overlap_by_day = build_overlap_summary(
+            requester_availability,
+            candidate_availability
+        )
+
         if overlap_minutes_total <= 0:
             continue
+
+        candidate_units = {
+            subject.subject_code.upper()
+            for subject in UserSubject.query.filter_by(user_id=candidate.id).all()
+        }
+
+        shared_units = sorted(requester_units.intersection(candidate_units))
+        shared_unit_count = len(shared_units)
+
+        same_degree = (
+            requester.degree_option_id is not None
+            and candidate.degree_option_id == requester.degree_option_id
+        ) or (
+            requester.degree
+            and candidate.degree
+            and requester.degree.strip().lower() == candidate.degree.strip().lower()
+        )
 
         match_results.append(
             {
                 "user": candidate,
                 "overlap_minutes_total": overlap_minutes_total,
                 "overlap_by_day": overlap_by_day,
+                "shared_units": shared_units,
+                "shared_unit_count": shared_unit_count,
+                "same_degree": same_degree,
             }
         )
 
-    match_results.sort(key=lambda item: item["overlap_minutes_total"], reverse=True)
+    match_results.sort(
+        key=lambda item: (
+            item["shared_unit_count"] > 0,
+            item["shared_unit_count"],
+            item["same_degree"],
+            item["overlap_minutes_total"]
+        ),
+        reverse=True
+    )
+
     return match_results
 
 
@@ -846,19 +899,6 @@ def matches():
         message=message,
     )
 
-    message = ""
-    if not match_results:
-        message = "No matches found with overlapping availability."
-
-    return render_template(
-        "matches.html",
-        current_user=requester,
-        matches=match_results[:10],
-        degree_options=degree_options,
-        selected_degree_option_id=selected_degree_option_id,
-        message=message,
-    )
-
 
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
@@ -871,6 +911,8 @@ def profile():
         submitted_degree = request.form.get("degree", "").strip()
         submitted_degree_option_id = request.form.get("degree_option_id", type=int)
         submitted_major = request.form.get("major", "").strip()
+        second_major = request.form.get("second_major", "").strip()
+        minor = request.form.get("minor", "").strip()
         submitted_bio = request.form.get("bio", "").strip()
         submitted_sessions_per_week = request.form.get("sessions_per_week", "").strip()
         submitted_group_size = request.form.get("preferred_group_size", "").strip()
@@ -1055,6 +1097,8 @@ def register():
         degree_option_id = request.form.get("degree_option_id", type=int)
         degree = request.form.get("degree", "").strip()
         major = request.form.get("major", "").strip()
+        second_major = request.form.get("second_major", "").strip()
+        minor = request.form.get("minor", "").strip()
         password = request.form.get("password", "").strip()
         confirm_password = request.form.get("confirm_password", "").strip()
 
@@ -1104,6 +1148,8 @@ def register():
             degree=selected_degree_option.name if selected_degree_option else degree,
             degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
+            second_major=second_major or None,
+            minor=minor or None,
         )
 
         new_user.set_password(password)
