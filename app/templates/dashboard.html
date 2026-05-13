@@ -3,7 +3,7 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const calendarGrid = document.getElementById('calendarGrid');
     const monthYearDisplay = document.getElementById('currentMonthYear');
     const prevBtn = document.getElementById('prevMonth');
@@ -12,112 +12,128 @@ document.addEventListener('DOMContentLoaded', function() {
     let displayedDate = new Date(); // Current date
 
     const monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
+      "July", "August", "September", "October", "November", "December"
     ];
 
     const eventsData = [
-        {% for event in upcoming_events %}
+      {% for event in upcoming_events %}
         {
-            id: "{{ event.id }}",
-            date: "{{ event.start_at.strftime('%Y-%m-%d') }}",
-            title: "{{ event.title|escape }}"
-        },
-        {% endfor %}
+      id: "{{ event.id }}",
+      date: "{{ event.start_at.strftime('%Y-%m-%d') }}",
+      title: "{{ event.title|escape }}"
+    },
+    {% endfor %}
     ];
 
-    function renderCalendar() {
-        const year = displayedDate.getFullYear();
-        const month = displayedDate.getMonth();
-        
-        // Update header
-        monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+  function renderCalendar() {
+    const year = displayedDate.getFullYear();
+    const month = displayedDate.getMonth();
 
-        // Clear existing days (keep weekdays)
-        const weekdays = Array.from(calendarGrid.querySelectorAll('.calendar-weekday'));
-        calendarGrid.innerHTML = '';
-        weekdays.forEach(wd => calendarGrid.appendChild(wd));
+    // Update header
+    monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
 
-        // Get first day of month (0 = Sunday) and total days
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Clear existing days (keep weekdays)
+    const weekdays = Array.from(calendarGrid.querySelectorAll('.calendar-weekday'));
+    calendarGrid.innerHTML = '';
+    weekdays.forEach(wd => calendarGrid.appendChild(wd));
 
-        // Padding for the first week
-        for (let i = 0; i < firstDay; i++) {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'calendar-day other-month';
-            calendarGrid.appendChild(emptyDiv);
-        }
+    // Get first day of month (0 = Sunday) and total days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-        // Current month days
-        const today = new Date();
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'calendar-day';
-            dayDiv.textContent = day;
+    let totalCells = 0;
 
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            dayDiv.setAttribute('data-date', dateStr);
-
-            // Check if it's today
-            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                dayDiv.classList.add('today');
-            }
-
-            // Check for events
-            if (eventsData.some(e => e.date === dateStr)) {
-                dayDiv.classList.add('has-event');
-                
-                // Interaction: Hover day -> Highlight meetings
-                dayDiv.addEventListener('mouseenter', () => {
-                    document.querySelectorAll(`.meeting-card[data-event-date="${dateStr}"]`).forEach(card => {
-                        card.classList.add('highlighted');
-                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    });
-                });
-                dayDiv.addEventListener('mouseleave', () => {
-                    document.querySelectorAll('.meeting-card.highlighted').forEach(card => {
-                        card.classList.remove('highlighted');
-                    });
-                });
-            }
-
-            calendarGrid.appendChild(dayDiv);
-        }
+    // Padding for the first week (days from previous month)
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'calendar-day other-month';
+      dayDiv.textContent = prevMonthLastDay - i;
+      calendarGrid.appendChild(dayDiv);
+      totalCells++;
     }
 
-    // Interaction: Hover meeting -> Highlight calendar day
-    document.addEventListener('mouseover', (e) => {
-        const card = e.target.closest('.meeting-card');
-        if (card) {
-            const dateStr = card.getAttribute('data-event-date');
-            document.querySelectorAll(`.calendar-day[data-date="${dateStr}"]`).forEach(day => {
-                day.classList.add('selected');
-            });
-        }
-    });
+    // Current month days
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'calendar-day';
+      dayDiv.textContent = day;
 
-    document.addEventListener('mouseout', (e) => {
-        const card = e.target.closest('.meeting-card');
-        if (card) {
-            document.querySelectorAll('.calendar-day.selected').forEach(day => {
-                day.classList.remove('selected');
-            });
-        }
-    });
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      dayDiv.setAttribute('data-date', dateStr);
 
-    prevBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        displayedDate.setMonth(displayedDate.getMonth() - 1);
-        renderCalendar();
-    });
+      // Check if it's today
+      if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        dayDiv.classList.add('today');
+      }
 
-    nextBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        displayedDate.setMonth(displayedDate.getMonth() + 1);
-        renderCalendar();
-    });
+      // Check for events
+      if (eventsData.some(e => e.date === dateStr)) {
+        dayDiv.classList.add('has-event');
 
+        // Interaction: Hover day -> Highlight meetings
+        dayDiv.addEventListener('mouseenter', () => {
+          document.querySelectorAll(`.meeting-card[data-event-date="${dateStr}"]`).forEach(card => {
+            card.classList.add('highlighted');
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          });
+        });
+        dayDiv.addEventListener('mouseleave', () => {
+          document.querySelectorAll('.meeting-card.highlighted').forEach(card => {
+            card.classList.remove('highlighted');
+          });
+        });
+      }
+
+      calendarGrid.appendChild(dayDiv);
+      totalCells++;
+    }
+
+    // Padding for the remaining cells (days from next month) until we hit 42
+    let nextMonthDay = 1;
+    while (totalCells < 42) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'calendar-day other-month';
+      dayDiv.textContent = nextMonthDay++;
+      calendarGrid.appendChild(dayDiv);
+      totalCells++;
+    }
+  }
+
+  // Interaction: Hover meeting -> Highlight calendar day
+  document.addEventListener('mouseover', (e) => {
+    const card = e.target.closest('.meeting-card');
+    if (card) {
+      const dateStr = card.getAttribute('data-event-date');
+      document.querySelectorAll(`.calendar-day[data-date="${dateStr}"]`).forEach(day => {
+        day.classList.add('selected');
+      });
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const card = e.target.closest('.meeting-card');
+    if (card) {
+      document.querySelectorAll('.calendar-day.selected').forEach(day => {
+        day.classList.remove('selected');
+      });
+    }
+  });
+
+  prevBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    displayedDate.setMonth(displayedDate.getMonth() - 1);
     renderCalendar();
+  });
+
+  nextBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    displayedDate.setMonth(displayedDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  renderCalendar();
 });
 </script>
 {% endblock %}
@@ -132,10 +148,25 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-8">
-    <div class="row g-4">
-      <div class="col-12">
-        <div class="info-card">
+  <div class="col-lg-8 d-flex flex-column">
+    <div class="d-flex flex-column h-100 gap-3">
+      <div class="info-card stats-card flex-grow-1 d-flex align-items-center">
+        <div class="stats-grid w-100">
+          <div class="stat-column">
+            <div class="dashboard-stat-value purple">{{ stats.total_matches }}</div>
+            <div class="dashboard-stat-label">Matches</div>
+          </div>
+          <div class="stat-column">
+            <div class="dashboard-stat-value cyan">{{ stats.active_sessions }}</div>
+            <div class="dashboard-stat-label">Sessions</div>
+          </div>
+          <div class="stat-column">
+            <div class="dashboard-stat-value pink">{{ stats.pending_requests }}</div>
+            <div class="dashboard-stat-label">Pending</div>
+          </div>
+        </div>
+      </div>
+      <div class="info-card flex-grow-1">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="m-0">Suggested Partners</h3>
             <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}"
@@ -174,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
               style="color: #8b5cf6;">Add your availability</a> to get matched!</p>
           {% endif %}
         </div>
-      </div>
     </div>
   </div>
 
@@ -210,55 +240,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <div class="meetings-scroll-area" style="max-height: 380px; overflow-y: auto; padding-right: 8px;">
         {% if upcoming_events %}
-          {% for event in upcoming_events %}
-            <div class="meeting-card d-flex align-items-center justify-content-between p-3 mb-3 rounded" 
-                 data-event-date="{{ event.start_at.strftime('%Y-%m-%d') }}"
-                 style="
+        {% for event in upcoming_events %}
+        <div class="meeting-card d-flex align-items-center justify-content-between p-3 mb-3 rounded"
+          data-event-date="{{ event.start_at.strftime('%Y-%m-%d') }}" style="
                         background: rgba(255, 255, 255, 0.05);
                         border: 1px solid rgba(255, 255, 255, 0.1);
                       ">
-              <div class="d-flex align-items-center gap-3">
-                {% set badge_color = '#d56cff' if loop.index0 % 2 == 0 else '#4cd8ff' %}
-                {% set badge_bg = 'rgba(197, 92, 255, 0.15)' if loop.index0 % 2 == 0 else 'rgba(65, 217, 255, 0.15)' %}
-                
-                <div class="text-center p-2 rounded" style="
+          <div class="d-flex align-items-center gap-3">
+            {% set badge_color = '#d56cff' if loop.index0 % 2 == 0 else '#4cd8ff' %}
+            {% set badge_bg = 'rgba(197, 92, 255, 0.15)' if loop.index0 % 2 == 0 else 'rgba(65, 217, 255, 0.15)' %}
+
+            <div class="text-center p-2 rounded" style="
                             background: {{ badge_bg }};
                             min-width: 65px;
                           ">
-                  <div class="fw-bold" style="
+              <div class="fw-bold" style="
                               color: {{ badge_color }};
                               font-size: 12px;
                               text-transform: uppercase;
                             ">
-                    {{ event.start_at.strftime('%b') }}
-                  </div>
-                  <div class="fs-4 fw-bold">{{ event.start_at.strftime('%d') }}</div>
-                </div>
-
-                <div>
-                  <h5 class="m-0 mb-1">{{ event.title }}</h5>
-                  <div class="text-light" style="font-size: 14px">
-                    {{ event.start_at.strftime('%I:%M %p') }} - {{ event.end_at.strftime('%I:%M %p') }}
-                    {% if event.location_or_link %}
-                      <span class="mx-2" style="color: #aab3d9">|</span>
-                      {{ event.location_or_link }}
-                    {% endif %}
-                  </div>
-                </div>
+                {{ event.start_at.strftime('%b') }}
               </div>
+              <div class="fs-4 fw-bold">{{ event.start_at.strftime('%d') }}</div>
+            </div>
 
-              <div class="d-flex align-items-center gap-4">
-                <a href="{{ url_for('events_page') }}" class="custom-btn secondary py-1 px-3 text-decoration-none" style="font-size: 13px;">
-                  Details
-                </a>
+            <div>
+              <h5 class="m-0 mb-1">{{ event.title }}</h5>
+              <div class="text-light" style="font-size: 14px">
+                {{ event.start_at.strftime('%I:%M %p') }} - {{ event.end_at.strftime('%I:%M %p') }}
+                {% if event.location_or_link %}
+                <span class="mx-2" style="color: #aab3d9">|</span>
+                {{ event.location_or_link }}
+                {% endif %}
               </div>
             </div>
-          {% endfor %}
-        {% else %}
-          <div class="text-center py-5" style="background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
-            <p class="text-light opacity-50 m-0">No upcoming meetings scheduled.</p>
-            <a href="{{ url_for('events_page') }}" class="text-decoration-none" style="color: #8b5cf6; font-size: 14px; margin-top: 8px; display: inline-block;">Schedule one now →</a>
           </div>
+
+          <div class="d-flex align-items-center gap-4">
+            <a href="{{ url_for('events_page') }}" class="custom-btn secondary py-1 px-3 text-decoration-none"
+              style="font-size: 13px;">
+              Details
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-5"
+          style="background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+          <p class="text-light opacity-50 m-0">No upcoming meetings scheduled.</p>
+          <a href="{{ url_for('events_page') }}" class="text-decoration-none"
+            style="color: #8b5cf6; font-size: 14px; margin-top: 8px; display: inline-block;">Schedule one now →</a>
+        </div>
         {% endif %}
       </div>
     </div>
