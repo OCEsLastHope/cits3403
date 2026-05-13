@@ -12,37 +12,47 @@
 
 <section class="profile-card profile-hero">
 
-    <div class="avatar">
-        {% if current_user %}
-        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
-        {% else %}
-        SS
-        {% endif %}
+    <div class="hero-top">
+
+        <div class="avatar">
+            {% if current_user %}
+            {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
+            {% else %}
+            SS
+            {% endif %}
+        </div>
+
+        <div class="hero-text">
+
+            <div class="profile-name">
+
+                {% if current_user %}
+                {{ current_user.first_name }} {{ current_user.last_name }}
+                {% else %}
+                StudySync User
+                {% endif %}
+
+            </div>
+
+            <div class="profile-subtext">
+                {% if current_user %}
+                {{ current_user.degree }} • {{ current_user.major }}
+                {% else %}
+                Degree and major not available
+                {% endif %}
+            </div>
+
+            <div class="mb-2">
+                <span class="tag">Quiet Study</span>
+                <span class="tag">Exam Prep</span>
+                <span class="tag">Library Sessions</span>
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="profile-name">
-        {% if current_user %}
-        {{ current_user.first_name }} {{ current_user.last_name }}
-        {% else %}
-        StudySync User
-        {% endif %}
-    </div>
-
-    <div class="profile-subtext">
-        {% if current_user %}
-        {{ current_user.degree }} • {{ current_user.major }}
-        {% else %}
-        Degree and major not available
-        {% endif %}
-    </div>
-
-    <div class="mb-3">
-        <span class="tag">Quiet Study</span>
-        <span class="tag">Exam Prep</span>
-        <span class="tag">Library Sessions</span>
-    </div>
-
-    <p class="mb-0 text-light">
+    <p class="mb-0 text-light mt-3">
         Looking for people to study with for exams and weekly revision sessions.
     </p>
 
@@ -60,20 +70,47 @@
                 Basic Info
             </div>
 
-            <p>
-                <strong>Email:</strong><br>
-                {{ current_user.email if current_user else 'Not available' }}
-            </p>
+            <div class="info-item">
 
-            <p>
-                <strong>Degree:</strong><br>
-                {{ current_user.degree if current_user else 'Not available' }}
-            </p>
+                <i class="bi bi-envelope"></i>
 
-            <p>
-                <strong>Major:</strong><br>
-                {{ current_user.major if current_user else 'Not available' }}
-            </p>
+                <div>
+                    <div class="info-label">Email</div>
+
+                    <div class="info-value">
+                        {{ current_user.email if current_user else 'Not available' }}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="info-item">
+
+                <i class="bi bi-mortarboard"></i>
+
+                <div>
+                    <div class="info-label">Degree</div>
+
+                    <div class="info-value">
+                        {{ current_user.degree if current_user else 'Not available' }}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="info-item">
+
+                <i class="bi bi-code-slash"></i>
+
+                <div>
+                    <div class="info-label">Major</div>
+
+                    <div class="info-value">
+                        {{ current_user.major if current_user else 'Not available' }}
+                    </div>
+                </div>
+
+            </div>
 
         </section>
 
@@ -139,8 +176,8 @@
                 {% for slot in availability_map[day] %}
 
                 <li>
-                    {{ day }}:
-                    {{ slot[0] }} - {{ slot[1] }}
+                    <span>{{ day }}</span>
+                    <span>{{ slot[0] }} - {{ slot[1] }}</span>
                 </li>
 
                 {% endfor %}
@@ -149,7 +186,9 @@
                 {% endfor %}
 
                 {% if not availability_map.values() | select | list %}
-                <li>No availability added yet</li>
+                <li>
+                    <span>No availability added yet</span>
+                </li>
                 {% endif %}
 
             </ul>
@@ -234,15 +273,17 @@
                 About Me
             </div>
 
-            <p class="mb-0 about-text">
+            {% if current_user and current_user.bio %}
 
-                {% if current_user and current_user.bio %}
+                <p class="mb-0 about-text">
                     {{ current_user.bio }}
-                {% else %}
-                    I'm a focused and consistent learner who loves solving problems and helping others.
-                {% endif %}
+                </p>
 
-            </p>
+            {% else %}
+
+                <div class="empty-about"></div>
+
+            {% endif %}
 
         </section>
 
@@ -251,6 +292,8 @@
 </div>
 
 {% endblock %}
+
+
 
 
 
