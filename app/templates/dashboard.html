@@ -40,12 +40,17 @@
     // Get first day of month (0 = Sunday) and total days
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-    // Padding for the first week
-    for (let i = 0; i < firstDay; i++) {
-      const emptyDiv = document.createElement('div');
-      emptyDiv.className = 'calendar-day other-month';
-      calendarGrid.appendChild(emptyDiv);
+    let totalCells = 0;
+
+    // Padding for the first week (days from previous month)
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'calendar-day other-month';
+      dayDiv.textContent = prevMonthLastDay - i;
+      calendarGrid.appendChild(dayDiv);
+      totalCells++;
     }
 
     // Current month days
@@ -82,6 +87,17 @@
       }
 
       calendarGrid.appendChild(dayDiv);
+      totalCells++;
+    }
+
+    // Padding for the remaining cells (days from next month) until we hit 42
+    let nextMonthDay = 1;
+    while (totalCells < 42) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'calendar-day other-month';
+      dayDiv.textContent = nextMonthDay++;
+      calendarGrid.appendChild(dayDiv);
+      totalCells++;
     }
   }
 
