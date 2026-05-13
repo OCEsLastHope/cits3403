@@ -23,58 +23,105 @@ body {
 /* Sidebar + layout */
 
 .sidebar {
-   width: 250px;
+    width: 250px;
     flex-shrink: 0;
-    background: rgba(14, 20, 40, 0.95);
+    min-height: calc(100vh - 48px);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(5, 7, 24, 0.42),
+            rgba(5, 7, 24, 0.58)
+        ),
+        url("../static/sidebarUI.png") center/cover no-repeat;
+
     border-radius: 28px;
-    padding: 28px 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    padding: 24px 18px;
+
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(139, 92, 246, 0.22);
+
     display: flex;
     flex-direction: column;
+
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            rgba(255,255,255,0.02),
+            rgba(255,255,255,0.01)
+        );
+
+    pointer-events: none;
+}
+
+.sidebar > * {
+    position: relative;
+    z-index: 1;
 }
 
 .sidebar h2 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 28px;
+    font-size: 22px;
+    font-weight: 800;
+
+    margin-bottom: 26px;
+    padding-bottom: 20px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .logo-study {
     color: #ffffff;
-    font-weight: 700;
 }
 
 .logo-sync {
-    color: #8b5cf6;
-    font-weight: 700;
+    color: #a855f7;
+    text-shadow: 0 0 16px rgba(168, 85, 247, 0.7);
 }
 
 .sidebar-section {
-    margin-bottom: 28px;
+    margin-bottom: 26px;
 }
 
 .sidebar-title {
-    font-size: 12px;
-    letter-spacing: 1px;
+    font-size: 11px;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
+
     color: #d56cff;
-    margin-bottom: 12px;
-    font-weight: 700;
+
+    margin-bottom: 14px;
+    font-weight: 800;
 }
 
 .sidebar a {
     display: flex;
     align-items: center;
+    gap: 10px;
+
     text-decoration: none;
-    color: #cfd5ff;
-    padding: 10px 14px;
-    border-radius: 12px;
-    margin-bottom: 6px;
-    transition: 0.2s;
+    color: #d9ddff;
+
+    padding: 11px 13px;
+    border-radius: 13px;
+    margin-bottom: 8px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    transition: 0.2s ease;
 }
 
 .sidebar a i {
-    font-size: 15px;
+    font-size: 16px;
     width: 18px;
     text-align: center;
     flex-shrink: 0;
@@ -82,18 +129,90 @@ body {
 
 .sidebar a:hover,
 .sidebar a.active {
-    background: linear-gradient(90deg, rgba(191, 108, 255, 0.28), rgba(113, 82, 255, 0.16));
+    background: linear-gradient(
+        90deg,
+        rgba(168, 85, 247, 0.32),
+        rgba(59, 130, 246, 0.14)
+    );
+
     color: #ffffff;
+
+    box-shadow:
+        0 0 18px rgba(139, 92, 246, 0.18),
+        inset 0 0 0 1px rgba(192, 132, 252, 0.24);
+
+    backdrop-filter: blur(8px);
 }
 
 .sidebar-notif-badge {
     margin-left: auto;
+
     font-size: 10px;
     font-weight: 700;
+
     padding: 2px 7px;
     border-radius: 100px;
-    background: #d56cff;
+
+    background: #9333ea;
     color: #fff;
+
+    box-shadow:
+        0 0 12px rgba(147, 51, 234, 0.65);
+}
+
+.sidebar-user-footer {
+    margin-top: auto;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px;
+    border-radius: 18px;
+
+    background: rgba(8, 12, 35, 0.52);
+
+    border: 1px solid rgba(139, 92, 246, 0.18);
+
+    backdrop-filter: blur(8px);
+
+    box-shadow:
+        0 0 24px rgba(0, 0, 0, 0.18);
+}
+
+.sidebar-user-avatar {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(135deg, #7c3aed, #38bdf8);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+
+    flex-shrink: 0;
+}
+
+.sidebar-user-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.sidebar-user-username {
+    margin-top: 2px;
+
+    font-size: 11px;
+    color: #b8c2dc;
+
+    font-weight: 500;
 }
 
 .notif-dropdown-toggle {
