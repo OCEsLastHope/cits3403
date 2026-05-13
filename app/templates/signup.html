@@ -78,7 +78,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <p id="form-error" class="form-error"></p>
-                
+
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                 <div class="mb-3 auth-flash-stack">
@@ -210,6 +210,44 @@
                         placeholder="Enter your major"
                         required
                     >
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>
+                            Second Major
+                            <span style="opacity: 0.7; font-size: 0.85rem;">
+                                (Optional)
+                            </span>
+                        </label>
+
+                        <input
+                            type="text"
+                            name="second_major"
+                            placeholder="Enter second major"
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>
+                            Minor
+                            <span style="opacity: 0.7; font-size: 0.85rem;">
+                                (Optional)
+                            </span>
+                        </label>
+
+                        <input
+                            type="text"
+                            name="minor"
+                            placeholder="Enter minor"
+                        >
+
+                    </div>
 
                 </div>
 
@@ -352,265 +390,6 @@
                 otherInput.value = "";
             }
         }
-
-        const registerForm =
-            document.getElementById("register-form");
-
-        const emailInput =
-            document.getElementById("email");
-
-        const usernameInput =
-            document.getElementById("username");
-
-        const passwordInput =
-            document.getElementById("password");
-
-        const confirmPasswordInput =
-            document.getElementById("confirm-password");
-
-        const formError =
-            document.getElementById("form-error");
-
-        const emailMessage =
-            document.getElementById("email-message");
-
-        const usernameMessage =
-            document.getElementById("username-message");
-
-        const passwordMessage =
-            document.getElementById("password-message");
-
-        const confirmPasswordMessage =
-            document.getElementById("confirm-password-message");
-
-        async function checkEmail() {
-
-            const email =
-                emailInput.value.trim();
-
-            if (email.length === 0) {
-
-                emailMessage.textContent = "";
-                return false;
-            }
-
-            const emailPattern =
-                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            if (!emailPattern.test(email)) {
-
-                emailMessage.textContent =
-                    "Please enter a valid email address.";
-
-                return false;
-            }
-
-            try {
-
-                const response =
-                    await fetch(`/check_register_details?email=${encodeURIComponent(email)}`);
-
-                const data =
-                    await response.json();
-
-                if (data.email_exists) {
-
-                    emailMessage.textContent =
-                        "This email is already registered.";
-
-                    return false;
-                }
-
-                emailMessage.textContent =
-                    "Looks Good!";
-
-                return true;
-
-            } catch (error) {
-
-                emailMessage.textContent =
-                    "Could not check email right now.";
-
-                return false;
-            }
-        }
-
-        async function checkUsername() {
-
-            const username =
-                usernameInput.value.trim();
-
-            if (username.length === 0) {
-
-                usernameMessage.textContent = "";
-                return false;
-            }
-
-            if (username.includes("@")) {
-
-                usernameMessage.textContent =
-                    "Username cannot contain @ symbol.";
-
-                return false;
-            }
-
-            if (username.length < 5) {
-
-                usernameMessage.textContent =
-                    "Username must be at least 5 characters.";
-
-                return false;
-            }
-
-            try {
-
-                const response =
-                    await fetch(`/check_register_details?username=${encodeURIComponent(username)}`);
-
-                const data =
-                    await response.json();
-
-                if (data.username_exists) {
-
-                    usernameMessage.textContent =
-                        "This username is already taken.";
-
-                    return false;
-                }
-
-                usernameMessage.textContent =
-                    "Username is available.";
-
-                return true;
-
-            } catch (error) {
-
-                usernameMessage.textContent =
-                    "Could not check username right now.";
-
-                return false;
-            }
-        }
-
-        function checkPasswordStrength() {
-
-            const password =
-                passwordInput.value;
-
-            if (password.length === 0) {
-
-                passwordMessage.textContent = "";
-                return false;
-            }
-
-            if (password.length < 6) {
-
-                passwordMessage.textContent =
-                    "Password must be at least 6 characters.";
-
-                return false;
-            }
-
-            passwordMessage.textContent =
-                "Password looks good.";
-
-            return true;
-        }
-
-        function checkPasswordMatch() {
-
-            const password =
-                passwordInput.value;
-
-            const confirmPassword =
-                confirmPasswordInput.value;
-
-            if (confirmPassword.length === 0) {
-
-                confirmPasswordMessage.textContent = "";
-                return false;
-            }
-
-            if (password !== confirmPassword) {
-
-                confirmPasswordMessage.textContent =
-                    "Passwords do not match.";
-
-                return false;
-            }
-
-            confirmPasswordMessage.textContent =
-                "Passwords match.";
-
-            return true;
-        }
-
-        emailInput.addEventListener(
-            "input",
-            function() {
-
-                checkEmail();
-            }
-        );
-
-        usernameInput.addEventListener(
-            "input",
-            function() {
-
-                checkUsername();
-            }
-        );
-
-        passwordInput.addEventListener(
-            "input",
-            function() {
-
-                checkPasswordStrength();
-                checkPasswordMatch();
-            }
-        );
-
-        confirmPasswordInput.addEventListener(
-            "input",
-            checkPasswordMatch
-        );
-
-        registerForm.addEventListener(
-            "submit",
-            async function(event) {
-
-                event.preventDefault();
-
-                formError.textContent = "";
-
-                const emailValid =
-                    await checkEmail();
-
-                const usernameValid =
-                    await checkUsername();
-
-                const passwordValid =
-                    checkPasswordStrength();
-
-                const passwordsMatch =
-                    checkPasswordMatch();
-
-                if (
-                    !emailValid ||
-                    !usernameValid ||
-                    !passwordValid ||
-                    !passwordsMatch
-                ) {
-
-                    formError.textContent =
-                        "Please fix the errors before registering.";
-
-                    return;
-                }
-
-                registerForm.submit();
-            }
-        );
 
     </script>
 

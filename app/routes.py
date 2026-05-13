@@ -203,54 +203,445 @@ def build_overlap_summary(requester_availability, candidate_availability):
     return overlap_minutes_total, overlap_by_day
 
 
+def normalise_text(value):
+    if not value:
+        return ""
+    return value.strip().lower()
+
+
+def get_shared_unit_score(shared_unit_count):
+    return shared_unit_count * 100
+
+
+def calculate_academic_score(requester, candidate):
+    score = 0
+    matched_fields = []
+
+    requester_major = normalise_text(requester.major)
+    requester_second_major = normalise_text(requester.second_major)
+    requester_minor = normalise_text(requester.minor)
+
+    candidate_major = normalise_text(candidate.major)
+    candidate_second_major = normalise_text(candidate.second_major)
+    candidate_minor = normalise_text(candidate.minor)
+
+    requester_secondary_fields = {
+        requester_second_major,
+        requester_minor,
+    } - {""}
+
+    candidate_secondary_fields = {
+        candidate_second_major,
+        candidate_minor,
+    } - {""}
+
+    if requester_major and requester_major == candidate_major:
+        score += 70
+        matched_fields.append("Same major")
+
+    if requester_second_major and requester_second_major == candidate_second_major:
+        score += 45
+        matched_fields.append("Same second major")
+
+    if requester_minor and requester_minor == candidate_minor:
+        score += 25
+        matched_fields.append("Same minor")
+
+    if requester_major and requester_major in candidate_secondary_fields:
+        score += 45
+        matched_fields.append("Your major matches their second major/minor")
+
+    if candidate_major and candidate_major in requester_secondary_fields:
+        score += 45
+        matched_fields.append("Their major matches your second major/minor")
+
+    same_degree = (
+        requester.degree_option_id is not None
+        and candidate.degree_option_id == requester.degree_option_id
+    ) or (
+        requester.degree
+        and candidate.degree
+        and requester.degree.strip().lower() == candidate.degree.strip().lower()
+    )
+
+    if same_degree:
+        score += 20
+        matched_fields.append("Same degree")
+
+    return score, matched_fields, same_degree
+
+
+def calculate_availability_score(overlap_by_day):
+    valid_overlap_days = 0
+    useful_overlap_days = 0
+    strong_overlap_days = 0
+    overlap_minutes_total = 0
+    strongest_single_day_overlap = 0
+
+    for overlaps in overlap_by_day.values():
+        day_total = 0
+
+        for start_time, end_time in overlaps:
+            day_total += (
+                time_to_minutes(end_time)
+                - time_to_minutes(start_time)
+            )
+
+        overlap_minutes_total += day_total
+
+        if day_total >= 30:
+            valid_overlap_days += 1
+
+        if day_total >= 45:
+            useful_overlap_days += 1
+
+        if day_total >= 90:
+            strong_overlap_days += 1
+
+        strongest_single_day_overlap = max(
+            strongest_single_day_overlap,
+            day_total
+        )
+
+    if valid_overlap_days == 0:
+        return None
+
+    availability_score = (
+        valid_overlap_days * 30
+        + useful_overlap_days * 45
+        + strong_overlap_days * 60
+        + (overlap_minutes_total / 60) * 40
+        + (strongest_single_day_overlap / 60) * 20
+    )
+
+    return {
+        "availability_score": availability_score,
+        "valid_overlap_days": valid_overlap_days,
+        "useful_overlap_days": useful_overlap_days,
+        "strong_overlap_days": strong_overlap_days,
+        "overlap_minutes_total": overlap_minutes_total,
+        "strongest_single_day_overlap": strongest_single_day_overlap,
+    }
+
+
+def normalise_text(value):
+    if not value:
+        return ""
+    return value.strip().lower()
+
+
+def get_shared_unit_score(shared_unit_count):
+    # Strong academic weighting without becoming overwhelming.
+    return shared_unit_count * 100
+
+
+def calculate_academic_score(requester, candidate):
+    score = 0
+    matched_fields = []
+
+    requester_major = normalise_text(requester.major)
+    requester_second_major = normalise_text(requester.second_major)
+    requester_minor = normalise_text(requester.minor)
+
+    candidate_major = normalise_text(candidate.major)
+    candidate_second_major = normalise_text(candidate.second_major)
+    candidate_minor = normalise_text(candidate.minor)
+
+    requester_secondary_fields = {
+        requester_second_major,
+        requester_minor,
+    } - {""}
+
+    candidate_secondary_fields = {
+        candidate_second_major,
+        candidate_minor,
+    } - {""}
+
+    # Same primary major
+    if requester_major and requester_major == candidate_major:
+        score += 70
+        matched_fields.append("Same major")
+
+    # Same second major
+    if (
+        requester_second_major
+        and requester_second_major == candidate_second_major
+    ):
+        score += 45
+        matched_fields.append("Same second major")
+
+    # Same minor
+    if requester_minor and requester_minor == candidate_minor:
+        score += 25
+        matched_fields.append("Same minor")
+
+    # Cross-field matches
+    if (
+        requester_major
+        and requester_major in candidate_secondary_fields
+    ):
+        score += 45
+        matched_fields.append(
+            "Your major matches their second major/minor"
+        )
+
+    if (
+        candidate_major
+        and candidate_major in requester_secondary_fields
+    ):
+        score += 45
+        matched_fields.append(
+            "Their major matches your second major/minor"
+        )
+
+    # Same degree
+    same_degree = (
+        requester.degree_option_id is not None
+        and candidate.degree_option_id == requester.degree_option_id
+    ) or (
+        requester.degree
+        and candidate.degree
+        and requester.degree.strip().lower()
+        == candidate.degree.strip().lower()
+    )
+
+    if same_degree:
+        score += 20
+        matched_fields.append("Same degree")
+
+    return score, matched_fields, same_degree
+
+
+def calculate_availability_score(overlap_by_day):
+    valid_overlap_days = 0
+    useful_overlap_days = 0
+    strong_overlap_days = 0
+
+    overlap_minutes_total = 0
+    strongest_single_day_overlap = 0
+
+    for overlaps in overlap_by_day.values():
+        day_total = 0
+
+        for start_time, end_time in overlaps:
+            day_total += (
+                time_to_minutes(end_time)
+                - time_to_minutes(start_time)
+            )
+
+        overlap_minutes_total += day_total
+
+        if day_total >= 30:
+            valid_overlap_days += 1
+
+        if day_total >= 45:
+            useful_overlap_days += 1
+
+        if day_total >= 90:
+            strong_overlap_days += 1
+
+        strongest_single_day_overlap = max(
+            strongest_single_day_overlap,
+            day_total
+        )
+
+    # Require at least one meaningful overlap day
+    if valid_overlap_days == 0:
+        return None
+
+    overlap_hours_total = overlap_minutes_total / 60
+    strongest_day_hours = strongest_single_day_overlap / 60
+
+    # Balanced availability weighting.
+    # Availability matters a lot,
+    # but should not overpower academic compatibility.
+
+    availability_score = (
+        # Consistency across days
+        valid_overlap_days * 25
+
+        # Better overlap quality
+        + useful_overlap_days * 35
+        + strong_overlap_days * 45
+
+        # Total overlap time
+        + overlap_hours_total * 25
+
+        # Strongest single study session
+        + strongest_day_hours * 15
+    )
+
+    return {
+        "availability_score": availability_score,
+        "valid_overlap_days": valid_overlap_days,
+        "useful_overlap_days": useful_overlap_days,
+        "strong_overlap_days": strong_overlap_days,
+        "overlap_minutes_total": overlap_minutes_total,
+        "strongest_single_day_overlap": strongest_single_day_overlap,
+    }
+
+
 def find_matches(user_id, selected_degree_option_id=None):
     requester = db.session.get(User, user_id)
+
     if not requester:
         return []
 
-    requester_availability = UserAvailability.query.filter_by(user_id=requester.id).all()
+    requester_availability = UserAvailability.query.filter_by(
+        user_id=requester.id
+    ).all()
+
     if not requester_availability:
         return []
 
-    requester_days = sorted({slot.day_of_week for slot in requester_availability})
+    requester_units = {
+        subject.subject_code.upper()
+        for subject in UserSubject.query.filter_by(
+            user_id=requester.id
+        ).all()
+    }
+
+    requester_days = sorted({
+        slot.day_of_week
+        for slot in requester_availability
+    })
+
     candidate_query = (
-        User.query.join(UserAvailability, UserAvailability.user_id == User.id)
+        User.query
+        .join(
+            UserAvailability,
+            UserAvailability.user_id == User.id
+        )
         .filter(User.id != requester.id)
-        .filter(UserAvailability.day_of_week.in_(requester_days))
+        .filter(
+            UserAvailability.day_of_week.in_(requester_days)
+        )
     )
 
     if selected_degree_option_id is not None:
-        degree_option = DegreeOption.query.filter_by(id=selected_degree_option_id, is_active=True).first()
+        degree_option = DegreeOption.query.filter_by(
+            id=selected_degree_option_id,
+            is_active=True
+        ).first()
+
         if degree_option:
             candidate_query = candidate_query.filter(
                 or_(
-                    User.degree_option_id == selected_degree_option_id,
-                    func.lower(func.trim(User.degree)) == degree_option.name.strip().lower(),
+                    User.degree_option_id
+                    == selected_degree_option_id,
+
+                    func.lower(
+                        func.trim(User.degree)
+                    ) == degree_option.name.strip().lower(),
                 )
             )
 
     candidates = candidate_query.distinct().all()
+
     match_results = []
 
     for candidate in candidates:
-        candidate_availability = UserAvailability.query.filter_by(user_id=candidate.id).all()
+        candidate_availability = (
+            UserAvailability.query.filter_by(
+                user_id=candidate.id
+            ).all()
+        )
+
         if not candidate_availability:
             continue
 
-        overlap_minutes_total, overlap_by_day = build_overlap_summary(requester_availability, candidate_availability)
-        if overlap_minutes_total <= 0:
-            continue
-
-        match_results.append(
-            {
-                "user": candidate,
-                "overlap_minutes_total": overlap_minutes_total,
-                "overlap_by_day": overlap_by_day,
-            }
+        _, overlap_by_day = build_overlap_summary(
+            requester_availability,
+            candidate_availability
         )
 
-    match_results.sort(key=lambda item: item["overlap_minutes_total"], reverse=True)
+        availability_data = calculate_availability_score(
+            overlap_by_day
+        )
+
+        if availability_data is None:
+            continue
+
+        candidate_units = {
+            subject.subject_code.upper()
+            for subject in UserSubject.query.filter_by(
+                user_id=candidate.id
+            ).all()
+        }
+
+        shared_units = sorted(
+            requester_units.intersection(candidate_units)
+        )
+
+        shared_unit_count = len(shared_units)
+
+        unit_score = get_shared_unit_score(
+            shared_unit_count
+        )
+
+        (
+            academic_score,
+            matched_academic_fields,
+            same_degree
+        ) = calculate_academic_score(
+            requester,
+            candidate
+        )
+
+        match_score = (
+            unit_score
+            + academic_score
+            + availability_data["availability_score"]
+        )
+
+        match_results.append({
+            "user": candidate,
+
+            "match_score": round(match_score, 2),
+
+            "shared_units": shared_units,
+            "shared_unit_count": shared_unit_count,
+            "unit_score": unit_score,
+
+            "academic_score": academic_score,
+            "matched_academic_fields": matched_academic_fields,
+            "same_degree": same_degree,
+
+            "availability_score":
+                round(
+                    availability_data["availability_score"],
+                    2
+                ),
+
+            "overlap_minutes_total":
+                availability_data["overlap_minutes_total"],
+
+            "overlap_by_day": overlap_by_day,
+
+            "valid_overlap_days":
+                availability_data["valid_overlap_days"],
+
+            "useful_overlap_days":
+                availability_data["useful_overlap_days"],
+
+            "strong_overlap_days":
+                availability_data["strong_overlap_days"],
+
+            "strongest_single_day_overlap":
+                availability_data[
+                    "strongest_single_day_overlap"
+                ],
+        })
+
+    # True weighted ranking
+    match_results.sort(
+        key=lambda item: item["match_score"],
+        reverse=True
+    )
+
     return match_results
+
+
 
 
 def parse_event_datetime(value):
@@ -858,19 +1249,6 @@ def matches():
         message=message,
     )
 
-    message = ""
-    if not match_results:
-        message = "No matches found with overlapping availability."
-
-    return render_template(
-        "matches.html",
-        current_user=requester,
-        matches=match_results[:10],
-        degree_options=degree_options,
-        selected_degree_option_id=selected_degree_option_id,
-        message=message,
-    )
-
 
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
@@ -883,6 +1261,8 @@ def profile():
         submitted_degree = request.form.get("degree", "").strip()
         submitted_degree_option_id = request.form.get("degree_option_id", type=int)
         submitted_major = request.form.get("major", "").strip()
+        second_major = request.form.get("second_major", "").strip()
+        minor = request.form.get("minor", "").strip()
         submitted_bio = request.form.get("bio", "").strip()
         submitted_sessions_per_week = request.form.get("sessions_per_week", "").strip()
         submitted_group_size = request.form.get("preferred_group_size", "").strip()
@@ -1067,6 +1447,8 @@ def register():
         degree_option_id = request.form.get("degree_option_id", type=int)
         degree = request.form.get("degree", "").strip()
         major = request.form.get("major", "").strip()
+        second_major = request.form.get("second_major", "").strip()
+        minor = request.form.get("minor", "").strip()
         password = request.form.get("password", "").strip()
         confirm_password = request.form.get("confirm_password", "").strip()
 
@@ -1116,6 +1498,8 @@ def register():
             degree=selected_degree_option.name if selected_degree_option else degree,
             degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
+            second_major=second_major or None,
+            minor=minor or None,
         )
 
         new_user.set_password(password)
