@@ -1374,6 +1374,8 @@ def profile():
             user.degree_option_id = None
             user.degree = submitted_degree
         user.major = submitted_major
+        user.second_major = second_major or None
+        user.minor = minor or None
         user.bio = submitted_bio
         user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
         user.preferred_group_size = submitted_group_size or None

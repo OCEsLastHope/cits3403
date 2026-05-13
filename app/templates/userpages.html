@@ -74,6 +74,38 @@
 
             </div>
 
+            {% if current_user and current_user.second_major %}
+            <div class="info-item">
+
+                <i class="bi bi-diagram-3"></i>
+
+                <div>
+                    <div class="info-label">Second Major</div>
+
+                    <div class="info-value">
+                        {{ current_user.second_major }}
+                    </div>
+                </div>
+
+            </div>
+            {% endif %}
+
+            {% if current_user and current_user.minor %}
+            <div class="info-item">
+
+                <i class="bi bi-bookmark-star"></i>
+
+                <div>
+                    <div class="info-label">Minor</div>
+
+                    <div class="info-value">
+                        {{ current_user.minor }}
+                    </div>
+                </div>
+
+            </div>
+            {% endif %}
+
             <div class="info-item">
 
                 <i class="bi bi-mortarboard"></i>
@@ -318,6 +350,17 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Major</label>
                                     <input name="major" class="form-control" value="{{ current_user.major if current_user else '' }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Second Major</label>
+                                    <input name="second_major" class="form-control" value="{{ current_user.second_major if current_user and current_user.second_major else '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Minor</label>
+                                    <input name="minor" class="form-control" value="{{ current_user.minor if current_user and current_user.minor else '' }}">
                                 </div>
                             </div>
 
