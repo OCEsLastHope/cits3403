@@ -110,6 +110,18 @@
         </aside>
 
         <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-3 auth-flash-stack">
+                {% for category, message in messages %}
+                <div class="auth-flash {% if category == 'success' %}auth-flash-success{% else %}auth-flash-error{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
             {% if onboarding_guide %}
             <section class="onboarding-guide" role="status" aria-live="polite">
                 <div class="onboarding-guide__header">
@@ -163,4 +175,3 @@
 </body>
 
 </html>
-
