@@ -67,6 +67,7 @@
 
             </div>
 
+            {% if request.endpoint == 'main.profile' %}
             <div class="sidebar-section">
 
                 <div class="sidebar-title">
@@ -84,6 +85,7 @@
                 </a>
 
             </div>
+            {% endif %}
 
             {% if current_user and current_user.is_authenticated %}
             <div class="sidebar-user-footer">
