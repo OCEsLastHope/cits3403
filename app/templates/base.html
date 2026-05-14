@@ -47,6 +47,12 @@
                     Matches
                 </a>
 
+                <a href="{{ url_for('main.people') }}"
+                    class="{% if request.endpoint == 'main.people' %}active{% endif %}">
+                    <i class="bi bi-person-lines-fill"></i>
+                    People
+                </a>
+
                 <a href="{{ url_for('main.events_page') }}"
                     class="{% if request.endpoint == 'main.events_page' %}active{% endif %}">
                     <i class="bi bi-calendar-event"></i>
