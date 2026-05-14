@@ -10,6 +10,46 @@
     .sidebar a#editProfileBtn {
         display: none;
     }
+
+    .matches-filter-form .form-label {
+        color: rgba(235, 239, 255, 0.9);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .matches-filter-input,
+    .matches-filter-select {
+        min-height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(11, 18, 36, 0.62);
+        color: #f4f7ff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .matches-filter-input::placeholder {
+        color: rgba(208, 217, 255, 0.55);
+    }
+
+    .matches-filter-input:focus,
+    .matches-filter-select:focus {
+        border-color: rgba(109, 165, 255, 0.75);
+        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
+        background: rgba(18, 27, 52, 0.82);
+        color: #ffffff;
+    }
+
+    .matches-filter-select option,
+    .matches-filter-select optgroup {
+        background: #101b33;
+        color: #f4f7ff;
+    }
+
+    .matches-filter-btn {
+        min-height: 44px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
 </style>
 {% endblock %}
 
@@ -22,11 +62,11 @@
 </div>
 
 <section class="info-card mb-4">
-    <form method="GET" action="{{ url_for('main.matches') }}" class="row g-3 align-items-end">
+    <form method="GET" action="{{ url_for('main.matches') }}" class="row g-3 align-items-end matches-filter-form">
         <input type="hidden" name="user_id" value="{{ current_user.id if current_user else request.args.get('user_id', '') }}">
-        <div class="col-md-6">
+        <div class="col-md-5">
             <label for="degreeFilter" class="form-label">Filter by Degree (optional)</label>
-            <select id="degreeFilter" name="degree_option_id" class="form-select">
+            <select id="degreeFilter" name="degree_option_id" class="form-select matches-filter-select">
                 <option value="">Any degree</option>
                 {% for category_key, options in degree_options.items() %}
                     {% if options %}
@@ -39,8 +79,13 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="col-md-4">
+            <label for="unitFilter" class="form-label">Filter by Unit (optional)</label>
+            <input id="unitFilter" name="unit_code" class="form-control text-uppercase unit-autocomplete matches-filter-input" placeholder="CITS3403" value="{{ selected_unit_code or '' }}" autocomplete="off" list="unitSuggestions">
+            <datalist id="unitSuggestions"></datalist>
+        </div>
         <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+            <button type="submit" class="btn btn-primary w-100 matches-filter-btn">Apply Filter</button>
         </div>
     </form>
 </section>
@@ -72,4 +117,40 @@
         </section>
     {% endfor %}
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const unitInput = document.querySelector('.unit-autocomplete');
+    const suggestions = document.getElementById('unitSuggestions');
+    if (!unitInput || !suggestions) return;
+
+    let timer;
+    const unitSearchUrl = "{{ url_for('main.search_units') }}";
+
+    unitInput.addEventListener('input', () => {
+        const query = unitInput.value.trim().toUpperCase();
+        unitInput.value = query;
+
+        if (query.length < 2) {
+            suggestions.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(timer);
+        timer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return;
+                const payload = await response.json();
+                const units = Array.isArray(payload.units) ? payload.units : [];
+                suggestions.innerHTML = units.map((unit) => `<option value="${unit}"></option>`).join('');
+            } catch (_error) {
+                suggestions.innerHTML = '';
+            }
+        }, 120);
+    });
+})();
+</script>
 {% endblock %}
