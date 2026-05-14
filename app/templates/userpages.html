@@ -350,18 +350,18 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Major</label>
-                                    <input name="major" class="form-control" value="{{ current_user.major if current_user else '' }}" required>
+                                    <input name="major" class="form-control major-autocomplete" value="{{ current_user.major if current_user else '' }}" autocomplete="off" list="majorSuggestions" required>
                                 </div>
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Second Major</label>
-                                    <input name="second_major" class="form-control" value="{{ current_user.second_major if current_user and current_user.second_major else '' }}">
+                                    <input name="second_major" class="form-control major-autocomplete" value="{{ current_user.second_major if current_user and current_user.second_major else '' }}" autocomplete="off" list="majorSuggestions">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Minor</label>
-                                    <input name="minor" class="form-control" value="{{ current_user.minor if current_user and current_user.minor else '' }}">
+                                    <input name="minor" class="form-control minor-autocomplete" value="{{ current_user.minor if current_user and current_user.minor else '' }}" autocomplete="off" list="minorSuggestions">
                                 </div>
                             </div>
 
@@ -396,6 +396,8 @@
                                 <label class="form-label">About</label>
                                 <textarea name="bio" class="form-control" rows="3">{{ current_user.bio if current_user and current_user.bio else '' }}</textarea>
                             </div>
+                            <datalist id="majorSuggestions"></datalist>
+                            <datalist id="minorSuggestions"></datalist>
                         </div>
 
                         <div class="tab-pane fade" id="tab-units" role="tabpanel">
@@ -626,6 +628,10 @@
 
     let autocompleteTimer;
     const unitSearchUrl = "{{ url_for('main.search_units') }}";
+    let majorTimer;
+    const majorSearchUrl = "{{ url_for('main.search_majors') }}";
+    let minorTimer;
+    const minorSearchUrl = "{{ url_for('main.search_minors') }}";
 
     document.addEventListener('input', (event) => {
         const input = event.target;
@@ -651,6 +657,60 @@
                 const payload = await response.json();
                 const units = Array.isArray(payload.units) ? payload.units : [];
                 list.innerHTML = units.map((unit) => `<option value="${unit}"></option>`).join('');
+            } catch (_error) {
+                list.innerHTML = '';
+            }
+        }, 120);
+    });
+
+    document.addEventListener('input', (event) => {
+        const input = event.target;
+        if (!input.classList.contains('major-autocomplete')) return;
+
+        const query = input.value.trim();
+        const list = document.getElementById('majorSuggestions');
+        if (!list) return;
+
+        if (query.length < 2) {
+            list.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(majorTimer);
+        majorTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${majorSearchUrl}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return;
+                const payload = await response.json();
+                const majors = Array.isArray(payload.majors) ? payload.majors : [];
+                list.innerHTML = majors.map((major) => `<option value="${major}"></option>`).join('');
+            } catch (_error) {
+                list.innerHTML = '';
+            }
+        }, 120);
+    });
+
+    document.addEventListener('input', (event) => {
+        const input = event.target;
+        if (!input.classList.contains('minor-autocomplete')) return;
+
+        const query = input.value.trim();
+        const list = document.getElementById('minorSuggestions');
+        if (!list) return;
+
+        if (query.length < 2) {
+            list.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(minorTimer);
+        minorTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${minorSearchUrl}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return;
+                const payload = await response.json();
+                const minors = Array.isArray(payload.minors) ? payload.minors : [];
+                list.innerHTML = minors.map((minor) => `<option value="${minor}"></option>`).join('');
             } catch (_error) {
                 list.innerHTML = '';
             }
