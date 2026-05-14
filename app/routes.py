@@ -76,6 +76,38 @@ def load_valid_uwa_2026_unit_codes():
 VALID_UWA_2026_UNIT_CODES = load_valid_uwa_2026_unit_codes()
 
 
+def load_uwa_majors():
+    app_root = Path(current_app.root_path) if has_app_context() else Path(__file__).resolve().parent
+    data_path = app_root.parent / "data" / "uwa_majors.txt"
+    if not data_path.exists():
+        return []
+    majors = []
+    for line in data_path.read_text(encoding="utf-8").splitlines():
+        major = line.strip()
+        if major:
+            majors.append(major)
+    return sorted(set(majors), key=str.lower)
+
+
+UWA_MAJORS = load_uwa_majors()
+
+
+def load_uwa_minors():
+    app_root = Path(current_app.root_path) if has_app_context() else Path(__file__).resolve().parent
+    data_path = app_root.parent / "data" / "uwa_minors.txt"
+    if not data_path.exists():
+        return []
+    minors = []
+    for line in data_path.read_text(encoding="utf-8").splitlines():
+        minor = line.strip()
+        if minor:
+            minors.append(minor)
+    return sorted(set(minors), key=str.lower)
+
+
+UWA_MINORS = load_uwa_minors()
+
+
 def get_serializer():
     return URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
 
@@ -164,9 +196,28 @@ def get_onboarding_target_endpoint(user):
 
 
 def can_finish_onboarding(user):
-    has_subject = UserSubject.query.filter_by(user_id=user.id).first() is not None
+    has_degree = bool((user.degree or "").strip()) or user.degree_option_id is not None
+
+    subjects = UserSubject.query.filter_by(user_id=user.id).all()
+    subject_codes = [subject.subject_code.strip().upper() for subject in subjects if subject.subject_code]
+
+    if len(subject_codes) > MAX_PROFILE_UNITS:
+        return False
+
+    if len(subject_codes) != len(set(subject_codes)):
+        return False
+
+    if not subject_codes:
+        return False
+
+    for code in subject_codes:
+        if not UNIT_CODE_PATTERN.match(code):
+            return False
+        if VALID_UWA_2026_UNIT_CODES and code not in VALID_UWA_2026_UNIT_CODES:
+            return False
+
     has_availability = UserAvailability.query.filter_by(user_id=user.id).first() is not None
-    return has_subject and has_availability
+    return has_degree and has_availability
 
 
 @main_bp.app_context_processor
@@ -801,7 +852,10 @@ def onboarding_advance():
         current_user.onboarding_step = max(1, step - 1)
     elif action == "finish":
         if not can_finish_onboarding(current_user):
-            flash("Before finishing, add at least one unit and one availability slot in Profile.", "error")
+            flash(
+                "Before finishing, ensure degree is set and add valid units (max 6, unique UWA codes) plus at least one availability slot in Profile.",
+                "error",
+            )
             current_user.onboarding_step = max_step
             db.session.commit()
             return redirect(url_for("main.profile"))
@@ -1409,6 +1463,32 @@ def search_units():
     ]
     matches.sort()
     return {"units": matches[:12]}
+
+
+@main_bp.route("/majors/search")
+def search_majors():
+    query = request.args.get("q", "").strip().lower()
+    if len(query) < 2:
+        return {"majors": []}
+
+    if not re.match(r"^[a-z0-9 '&/-]+$", query):
+        return {"majors": []}
+
+    matches = [major for major in UWA_MAJORS if query in major.lower()]
+    return {"majors": matches[:12]}
+
+
+@main_bp.route("/minors/search")
+def search_minors():
+    query = request.args.get("q", "").strip().lower()
+    if len(query) < 2:
+        return {"minors": []}
+
+    if not re.match(r"^[a-z0-9 '&/-]+$", query):
+        return {"minors": []}
+
+    matches = [minor for minor in UWA_MINORS if query in minor.lower()]
+    return {"minors": matches[:12]}
 
 
 @main_bp.route("/register", methods=["GET", "POST"])
