@@ -136,7 +136,7 @@
                     {% endfor %}
                 </ol>
 
-                <form method="POST" action="{{ url_for('onboarding_advance') }}" class="onboarding-guide__actions">
+                <form method="POST" action="{{ url_for('main.onboarding_advance') }}" class="onboarding-guide__actions">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% if onboarding_guide.step > 1 %}
                     <button type="submit" name="action" value="back" class="btn btn-outline-secondary btn-sm onboarding-btn onboarding-btn--secondary">Back</button>
@@ -163,5 +163,4 @@
 </body>
 
 </html>
-
 

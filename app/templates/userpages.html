@@ -400,14 +400,28 @@
 
                         <div class="tab-pane fade" id="tab-units" role="tabpanel">
                             <div class="mb-3">
-                                <label class="form-label">Units (max 4)</label>
-                                <div class="row g-2">
-                                    {% for i in [0,1,2,3] %}
-                                    <div class="col-md-6">
-                                        <input name="unit{{ i + 1 }}" class="form-control text-uppercase" maxlength="8" placeholder="CITS3403" value="{{ units[i] if units|length > i else '' }}">
+                                <label class="form-label">Units (max 6)</label>
+                                <div id="unitRows" class="row g-2">
+                                    {% if units and units|length > 0 %}
+                                    {% for unit in units %}
+                                    <div class="col-md-6 unit-row">
+                                        <div class="d-flex gap-2">
+                                            <input name="unit{{ loop.index }}" class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="{{ unit }}" autocomplete="off" list="unitSuggestionsShared">
+                                            <button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button>
+                                        </div>
                                     </div>
                                     {% endfor %}
+                                    {% else %}
+                                    <div class="col-md-6 unit-row">
+                                        <div class="d-flex gap-2">
+                                            <input name="unit1" class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="" autocomplete="off" list="unitSuggestionsShared">
+                                            <button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
+                                <datalist id="unitSuggestionsShared"></datalist>
+                                <button type="button" class="btn btn-outline-info btn-sm mt-2" id="addUnitBtn">Add unit</button>
                             </div>
                         </div>
 
@@ -565,6 +579,86 @@
         }
         row.remove();
     });
+
+    const maxUnits = 6;
+    const unitRows = document.getElementById('unitRows');
+    const addUnitBtn = document.getElementById('addUnitBtn');
+
+    function renumberUnitInputs() {
+        if (!unitRows) return;
+        unitRows.querySelectorAll('.unit-row input').forEach((input, index) => {
+            input.name = `unit${index + 1}`;
+        });
+    }
+
+    function updateAddUnitState() {
+        if (!unitRows || !addUnitBtn) return;
+        addUnitBtn.disabled = unitRows.querySelectorAll('.unit-row').length >= maxUnits;
+    }
+
+    if (addUnitBtn && unitRows) {
+        addUnitBtn.addEventListener('click', () => {
+            const count = unitRows.querySelectorAll('.unit-row').length;
+            if (count >= maxUnits) return;
+
+            const row = document.createElement('div');
+            row.className = 'col-md-6 unit-row';
+            row.innerHTML = '<div class="d-flex gap-2"><input class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="" autocomplete="off" list="unitSuggestionsShared"><button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button></div>';
+            unitRows.appendChild(row);
+            renumberUnitInputs();
+            updateAddUnitState();
+        });
+    }
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.classList.contains('remove-unit') || !unitRows) return;
+        const row = event.target.closest('.unit-row');
+        if (!row) return;
+        if (unitRows.querySelectorAll('.unit-row').length === 1) {
+            const input = row.querySelector('input');
+            if (input) input.value = '';
+            return;
+        }
+        row.remove();
+        renumberUnitInputs();
+        updateAddUnitState();
+    });
+
+    let autocompleteTimer;
+    const unitSearchUrl = "{{ url_for('main.search_units') }}";
+
+    document.addEventListener('input', (event) => {
+        const input = event.target;
+        if (!input.classList.contains('unit-autocomplete')) return;
+
+        const query = input.value.trim().toUpperCase();
+        input.value = query;
+
+        const listId = input.getAttribute('list');
+        const list = listId ? document.getElementById(listId) : null;
+        if (!list) return;
+
+        if (query.length < 2) {
+            list.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(autocompleteTimer);
+        autocompleteTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return;
+                const payload = await response.json();
+                const units = Array.isArray(payload.units) ? payload.units : [];
+                list.innerHTML = units.map((unit) => `<option value="${unit}"></option>`).join('');
+            } catch (_error) {
+                list.innerHTML = '';
+            }
+        }, 120);
+    });
+
+    renumberUnitInputs();
+    updateAddUnitState();
 })();
 </script>
 {% endblock %}
