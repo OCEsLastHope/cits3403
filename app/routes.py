@@ -45,6 +45,20 @@ EVENT_STATUSES = {"scheduled", "cancelled"}
 ATTENDEE_STATUSES = {"invited", "accepted", "declined", "left"}
 MAX_PROFILE_UNITS = 4
 UNIT_CODE_PATTERN = re.compile(r"^[A-Z]{4}[0-9]{4}$")
+ONBOARDING_STEP_ENDPOINTS = {
+    1: "dashboard",
+    2: "matches",
+    3: "messages_inbox",
+    4: "events_page",
+    5: "profile",
+}
+ONBOARDING_STEP_COPY = {
+    1: "This is your dashboard. You can track upcoming meetings and suggested matches here.",
+    2: "This is matches. StudySync ranks people by overlapping availability and profile fit.",
+    3: "This is messages. Use it to chat and coordinate study sessions.",
+    4: "This is events. Create or join sessions to plan study time.",
+    5: "This is profile. Add at least one unit and one availability slot, then finish onboarding.",
+}
 
 
 def load_valid_uwa_2026_unit_codes():
@@ -136,6 +150,56 @@ def get_current_user():
         return None
     return current_user
 
+
+def get_onboarding_step_for_user(user):
+    step = user.onboarding_step or 1
+    if step not in ONBOARDING_STEP_ENDPOINTS:
+        return 1
+    return step
+
+
+def get_onboarding_target_endpoint(user):
+    return ONBOARDING_STEP_ENDPOINTS[get_onboarding_step_for_user(user)]
+
+
+def can_finish_onboarding(user):
+    has_subject = UserSubject.query.filter_by(user_id=user.id).first() is not None
+    has_availability = UserAvailability.query.filter_by(user_id=user.id).first() is not None
+    return has_subject and has_availability
+
+
+@app.context_processor
+def inject_onboarding_guide():
+    if not current_user.is_authenticated or current_user.onboarding_completed:
+        return {"onboarding_guide": None}
+    step = get_onboarding_step_for_user(current_user)
+    target_endpoint = ONBOARDING_STEP_ENDPOINTS[step]
+    if request.endpoint != target_endpoint:
+        return {"onboarding_guide": None}
+    return {
+        "onboarding_guide": {
+            "step": step,
+            "total_steps": len(ONBOARDING_STEP_ENDPOINTS),
+            "message": ONBOARDING_STEP_COPY.get(step, ""),
+            "show_finish": step == len(ONBOARDING_STEP_ENDPOINTS),
+        }
+    }
+
+
+@app.before_request
+def require_onboarding_completion():
+    if not current_user.is_authenticated or current_user.onboarding_completed:
+        return None
+    if request.endpoint is None:
+        return None
+    allowed_endpoints = {"onboarding", "onboarding_advance", "logout", "static"}
+    if request.endpoint in allowed_endpoints:
+        return None
+    target_endpoint = get_onboarding_target_endpoint(current_user)
+    if request.endpoint != target_endpoint:
+        return redirect(url_for(target_endpoint))
+    return None
+
 def parse_mentions(body):
     """Extract @username mentions from a message body."""
     return re.findall(r"@(\w+)", body)
@@ -207,6 +271,7 @@ def build_overlap_summary(requester_availability, candidate_availability):
     return overlap_minutes_total, overlap_by_day
 
 
+
 def normalise_text(value):
     if not value:
         return ""
@@ -229,35 +294,41 @@ def calculate_academic_score(requester, candidate):
     candidate_second_major = normalise_text(candidate.second_major)
     candidate_minor = normalise_text(candidate.minor)
 
-    requester_secondary_fields = {
+    requester_major_fields = {
+        requester_major,
         requester_second_major,
-        requester_minor,
     } - {""}
 
-    candidate_secondary_fields = {
+    candidate_major_fields = {
+        candidate_major,
         candidate_second_major,
-        candidate_minor,
     } - {""}
 
-    if requester_major and requester_major == candidate_major:
-        score += 70
-        matched_fields.append("Same major")
+    shared_major_fields = requester_major_fields.intersection(candidate_major_fields)
 
-    if requester_second_major and requester_second_major == candidate_second_major:
-        score += 45
-        matched_fields.append("Same second major")
+    for shared_field in shared_major_fields:
+        score += 70
+
+        if requester_major == candidate_major == shared_field:
+            matched_fields.append("Same major")
+
+        elif requester_second_major == candidate_second_major == shared_field:
+            matched_fields.append("Same second major")
+
+        else:
+            matched_fields.append("Major/second major match")
 
     if requester_minor and requester_minor == candidate_minor:
         score += 25
         matched_fields.append("Same minor")
 
-    if requester_major and requester_major in candidate_secondary_fields:
-        score += 45
-        matched_fields.append("Your major matches their second major/minor")
+    if requester_minor and requester_minor in candidate_major_fields:
+        score += 25
+        matched_fields.append("Your minor matches their major/second major")
 
-    if candidate_major and candidate_major in requester_secondary_fields:
-        score += 45
-        matched_fields.append("Their major matches your second major/minor")
+    if candidate_minor and candidate_minor in requester_major_fields:
+        score += 25
+        matched_fields.append("Their minor matches your major/second major")
 
     same_degree = (
         requester.degree_option_id is not None
@@ -274,146 +345,6 @@ def calculate_academic_score(requester, candidate):
 
     return score, matched_fields, same_degree
 
-
-def calculate_availability_score(overlap_by_day):
-    valid_overlap_days = 0
-    useful_overlap_days = 0
-    strong_overlap_days = 0
-    overlap_minutes_total = 0
-    strongest_single_day_overlap = 0
-
-    for overlaps in overlap_by_day.values():
-        day_total = 0
-
-        for start_time, end_time in overlaps:
-            day_total += (
-                time_to_minutes(end_time)
-                - time_to_minutes(start_time)
-            )
-
-        overlap_minutes_total += day_total
-
-        if day_total >= 30:
-            valid_overlap_days += 1
-
-        if day_total >= 45:
-            useful_overlap_days += 1
-
-        if day_total >= 90:
-            strong_overlap_days += 1
-
-        strongest_single_day_overlap = max(
-            strongest_single_day_overlap,
-            day_total
-        )
-
-    if valid_overlap_days == 0:
-        return None
-
-    availability_score = (
-        valid_overlap_days * 30
-        + useful_overlap_days * 45
-        + strong_overlap_days * 60
-        + (overlap_minutes_total / 60) * 40
-        + (strongest_single_day_overlap / 60) * 20
-    )
-
-    return {
-        "availability_score": availability_score,
-        "valid_overlap_days": valid_overlap_days,
-        "useful_overlap_days": useful_overlap_days,
-        "strong_overlap_days": strong_overlap_days,
-        "overlap_minutes_total": overlap_minutes_total,
-        "strongest_single_day_overlap": strongest_single_day_overlap,
-    }
-
-
-def normalise_text(value):
-    if not value:
-        return ""
-    return value.strip().lower()
-
-
-def get_shared_unit_score(shared_unit_count):
-    # Strong academic weighting without becoming overwhelming.
-    return shared_unit_count * 100
-
-
-def calculate_academic_score(requester, candidate):
-    score = 0
-    matched_fields = []
-
-    requester_major = normalise_text(requester.major)
-    requester_second_major = normalise_text(requester.second_major)
-    requester_minor = normalise_text(requester.minor)
-
-    candidate_major = normalise_text(candidate.major)
-    candidate_second_major = normalise_text(candidate.second_major)
-    candidate_minor = normalise_text(candidate.minor)
-
-    requester_secondary_fields = {
-        requester_second_major,
-        requester_minor,
-    } - {""}
-
-    candidate_secondary_fields = {
-        candidate_second_major,
-        candidate_minor,
-    } - {""}
-
-    # Same primary major
-    if requester_major and requester_major == candidate_major:
-        score += 70
-        matched_fields.append("Same major")
-
-    # Same second major
-    if (
-        requester_second_major
-        and requester_second_major == candidate_second_major
-    ):
-        score += 45
-        matched_fields.append("Same second major")
-
-    # Same minor
-    if requester_minor and requester_minor == candidate_minor:
-        score += 25
-        matched_fields.append("Same minor")
-
-    # Cross-field matches
-    if (
-        requester_major
-        and requester_major in candidate_secondary_fields
-    ):
-        score += 45
-        matched_fields.append(
-            "Your major matches their second major/minor"
-        )
-
-    if (
-        candidate_major
-        and candidate_major in requester_secondary_fields
-    ):
-        score += 45
-        matched_fields.append(
-            "Their major matches your second major/minor"
-        )
-
-    # Same degree
-    same_degree = (
-        requester.degree_option_id is not None
-        and candidate.degree_option_id == requester.degree_option_id
-    ) or (
-        requester.degree
-        and candidate.degree
-        and requester.degree.strip().lower()
-        == candidate.degree.strip().lower()
-    )
-
-    if same_degree:
-        score += 20
-        matched_fields.append("Same degree")
-
-    return score, matched_fields, same_degree
 
 
 def calculate_availability_score(overlap_by_day):
@@ -725,7 +656,9 @@ def login():
             return render_template("loginpage.html")
 
         login_user(user, remember=remember)
-        return redirect(url_for("main.dashboard"))
+        if not user.onboarding_completed:
+            return redirect(url_for("onboarding"))
+        return redirect(url_for("dashboard"))
 
     return render_template("loginpage.html")
 
@@ -849,7 +782,39 @@ def dashboard():
     )
 
 
-@main_bp.route("/events")
+@main_bp.route("/onboarding", methods=["GET"])
+@login_required
+def onboarding():
+    if current_user.onboarding_completed:
+        return redirect(url_for("main.dashboard"))
+    return redirect(url_for(f"main.{get_onboarding_target_endpoint(current_user)}"))
+@main_bp.route("/onboarding/advance", methods=["POST"])
+@login_required
+def onboarding_advance():
+    if current_user.onboarding_completed:
+        return redirect(url_for("main.dashboard"))
+    action = request.form.get("action", "next")
+    step = get_onboarding_step_for_user(current_user)
+    max_step = len(ONBOARDING_STEP_ENDPOINTS)
+    if action == "back":
+        current_user.onboarding_step = max(1, step - 1)
+    elif action == "finish":
+        if not can_finish_onboarding(current_user):
+            flash("Before finishing, add at least one unit and one availability slot in Profile.", "error")
+            current_user.onboarding_step = max_step
+            db.session.commit()
+            return redirect(url_for("main.profile"))
+        current_user.onboarding_completed = True
+        db.session.commit()
+        flash("Onboarding complete. Welcome to StudySync!", "success")
+        return redirect(url_for("main.dashboard"))
+    else:
+        current_user.onboarding_step = min(max_step, step + 1)
+    db.session.commit()
+    return redirect(url_for(f"main.{get_onboarding_target_endpoint(current_user)}"))
+
+
+@app.route("/events")
 @login_required
 def events_page():
     now = datetime.utcnow()
@@ -1504,6 +1469,7 @@ def register():
             degree=selected_degree_option.name if selected_degree_option else degree,
             degree_option_id=selected_degree_option.id if selected_degree_option else None,
             major=major,
+            onboarding_step=1,
             second_major=second_major or None,
             minor=minor or None,
         )
@@ -1513,9 +1479,10 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash("Registration successful. Please log in.", "success")
-        return redirect(url_for("main.login"))
-
+        login_user(new_user)
+        flash("Registration successful. Let's finish setup.", "success")
+        return redirect(url_for("main.onboarding"))
+        
     return render_template("signup.html", degree_options=degree_options)
 
 

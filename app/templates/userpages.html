@@ -50,131 +50,132 @@
 
 <div class="row g-4">
 
-    <!-- BASIC INFO -->
-    <div class="col-lg-4">
+ <!-- BASIC INFO -->
+<div class="col-lg-4">
 
-        <section class="info-card basic-info-card h-100">
+    <section class="info-card basic-info-card h-100">
 
-            <div class="section-heading">
-                <i class="bi bi-person"></i>
-                Basic Info
+        <div class="section-heading">
+            <i class="bi bi-person"></i>
+            Basic Info
+        </div>
+
+        <div class="info-item">
+
+            <i class="bi bi-envelope"></i>
+
+            <div>
+                <div class="info-label">Email</div>
+
+                <div class="info-value">
+                    {{ current_user.email if current_user else 'Not available' }}
+                </div>
             </div>
 
-            <div class="info-item">
+        </div>
 
-                <i class="bi bi-envelope"></i>
+        <div class="info-item">
 
-                <div>
-                    <div class="info-label">Email</div>
+            <i class="bi bi-code-slash"></i>
 
-                    <div class="info-value">
-                        {{ current_user.email if current_user else 'Not available' }}
+            <div>
+                <div class="info-label">Major</div>
+
+                <div class="info-value">
+                    {{ current_user.major if current_user else 'Not available' }}
+                </div>
+            </div>
+
+        </div>
+
+        {% if current_user and current_user.second_major %}
+        <div class="info-item">
+
+            <i class="bi bi-diagram-3"></i>
+
+            <div>
+                <div class="info-label">Second Major</div>
+
+                <div class="info-value">
+                    {{ current_user.second_major }}
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+        {% if current_user and current_user.minor %}
+        <div class="info-item">
+
+            <i class="bi bi-bookmark-star"></i>
+
+            <div>
+                <div class="info-label">Minor</div>
+
+                <div class="info-value">
+                    {{ current_user.minor }}
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+        <div class="info-item">
+
+            <i class="bi bi-mortarboard"></i>
+
+            <div>
+                <div class="info-label">Degree</div>
+
+                <div class="info-value">
+                    {{ current_user.degree if current_user else 'Not available' }}
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- SUBJECTS -->
+<div class="col-lg-4">
+
+    <section class="info-card subjects-card h-100">
+
+        <div class="section-heading">
+            <i class="bi bi-book"></i>
+            Subjects
+        </div>
+
+        <div class="subject-container">
+
+            {% if units %}
+
+                {% for unit in units %}
+                    <span class="subject-chip">{{ unit }}</span>
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-subject-state">
+
+                    <div class="empty-subject-icon">
+                        <i class="bi bi-book"></i>
                     </div>
+
+                    <p>No subjects added yet</p>
+
                 </div>
 
-            </div>
-
-            {% if current_user and current_user.second_major %}
-            <div class="info-item">
-
-                <i class="bi bi-diagram-3"></i>
-
-                <div>
-                    <div class="info-label">Second Major</div>
-
-                    <div class="info-value">
-                        {{ current_user.second_major }}
-                    </div>
-                </div>
-
-            </div>
             {% endif %}
 
-            {% if current_user and current_user.minor %}
-            <div class="info-item">
+        </div>
 
-                <i class="bi bi-bookmark-star"></i>
+    </section>
 
-                <div>
-                    <div class="info-label">Minor</div>
-
-                    <div class="info-value">
-                        {{ current_user.minor }}
-                    </div>
-                </div>
-
-            </div>
-            {% endif %}
-
-            <div class="info-item">
-
-                <i class="bi bi-mortarboard"></i>
-
-                <div>
-                    <div class="info-label">Degree</div>
-
-                    <div class="info-value">
-                        {{ current_user.degree if current_user else 'Not available' }}
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="info-item">
-
-                <i class="bi bi-code-slash"></i>
-
-                <div>
-                    <div class="info-label">Major</div>
-
-                    <div class="info-value">
-                        {{ current_user.major if current_user else 'Not available' }}
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
-
-    </div>
-
-    <!-- SUBJECTS -->
-    <div class="col-lg-4">
-
-        <section class="info-card subjects-card h-100">
-
-            <div class="section-heading">
-                <i class="bi bi-book"></i>
-                Subjects
-            </div>
-
-            <div class="subject-container">
-
-                {% if subjects %}
-
-                    {% for subject in subjects %}
-                        <span class="subject-chip">{{ subject }}</span>
-                    {% endfor %}
-
-                {% else %}
-
-                    <div class="empty-subject-state">
-
-                        <div class="empty-subject-icon">
-                            <i class="bi bi-book"></i>
-                        </div>
-
-                        <p>No subjects added yet</p>
-
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-        </section>
-
-    </div>
+</div>
 
     <!-- AVAILABILITY -->
     <div class="col-lg-4">
