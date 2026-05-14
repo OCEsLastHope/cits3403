@@ -196,9 +196,28 @@ def get_onboarding_target_endpoint(user):
 
 
 def can_finish_onboarding(user):
-    has_subject = UserSubject.query.filter_by(user_id=user.id).first() is not None
+    has_degree = bool((user.degree or "").strip()) or user.degree_option_id is not None
+
+    subjects = UserSubject.query.filter_by(user_id=user.id).all()
+    subject_codes = [subject.subject_code.strip().upper() for subject in subjects if subject.subject_code]
+
+    if len(subject_codes) > MAX_PROFILE_UNITS:
+        return False
+
+    if len(subject_codes) != len(set(subject_codes)):
+        return False
+
+    if not subject_codes:
+        return False
+
+    for code in subject_codes:
+        if not UNIT_CODE_PATTERN.match(code):
+            return False
+        if VALID_UWA_2026_UNIT_CODES and code not in VALID_UWA_2026_UNIT_CODES:
+            return False
+
     has_availability = UserAvailability.query.filter_by(user_id=user.id).first() is not None
-    return has_subject and has_availability
+    return has_degree and has_availability
 
 
 @main_bp.app_context_processor
@@ -833,7 +852,10 @@ def onboarding_advance():
         current_user.onboarding_step = max(1, step - 1)
     elif action == "finish":
         if not can_finish_onboarding(current_user):
-            flash("Before finishing, add at least one unit and one availability slot in Profile.", "error")
+            flash(
+                "Before finishing, ensure degree is set and add valid units (max 6, unique UWA codes) plus at least one availability slot in Profile.",
+                "error",
+            )
             current_user.onboarding_step = max_step
             db.session.commit()
             return redirect(url_for("main.profile"))
