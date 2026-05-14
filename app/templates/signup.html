@@ -391,9 +391,205 @@
             }
         }
 
+        const form = document.getElementById("register-form");
+
+        const emailInput = document.getElementById("email");
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const confirmPasswordInput = document.getElementById("confirm-password");
+
+        const emailMessage = document.getElementById("email-message");
+        const usernameMessage = document.getElementById("username-message");
+        const passwordMessage = document.getElementById("password-message");
+        const confirmPasswordMessage = document.getElementById("confirm-password-message");
+        const formError = document.getElementById("form-error");
+
+        let emailIsValid = false;
+        let usernameIsValid = false;
+        let passwordIsValid = false;
+        let passwordsMatch = false;
+
+        function setMessage(element, message, type) {
+            element.textContent = message;
+            element.classList.remove("valid-message", "error-message");
+
+            if (type === "valid") {
+                element.classList.add("valid-message");
+            }
+
+            if (type === "error") {
+                element.classList.add("error-message");
+            }
+        }
+
+        function isEmailFormatValid(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+        }
+
+        async function checkEmail() {
+            const email = emailInput.value.trim();
+
+            emailIsValid = false;
+
+            if (!email) {
+                setMessage(emailMessage, "", "");
+                return;
+            }
+
+            if (!isEmailFormatValid(email)) {
+                setMessage(emailMessage, "Enter a valid email format.", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/check_register_details?email=${encodeURIComponent(email)}`
+                );
+
+                const data = await response.json();
+
+                if (data.email_exists) {
+                    setMessage(emailMessage, "This email is already registered.", "error");
+                    return;
+                }
+
+                emailIsValid = true;
+                setMessage(emailMessage, "Email format looks valid.", "valid");
+
+            } catch (error) {
+                setMessage(emailMessage, "Could not check email right now.", "error");
+            }
+        }
+
+        async function checkUsername() {
+            const username = usernameInput.value.trim();
+
+            usernameIsValid = false;
+
+            if (!username) {
+                setMessage(usernameMessage, "", "");
+                return;
+            }
+
+            if (username.length < 5) {
+                setMessage(usernameMessage, "Username must be at least 5 characters.", "error");
+                return;
+            }
+
+            if (username.includes("@")) {
+                setMessage(usernameMessage, "Username cannot contain @.", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/check_register_details?username=${encodeURIComponent(username)}`
+                );
+
+                const data = await response.json();
+
+                if (data.username_exists) {
+                    setMessage(usernameMessage, "This username is already taken.", "error");
+                    return;
+                }
+
+                usernameIsValid = true;
+                setMessage(usernameMessage, "Username is available.", "valid");
+
+            } catch (error) {
+                setMessage(usernameMessage, "Could not check username right now.", "error");
+            }
+        }
+
+        function checkPassword() {
+            const password = passwordInput.value;
+
+            passwordIsValid = false;
+
+            if (!password) {
+                setMessage(passwordMessage, "", "");
+                return;
+            }
+
+            if (password.length < 6) {
+                setMessage(passwordMessage, "Password must be at least 6 characters.", "error");
+                return;
+            }
+
+            passwordIsValid = true;
+            setMessage(passwordMessage, "Password length looks valid.", "valid");
+        }
+
+        function checkConfirmPassword() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            passwordsMatch = false;
+
+            if (!confirmPassword) {
+                setMessage(confirmPasswordMessage, "", "");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                setMessage(confirmPasswordMessage, "Passwords do not match.", "error");
+                return;
+            }
+
+            passwordsMatch = true;
+            setMessage(confirmPasswordMessage, "Passwords match.", "valid");
+        }
+
+        let emailTimer;
+        let usernameTimer;
+
+        emailInput.addEventListener("input", function() {
+            clearTimeout(emailTimer);
+
+            emailTimer = setTimeout(function() {
+                checkEmail();
+            }, 400);
+        });
+
+        usernameInput.addEventListener("input", function() {
+            clearTimeout(usernameTimer);
+
+            usernameTimer = setTimeout(function() {
+                checkUsername();
+            }, 400);
+        });
+
+        passwordInput.addEventListener("input", function() {
+            checkPassword();
+            checkConfirmPassword();
+        });
+
+        confirmPasswordInput.addEventListener("input", function() {
+            checkConfirmPassword();
+        });
+
+        form.addEventListener("submit", async function(event) {
+            formError.textContent = "";
+
+            await checkEmail();
+            await checkUsername();
+            checkPassword();
+            checkConfirmPassword();
+
+            if (
+                !emailIsValid ||
+                !usernameIsValid ||
+                !passwordIsValid ||
+                !passwordsMatch
+            ) {
+                event.preventDefault();
+                formError.textContent =
+                    "Please fix the highlighted registration details before continuing.";
+            }
+        });
+
     </script>
 
 </body>
 </html>
-
 
