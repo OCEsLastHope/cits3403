@@ -24,7 +24,7 @@
 <section class="info-card mb-4">
     <form method="GET" action="{{ url_for('main.matches') }}" class="row g-3 align-items-end">
         <input type="hidden" name="user_id" value="{{ current_user.id if current_user else request.args.get('user_id', '') }}">
-        <div class="col-md-6">
+        <div class="col-md-5">
             <label for="degreeFilter" class="form-label">Filter by Degree (optional)</label>
             <select id="degreeFilter" name="degree_option_id" class="form-select">
                 <option value="">Any degree</option>
@@ -38,6 +38,11 @@
                     {% endif %}
                 {% endfor %}
             </select>
+        </div>
+        <div class="col-md-4">
+            <label for="unitFilter" class="form-label">Filter by Unit (optional)</label>
+            <input id="unitFilter" name="unit_code" class="form-control text-uppercase unit-autocomplete" placeholder="CITS3403" value="{{ selected_unit_code or '' }}" autocomplete="off" list="unitSuggestions">
+            <datalist id="unitSuggestions"></datalist>
         </div>
         <div class="col-md-3">
             <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
@@ -72,4 +77,40 @@
         </section>
     {% endfor %}
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const unitInput = document.querySelector('.unit-autocomplete');
+    const suggestions = document.getElementById('unitSuggestions');
+    if (!unitInput || !suggestions) return;
+
+    let timer;
+    const unitSearchUrl = "{{ url_for('main.search_units') }}";
+
+    unitInput.addEventListener('input', () => {
+        const query = unitInput.value.trim().toUpperCase();
+        unitInput.value = query;
+
+        if (query.length < 2) {
+            suggestions.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(timer);
+        timer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return;
+                const payload = await response.json();
+                const units = Array.isArray(payload.units) ? payload.units : [];
+                suggestions.innerHTML = units.map((unit) => `<option value="${unit}"></option>`).join('');
+            } catch (_error) {
+                suggestions.innerHTML = '';
+            }
+        }, 120);
+    });
+})();
+</script>
 {% endblock %}
