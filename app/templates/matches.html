@@ -22,7 +22,7 @@
 </div>
 
 <section class="info-card mb-4">
-    <form method="GET" action="{{ url_for('matches') }}" class="row g-3 align-items-end">
+    <form method="GET" action="{{ url_for('main.matches') }}" class="row g-3 align-items-end">
         <input type="hidden" name="user_id" value="{{ current_user.id if current_user else request.args.get('user_id', '') }}">
         <div class="col-md-6">
             <label for="degreeFilter" class="form-label">Filter by Degree (optional)</label>

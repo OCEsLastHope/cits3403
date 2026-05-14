@@ -169,7 +169,7 @@
       <div class="info-card flex-grow-1">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="m-0">Suggested Partners</h3>
-            <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}"
+            <a href="{{ url_for('main.matches', user_id=current_user.id if current_user else 1) }}"
               class="text-decoration-none" style="color: #8b5cf6; font-size: 14px;">View all →</a>
           </div>
 
@@ -189,7 +189,7 @@
                   <div class="text-light opacity-50 text-truncate" style="font-size: 11px;">{{
                     match.overlap_minutes_total // 60 }}h overlap</div>
                 </div>
-                <form action="{{ url_for('start_conversation', receiver_id=match.user.id) }}" method="POST">
+                <form action="{{ url_for('main.start_conversation', receiver_id=match.user.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="p-0 border-0 bg-transparent text-light opacity-50 hover-opacity-100">
                     <i class="bi bi-chat-dots"></i>
@@ -201,7 +201,7 @@
           </div>
           {% else %}
           <p class="text-light opacity-50">No suggestions yet. <a
-              href="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}"
+              href="{{ url_for('main.profile', user_id=current_user.id if current_user else 1) }}"
               style="color: #8b5cf6;">Add your availability</a> to get matched!</p>
           {% endif %}
         </div>
@@ -277,7 +277,7 @@
           </div>
 
           <div class="d-flex align-items-center gap-4">
-            <a href="{{ url_for('events_page') }}" class="custom-btn secondary py-1 px-3 text-decoration-none"
+            <a href="{{ url_for('main.events_page') }}" class="custom-btn secondary py-1 px-3 text-decoration-none"
               style="font-size: 13px;">
               Details
             </a>
@@ -288,7 +288,7 @@
         <div class="text-center py-5"
           style="background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
           <p class="text-light opacity-50 m-0">No upcoming meetings scheduled.</p>
-          <a href="{{ url_for('events_page') }}" class="text-decoration-none"
+          <a href="{{ url_for('main.events_page') }}" class="text-decoration-none"
             style="color: #8b5cf6; font-size: 14px; margin-top: 8px; display: inline-block;">Schedule one now →</a>
         </div>
         {% endif %}

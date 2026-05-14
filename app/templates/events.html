@@ -50,13 +50,13 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editEventModal{{ event.id }}">Edit</button>
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteEventModal{{ event.id }}">Invite</button>
-                                <form method="POST" action="{{ url_for('cancel_event', event_id=event.id) }}">
+                                <form method="POST" action="{{ url_for('main.cancel_event', event_id=event.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
                                 </form>
                             </div>
                         {% else %}
-                            <form method="POST" action="{{ url_for('leave_event', event_id=event.id) }}">
+                            <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
                             </form>
@@ -85,23 +85,23 @@
                         <p class="mb-2 text-light" style="opacity:0.8;">{{ event.description or "No description." }}</p>
 
                         {% if item.attendee_record and item.attendee_record.invite_status == "accepted" %}
-                            <form method="POST" action="{{ url_for('leave_event', event_id=event.id) }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
                             </form>
                         {% else %}
-                            <form method="POST" action="{{ url_for('respond_to_event_invite', event_id=event.id) }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="action" value="accept">
                                 <button type="submit" class="btn btn-sm btn-success">Accept</button>
                             </form>
-                            <form method="POST" action="{{ url_for('respond_to_event_invite', event_id=event.id) }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="action" value="accept">
                                 <input type="hidden" name="confirm_conflict" value="1">
                                 <button type="submit" class="btn btn-sm btn-outline-success">Accept (confirm conflict)</button>
                             </form>
-                            <form method="POST" action="{{ url_for('respond_to_event_invite', event_id=event.id) }}" class="d-inline">
+                            <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="action" value="decline">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
@@ -131,14 +131,14 @@
                         <p class="mb-2 text-light" style="opacity:0.8;">{{ event.description or "No description." }}</p>
 
                         {% if item.attendee_record and item.attendee_record.invite_status == "accepted" %}
-                            <form method="POST" action="{{ url_for('leave_event', event_id=event.id) }}">
+                            <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
                             </form>
                         {% elif item.is_full %}
                             <button class="btn btn-sm btn-secondary" disabled>Event Full</button>
                         {% else %}
-                            <form method="POST" action="{{ url_for('join_open_event', event_id=event.id) }}">
+                            <form method="POST" action="{{ url_for('main.join_open_event', event_id=event.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-primary">Join Event</button>
                             </form>
@@ -177,7 +177,7 @@
                 <h5 class="modal-title">Create Event</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('create_event') }}">
+            <form method="POST" action="{{ url_for('main.create_event') }}">
                 <div class="modal-body">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
@@ -235,7 +235,7 @@
                         <h5 class="modal-title">Edit Event</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <form method="POST" action="{{ url_for('edit_event', event_id=event.id) }}">
+                    <form method="POST" action="{{ url_for('main.edit_event', event_id=event.id) }}">
                         <div class="modal-body">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
@@ -290,7 +290,7 @@
                         <h5 class="modal-title">Invite Users to {{ event.title }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <form method="POST" action="{{ url_for('invite_to_event', event_id=event.id) }}">
+                    <form method="POST" action="{{ url_for('main.invite_to_event', event_id=event.id) }}">
                         <div class="modal-body">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <label class="form-label">Enter usernames or emails (comma separated)</label>

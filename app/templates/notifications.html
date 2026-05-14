@@ -20,16 +20,16 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Navigation</div>
 
-                <a href="{{ url_for('landing') }}">
+                <a href="{{ url_for('main.landing') }}">
                     <i class="bi bi-house"></i> Home
                 </a>
-                <a href="{{ url_for('dashboard') }}">
+                <a href="{{ url_for('main.dashboard') }}">
                     <i class="bi bi-grid"></i> Dashboard
                 </a>
-                <a href="{{ url_for('profile', user_id=current_user.id if current_user else 1) }}">
+                <a href="{{ url_for('main.profile', user_id=current_user.id if current_user else 1) }}">
                     <i class="bi bi-person"></i> Profile
                 </a>
-                <a href="{{ url_for('matches', user_id=current_user.id if current_user else 1) }}">
+                <a href="{{ url_for('main.matches', user_id=current_user.id if current_user else 1) }}">
                     <i class="bi bi-people"></i> Matches
                 </a>
 
@@ -43,13 +43,13 @@
                 </div>
 
                 <div class="notif-dropdown" id="msg-dropdown">
-                    <a href="{{ url_for('notifications') }}" class="notif-sub-item active">
+                    <a href="{{ url_for('main.notifications') }}" class="notif-sub-item active">
                         <i class="bi bi-bell"></i> Notifications
                         {% if unread_count > 0 %}
                         <span class="sidebar-notif-badge ms-auto">{{ unread_count }}</span>
                         {% endif %}
                     </a>
-                    <a href="{{ url_for('messages_inbox') }}" class="notif-sub-item">
+                    <a href="{{ url_for('main.messages_inbox') }}" class="notif-sub-item">
                         <i class="bi bi-chat-dots"></i> Direct Messages
                     </a>
                     <a href="#" class="notif-sub-item">
@@ -69,7 +69,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Settings</div>
                 <a href="#"><i class="bi bi-pencil"></i> Edit Profile</a>
-                <a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                <a href="{{ url_for('main.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
 
             <!-- Logged in user -->
