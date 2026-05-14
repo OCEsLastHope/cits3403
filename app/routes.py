@@ -3,7 +3,7 @@ from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
 
-from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, has_app_context, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import func, or_
 from flask_socketio import emit, join_room
@@ -43,7 +43,7 @@ TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(6, 24)]
 EVENT_VISIBILITY_MODES = {"invite_only", "open"}
 EVENT_STATUSES = {"scheduled", "cancelled"}
 ATTENDEE_STATUSES = {"invited", "accepted", "declined", "left"}
-MAX_PROFILE_UNITS = 4
+MAX_PROFILE_UNITS = 6
 UNIT_CODE_PATTERN = re.compile(r"^[A-Z]{4}[0-9]{4}$")
 ONBOARDING_STEP_ENDPOINTS = {
     1: "dashboard",
@@ -62,7 +62,8 @@ ONBOARDING_STEP_COPY = {
 
 
 def load_valid_uwa_2026_unit_codes():
-    data_path = Path(current_app.root_path).parent / "data" / "uwa_2026_unit_codes.txt"
+    app_root = Path(current_app.root_path) if has_app_context() else Path(__file__).resolve().parent
+    data_path = app_root.parent / "data" / "uwa_2026_unit_codes.txt"
     if not data_path.exists():
         return set()
     return {
@@ -168,12 +169,12 @@ def can_finish_onboarding(user):
     return has_subject and has_availability
 
 
-@app.context_processor
+@main_bp.app_context_processor
 def inject_onboarding_guide():
     if not current_user.is_authenticated or current_user.onboarding_completed:
         return {"onboarding_guide": None}
     step = get_onboarding_step_for_user(current_user)
-    target_endpoint = ONBOARDING_STEP_ENDPOINTS[step]
+    target_endpoint = f"main.{ONBOARDING_STEP_ENDPOINTS[step]}"
     if request.endpoint != target_endpoint:
         return {"onboarding_guide": None}
     return {
@@ -186,16 +187,16 @@ def inject_onboarding_guide():
     }
 
 
-@app.before_request
+@main_bp.before_app_request
 def require_onboarding_completion():
     if not current_user.is_authenticated or current_user.onboarding_completed:
         return None
     if request.endpoint is None:
         return None
-    allowed_endpoints = {"onboarding", "onboarding_advance", "logout", "static"}
+    allowed_endpoints = {"main.onboarding", "main.onboarding_advance", "main.logout", "static"}
     if request.endpoint in allowed_endpoints:
         return None
-    target_endpoint = get_onboarding_target_endpoint(current_user)
+    target_endpoint = f"main.{get_onboarding_target_endpoint(current_user)}"
     if request.endpoint != target_endpoint:
         return redirect(url_for(target_endpoint))
     return None
@@ -657,8 +658,8 @@ def login():
 
         login_user(user, remember=remember)
         if not user.onboarding_completed:
-            return redirect(url_for("onboarding"))
-        return redirect(url_for("dashboard"))
+            return redirect(url_for("main.onboarding"))
+        return redirect(url_for("main.dashboard"))
 
     return render_template("loginpage.html")
 
@@ -814,7 +815,7 @@ def onboarding_advance():
     return redirect(url_for(f"main.{get_onboarding_target_endpoint(current_user)}"))
 
 
-@app.route("/events")
+@main_bp.route("/events")
 @login_required
 def events_page():
     now = datetime.utcnow()
@@ -1099,7 +1100,7 @@ def invite_to_event(event_id):
         flash(f"Sent {invited_count} event invite(s).", "success")
     if skipped_count:
         flash(f"Skipped {skipped_count} user(s) (not found, self, or already invited).", "info")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
 @main_bp.route("/events/<int:event_id>/join", methods=["POST"])
@@ -1117,7 +1118,7 @@ def join_open_event(event_id):
 
     if is_event_full(event):
         flash("Event is full.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if attendee is None:
         attendee = EventAttendee(event_id=event.id, user_id=current_user.id)
@@ -1147,14 +1148,14 @@ def respond_to_event_invite(event_id):
 
     if event.status != "scheduled":
         flash("This event is no longer active.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if action == "decline":
         attendee.invite_status = "declined"
         attendee.responded_at = datetime.utcnow()
         db.session.commit()
         flash("Invitation declined.", "info")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     overlap = find_event_overlap_for_user(current_user.id, event.start_at, event.end_at, exclude_event_id=event.id)
     if overlap is not None and not confirm_conflict:
@@ -1162,11 +1163,11 @@ def respond_to_event_invite(event_id):
             f"Schedule conflict with '{overlap.title}'. Click accept again to confirm.",
             "error",
         )
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     if is_event_full(event) and attendee.invite_status != "accepted":
         flash("Event is full.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     attendee.invite_status = "accepted"
     attendee.responded_at = datetime.utcnow()
@@ -1184,13 +1185,13 @@ def leave_event(event_id):
         abort(403)
     if event.creator_user_id == current_user.id:
         flash("Event creators cannot leave their own event. Cancel it instead.", "error")
-        return redirect(url_for("events_page"))
+        return redirect(url_for("main.events_page"))
 
     attendee.invite_status = "left"
     attendee.responded_at = datetime.utcnow()
     db.session.commit()
     flash("You left the event.", "info")
-    return redirect(url_for("events_page"))
+    return redirect(url_for("main.events_page"))
 
 
 @main_bp.route("/matches")
@@ -1237,12 +1238,17 @@ def profile():
         submitted_group_size = request.form.get("preferred_group_size", "").strip()
         submitted_study_mode = request.form.get("study_mode", "").strip()
 
-        unit_values = [
-            request.form.get("unit1", "").strip().upper(),
-            request.form.get("unit2", "").strip().upper(),
-            request.form.get("unit3", "").strip().upper(),
-            request.form.get("unit4", "").strip().upper(),
-        ]
+        submitted_unit_items = []
+        for key, value in request.form.items():
+            if not key.startswith("unit"):
+                continue
+            suffix = key[4:]
+            if not suffix.isdigit():
+                continue
+            submitted_unit_items.append((int(suffix), value.strip().upper()))
+
+        submitted_unit_items.sort(key=lambda item: item[0])
+        unit_values = [value for _, value in submitted_unit_items]
         profile_errors = []
         availability_errors = []
         submitted_availability_map = {day: [] for day in DAY_NAMES}

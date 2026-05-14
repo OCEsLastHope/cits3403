@@ -110,6 +110,18 @@
         </aside>
 
         <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-3 auth-flash-stack">
+                {% for category, message in messages %}
+                <div class="auth-flash {% if category == 'success' %}auth-flash-success{% else %}auth-flash-error{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
             {% if onboarding_guide %}
             <section class="onboarding-guide" role="status" aria-live="polite">
                 <div class="onboarding-guide__header">
@@ -136,7 +148,7 @@
                     {% endfor %}
                 </ol>
 
-                <form method="POST" action="{{ url_for('onboarding_advance') }}" class="onboarding-guide__actions">
+                <form method="POST" action="{{ url_for('main.onboarding_advance') }}" class="onboarding-guide__actions">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% if onboarding_guide.step > 1 %}
                     <button type="submit" name="action" value="back" class="btn btn-outline-secondary btn-sm onboarding-btn onboarding-btn--secondary">Back</button>
@@ -163,5 +175,3 @@
 </body>
 
 </html>
-
-

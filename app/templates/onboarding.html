@@ -31,7 +31,7 @@
     </div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('onboarding') }}">
+    <form method="POST" action="{{ url_for('main.onboarding_advance') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="step" value="{{ step }}">
 
@@ -68,19 +68,33 @@
         <p class="mb-3">Use valid UWA unit codes (example: CITS3403).</p>
         <div class="mb-3">
             <label for="unit1" class="form-label">Unit 1</label>
-            <input id="unit1" name="unit1" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[0] if subjects|length > 0 else '' }}">
+            <input id="unit1" name="unit1" class="form-control text-uppercase unit-autocomplete" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[0] if subjects|length > 0 else '' }}" autocomplete="off" list="onboardingUnitSuggestions1">
+            <datalist id="onboardingUnitSuggestions1"></datalist>
         </div>
         <div class="mb-3">
             <label for="unit2" class="form-label">Unit 2</label>
-            <input id="unit2" name="unit2" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[1] if subjects|length > 1 else '' }}">
+            <input id="unit2" name="unit2" class="form-control text-uppercase unit-autocomplete" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[1] if subjects|length > 1 else '' }}" autocomplete="off" list="onboardingUnitSuggestions2">
+            <datalist id="onboardingUnitSuggestions2"></datalist>
         </div>
         <div class="mb-3">
             <label for="unit3" class="form-label">Unit 3</label>
-            <input id="unit3" name="unit3" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[2] if subjects|length > 2 else '' }}">
+            <input id="unit3" name="unit3" class="form-control text-uppercase unit-autocomplete" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[2] if subjects|length > 2 else '' }}" autocomplete="off" list="onboardingUnitSuggestions3">
+            <datalist id="onboardingUnitSuggestions3"></datalist>
         </div>
         <div class="mb-1">
             <label for="unit4" class="form-label">Unit 4</label>
-            <input id="unit4" name="unit4" class="form-control text-uppercase" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[3] if subjects|length > 3 else '' }}">
+            <input id="unit4" name="unit4" class="form-control text-uppercase unit-autocomplete" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[3] if subjects|length > 3 else '' }}" autocomplete="off" list="onboardingUnitSuggestions4">
+            <datalist id="onboardingUnitSuggestions4"></datalist>
+        </div>
+        <div class="mb-1">
+            <label for="unit5" class="form-label">Unit 5</label>
+            <input id="unit5" name="unit5" class="form-control text-uppercase unit-autocomplete" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[4] if subjects|length > 4 else '' }}" autocomplete="off" list="onboardingUnitSuggestions5">
+            <datalist id="onboardingUnitSuggestions5"></datalist>
+        </div>
+        <div class="mb-1">
+            <label for="unit6" class="form-label">Unit 6</label>
+            <input id="unit6" name="unit6" class="form-control text-uppercase unit-autocomplete" maxlength="8" pattern="[A-Za-z]{4}[0-9]{4}" value="{{ subjects[5] if subjects|length > 5 else '' }}" autocomplete="off" list="onboardingUnitSuggestions6">
+            <datalist id="onboardingUnitSuggestions6"></datalist>
         </div>
         {% endif %}
 
@@ -208,6 +222,39 @@ document.addEventListener('click', (event) => {
         return;
     }
     row.remove();
+});
+
+const unitInputs = document.querySelectorAll('.unit-autocomplete');
+let autocompleteTimer;
+const unitSearchUrl = "{{ url_for('main.search_units') }}";
+
+unitInputs.forEach((input) => {
+    input.addEventListener('input', () => {
+        const query = input.value.trim().toUpperCase();
+        input.value = query;
+
+        const listId = input.getAttribute('list');
+        const list = listId ? document.getElementById(listId) : null;
+        if (!list) return;
+
+        if (query.length < 2) {
+            list.innerHTML = '';
+            return;
+        }
+
+        clearTimeout(autocompleteTimer);
+        autocompleteTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(query)}`);
+                if (!response.ok) return;
+                const payload = await response.json();
+                const units = Array.isArray(payload.units) ? payload.units : [];
+                list.innerHTML = units.map((unit) => `<option value="${unit}"></option>`).join('');
+            } catch (_error) {
+                list.innerHTML = '';
+            }
+        }, 120);
+    });
 });
 </script>
 {% endblock %}
