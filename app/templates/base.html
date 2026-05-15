@@ -29,12 +29,6 @@
                     Navigation
                 </div>
 
-                <a href="{{ url_for('main.landing') }}"
-                    class="{% if request.endpoint == 'landing' %}active{% endif %}">
-                    <i class="bi bi-house"></i>
-                    Home
-                </a>
-
                 <a href="{{ url_for('main.dashboard') }}"
                     class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
                     <i class="bi bi-grid"></i>

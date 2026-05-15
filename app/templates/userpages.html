@@ -1,6 +1,101 @@
 {% extends "base.html" %}
 {% block title %}Profile{% endblock %}
 
+{% block head %}
+<style>
+    #profileModal .modal-content,
+    #subjectsModal .modal-content,
+    #availabilityModal .modal-content {
+        background: linear-gradient(155deg, rgba(15, 24, 46, 0.96), rgba(12, 19, 38, 0.98));
+        color: #ebefff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+    }
+
+    #profileModal .modal-header,
+    #subjectsModal .modal-header,
+    #availabilityModal .modal-header,
+    #profileModal .modal-footer,
+    #subjectsModal .modal-footer,
+    #availabilityModal .modal-footer {
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    #profileModal .modal-title,
+    #subjectsModal .modal-title,
+    #availabilityModal .modal-title,
+    #profileModal .form-label,
+    #subjectsModal .form-label,
+    #availabilityModal .form-label,
+    #availabilityModal .small {
+        color: #ebefff;
+    }
+
+    #profileModal .form-control,
+    #profileModal .form-select,
+    #subjectsModal .form-control,
+    #subjectsModal .form-select,
+    #availabilityModal .form-control,
+    #availabilityModal .form-select {
+        background: rgba(11, 18, 36, 0.72);
+        color: #f4f7ff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    #profileModal .form-control:focus,
+    #profileModal .form-select:focus,
+    #subjectsModal .form-control:focus,
+    #subjectsModal .form-select:focus,
+    #availabilityModal .form-control:focus,
+    #availabilityModal .form-select:focus {
+        border-color: rgba(109, 165, 255, 0.75);
+        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
+    }
+
+    #profileModal .nav-tabs,
+    #profileModal .nav-link {
+        border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    #profileModal .nav-link {
+        color: rgba(220, 228, 255, 0.86);
+    }
+
+    #profileModal .nav-link.active {
+        background: rgba(109, 165, 255, 0.2);
+        color: #ffffff;
+        border-color: rgba(109, 165, 255, 0.45);
+    }
+
+    #profileModal .btn-close,
+    #subjectsModal .btn-close,
+    #availabilityModal .btn-close {
+        filter: invert(1) grayscale(100%) brightness(1.2);
+    }
+
+    #editSubjectsBtn,
+    #editAvailabilityBtn {
+        border-radius: 999px;
+        border-color: rgba(109, 165, 255, 0.55);
+        color: #dbe6ff;
+        background: rgba(109, 165, 255, 0.12);
+        font-weight: 600;
+        padding: 0.28rem 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    #editSubjectsBtn:hover,
+    #editAvailabilityBtn:hover,
+    #editSubjectsBtn:focus,
+    #editAvailabilityBtn:focus {
+        color: #ffffff;
+        border-color: rgba(109, 165, 255, 0.8);
+        background: rgba(109, 165, 255, 0.26);
+        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header">
@@ -144,9 +239,9 @@
 
     <section class="info-card subjects-card h-100">
 
-        <div class="section-heading">
-            <i class="bi bi-book"></i>
-            Subjects
+        <div class="section-heading d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-book"></i> Subjects</span>
+            <button type="button" class="btn btn-outline-info btn-sm" id="editSubjectsBtn">Edit</button>
         </div>
 
         <div class="subject-container">
@@ -182,9 +277,9 @@
 
         <section class="info-card availability-card h-100">
 
-            <div class="section-heading">
-                <i class="bi bi-calendar-week"></i>
-                Availability
+            <div class="section-heading d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-week"></i> Availability</span>
+                <button type="button" class="btn btn-outline-info btn-sm" id="editAvailabilityBtn">Edit</button>
             </div>
 
             <ul class="info-list">
@@ -336,9 +431,7 @@
 
                     <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">
                         <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab">Profile</button></li>
-                        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-units" type="button" role="tab">Units</button></li>
                         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-preferences" type="button" role="tab">Study Preferences</button></li>
-                        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-availability" type="button" role="tab">Availability</button></li>
                     </ul>
 
                     <div class="tab-content">
@@ -400,33 +493,6 @@
                             <datalist id="minorSuggestions"></datalist>
                         </div>
 
-                        <div class="tab-pane fade" id="tab-units" role="tabpanel">
-                            <div class="mb-3">
-                                <label class="form-label">Units (max 6)</label>
-                                <div id="unitRows" class="row g-2">
-                                    {% if units and units|length > 0 %}
-                                    {% for unit in units %}
-                                    <div class="col-md-6 unit-row">
-                                        <div class="d-flex gap-2">
-                                            <input name="unit{{ loop.index }}" class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="{{ unit }}" autocomplete="off" list="unitSuggestionsShared">
-                                            <button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                    {% else %}
-                                    <div class="col-md-6 unit-row">
-                                        <div class="d-flex gap-2">
-                                            <input name="unit1" class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="" autocomplete="off" list="unitSuggestionsShared">
-                                            <button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <datalist id="unitSuggestionsShared"></datalist>
-                                <button type="button" class="btn btn-outline-info btn-sm mt-2" id="addUnitBtn">Add unit</button>
-                            </div>
-                        </div>
-
                         <div class="tab-pane fade" id="tab-preferences" role="tabpanel">
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
@@ -444,63 +510,125 @@
                             </div>
                         </div>
 
-                        <div class="tab-pane fade" id="tab-availability" role="tabpanel">
-                            <label class="form-label">Availability</label>
-                        {% for day in day_names %}
-                        {% set day_key = day|lower %}
-                        <div class="mb-2" data-day="{{ day_key }}">
-                            <div class="small mb-1">{{ day }}</div>
-                            <div class="availability-slots" id="{{ day_key }}Slots">
-                                {% if availability_map.get(day) %}
-                                {% for slot in availability_map[day] %}
-                                <div class="row g-2 mb-2 availability-row">
-                                    <div class="col">
-                                        <select name="{{ day_key }}_start" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            {% for time in time_options %}<option value="{{ time }}" {% if slot[0]==time %}selected{% endif %}>{{ time }}</option>{% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <select name="{{ day_key }}_end" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            {% for time in time_options %}<option value="{{ time }}" {% if slot[1]==time %}selected{% endif %}>{{ time }}</option>{% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-auto d-flex align-items-center">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm remove-slot">Remove</button>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                                {% else %}
-                                <div class="row g-2 mb-2 availability-row">
-                                    <div class="col">
-                                        <select name="{{ day_key }}_start" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            {% for time in time_options %}<option value="{{ time }}">{{ time }}</option>{% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <select name="{{ day_key }}_end" class="form-select">
-                                            <option value="">Unavailable</option>
-                                            {% for time in time_options %}<option value="{{ time }}">{{ time }}</option>{% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-auto d-flex align-items-center">
-                                        <button type="button" class="btn btn-outline-secondary btn-sm remove-slot">Remove</button>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-                            <button type="button" class="btn btn-outline-info btn-sm add-slot" data-day="{{ day_key }}">Add time slot</button>
-                        </div>
-                        {% endfor %}
-                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
                 <button type="submit" form="profileForm" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="subjectsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Subjects</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="subjectsForm" method="POST" action="{{ url_for('main.profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Units (max 6)</label>
+                        <div id="unitRows" class="row g-2">
+                            {% if units and units|length > 0 %}
+                            {% for unit in units %}
+                            <div class="col-md-6 unit-row">
+                                <div class="d-flex gap-2">
+                                    <input name="unit{{ loop.index }}" class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="{{ unit }}" autocomplete="off" list="unitSuggestionsShared">
+                                    <button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="col-md-6 unit-row">
+                                <div class="d-flex gap-2">
+                                    <input name="unit1" class="form-control text-uppercase unit-autocomplete" maxlength="8" placeholder="CITS3403" value="" autocomplete="off" list="unitSuggestionsShared">
+                                    <button type="button" class="btn btn-outline-secondary remove-unit" aria-label="Remove unit">Remove</button>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <datalist id="unitSuggestionsShared"></datalist>
+                        <button type="button" class="btn btn-outline-info btn-sm mt-2" id="addUnitBtn">Add unit</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="subjectsForm" class="btn btn-primary">Save Subjects</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="availabilityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Availability</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="availabilityForm" method="POST" action="{{ url_for('main.profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="form-label">Availability</label>
+                    {% for day in day_names %}
+                    {% set day_key = day|lower %}
+                    <div class="mb-2" data-day="{{ day_key }}">
+                        <div class="small mb-1">{{ day }}</div>
+                        <div class="availability-slots" id="{{ day_key }}Slots">
+                            {% if availability_map.get(day) %}
+                            {% for slot in availability_map[day] %}
+                            <div class="row g-2 mb-2 availability-row">
+                                <div class="col">
+                                    <select name="{{ day_key }}_start" class="form-select">
+                                        <option value="">Unavailable</option>
+                                        {% for time in time_options %}<option value="{{ time }}" {% if slot[0]==time %}selected{% endif %}>{{ time }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select name="{{ day_key }}_end" class="form-select">
+                                        <option value="">Unavailable</option>
+                                        {% for time in time_options %}<option value="{{ time }}" {% if slot[1]==time %}selected{% endif %}>{{ time }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-auto d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm remove-slot">Remove</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="row g-2 mb-2 availability-row">
+                                <div class="col">
+                                    <select name="{{ day_key }}_start" class="form-select">
+                                        <option value="">Unavailable</option>
+                                        {% for time in time_options %}<option value="{{ time }}">{{ time }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select name="{{ day_key }}_end" class="form-select">
+                                        <option value="">Unavailable</option>
+                                        {% for time in time_options %}<option value="{{ time }}">{{ time }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-auto d-flex align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm remove-slot">Remove</button>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-outline-info btn-sm add-slot" data-day="{{ day_key }}">Add time slot</button>
+                    </div>
+                    {% endfor %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="availabilityForm" class="btn btn-primary">Save Availability</button>
             </div>
         </div>
     </div>
@@ -515,6 +643,12 @@
     if (!profileModalEl) return;
 
     const profileModal = new bootstrap.Modal(profileModalEl);
+    const subjectsModalEl = document.getElementById('subjectsModal');
+    const availabilityModalEl = document.getElementById('availabilityModal');
+    const editSubjectsBtn = document.getElementById('editSubjectsBtn');
+    const editAvailabilityBtn = document.getElementById('editAvailabilityBtn');
+    const subjectsModal = subjectsModalEl ? new bootstrap.Modal(subjectsModalEl) : null;
+    const availabilityModal = availabilityModalEl ? new bootstrap.Modal(availabilityModalEl) : null;
     if (editProfileBtn) {
         editProfileBtn.addEventListener('click', (event) => {
             event.preventDefault();
@@ -524,6 +658,18 @@
 
     const shouldOpen = {{ 'true' if open_profile_modal else 'false' }};
     if (shouldOpen) profileModal.show();
+
+    if (editSubjectsBtn && subjectsModal) {
+        editSubjectsBtn.addEventListener('click', () => {
+            subjectsModal.show();
+        });
+    }
+
+    if (editAvailabilityBtn && availabilityModal) {
+        editAvailabilityBtn.addEventListener('click', () => {
+            availabilityModal.show();
+        });
+    }
 
     const degreeOptions = {{ degree_options | tojson }};
     const degreeTypeInput = document.getElementById('degreeTypeInput');
