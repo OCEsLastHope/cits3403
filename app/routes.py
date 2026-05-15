@@ -1302,6 +1302,8 @@ def profile():
     user = current_user
 
     if request.method == "POST":
+        form_type = request.form.get("form_type", "profile").strip().lower()
+
         submitted_email = request.form.get("email", "").strip()
         submitted_degree = request.form.get("degree", "").strip()
         submitted_degree_option_id = request.form.get("degree_option_id", type=int)
@@ -1329,86 +1331,94 @@ def profile():
         submitted_availability_map = {day: [] for day in DAY_NAMES}
         valid_availability_rows = []
 
-        if not submitted_email:
-            profile_errors.append("Email is required.")
-        elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", submitted_email):
-            profile_errors.append("Email format is invalid.")
-        else:
-            existing_user = User.query.filter_by(email=submitted_email).first()
-            if existing_user and existing_user.id != user.id:
-                profile_errors.append("Email is already in use by another account.")
-
         selected_degree_option = None
-        if submitted_degree_option_id:
-            selected_degree_option = DegreeOption.query.filter_by(id=submitted_degree_option_id, is_active=True).first()
-            if selected_degree_option is None:
-                profile_errors.append("Selected degree is invalid.")
-
-        if not selected_degree_option and not submitted_degree:
-            profile_errors.append("Degree is required.")
-        if not submitted_major:
-            profile_errors.append("Major is required.")
-        if submitted_sessions_per_week and not submitted_sessions_per_week.isdigit():
-            profile_errors.append("Sessions per week must be a valid number.")
-
         non_empty_units = [value for value in unit_values if value]
-        if len(non_empty_units) > MAX_PROFILE_UNITS:
-            profile_errors.append(f"You can add a maximum of {MAX_PROFILE_UNITS} units.")
 
-        if len(non_empty_units) != len(set(non_empty_units)):
-            profile_errors.append("Units must be unique.")
+        if form_type == "profile":
+            if not submitted_email:
+                profile_errors.append("Email is required.")
+            elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", submitted_email):
+                profile_errors.append("Email format is invalid.")
+            else:
+                existing_user = User.query.filter_by(email=submitted_email).first()
+                if existing_user and existing_user.id != user.id:
+                    profile_errors.append("Email is already in use by another account.")
 
-        for value in non_empty_units:
-            if not UNIT_CODE_PATTERN.match(value):
-                profile_errors.append(f"{value} is invalid. Use 4 letters followed by 4 numbers.")
-                continue
-            if VALID_UWA_2026_UNIT_CODES and value not in VALID_UWA_2026_UNIT_CODES:
-                profile_errors.append(f"{value} is not a valid UWA 2026 unit code.")
+            if submitted_degree_option_id:
+                selected_degree_option = DegreeOption.query.filter_by(id=submitted_degree_option_id, is_active=True).first()
+                if selected_degree_option is None:
+                    profile_errors.append("Selected degree is invalid.")
 
-        for day in DAY_NAMES:
-            day_key = day.lower()
-            start_times = request.form.getlist(f"{day_key}_start")
-            end_times = request.form.getlist(f"{day_key}_end")
+            if not selected_degree_option and not submitted_degree:
+                profile_errors.append("Degree is required.")
+            if not submitted_major:
+                profile_errors.append("Major is required.")
+            if submitted_sessions_per_week and not submitted_sessions_per_week.isdigit():
+                profile_errors.append("Sessions per week must be a valid number.")
 
-            for idx, (start_time, end_time) in enumerate(zip(start_times, end_times), start=1):
-                start_time = start_time.strip()
-                end_time = end_time.strip()
+        if form_type == "subjects":
+            if len(non_empty_units) > MAX_PROFILE_UNITS:
+                profile_errors.append(f"You can add a maximum of {MAX_PROFILE_UNITS} units.")
 
-                if not start_time and not end_time:
+            if len(non_empty_units) != len(set(non_empty_units)):
+                profile_errors.append("Units must be unique.")
+
+            for value in non_empty_units:
+                if not UNIT_CODE_PATTERN.match(value):
+                    profile_errors.append(f"{value} is invalid. Use 4 letters followed by 4 numbers.")
                     continue
+                if VALID_UWA_2026_UNIT_CODES and value not in VALID_UWA_2026_UNIT_CODES:
+                    profile_errors.append(f"{value} is not a valid UWA 2026 unit code.")
 
-                submitted_availability_map[day].append((start_time, end_time))
+        if form_type == "availability":
+            for day in DAY_NAMES:
+                day_key = day.lower()
+                start_times = request.form.getlist(f"{day_key}_start")
+                end_times = request.form.getlist(f"{day_key}_end")
 
-                if not start_time or not end_time:
-                    availability_errors.append(f"{day} slot {idx}: start and end time are both required.")
-                    continue
+                for idx, (start_time, end_time) in enumerate(zip(start_times, end_times), start=1):
+                    start_time = start_time.strip()
+                    end_time = end_time.strip()
 
-                if start_time >= end_time:
-                    availability_errors.append(f"{day} slot {idx}: end time must be later than start time.")
-                    continue
+                    if not start_time and not end_time:
+                        continue
 
-                valid_availability_rows.append((day, start_time, end_time))
+                    submitted_availability_map[day].append((start_time, end_time))
 
-        by_day = {}
-        for day, start_time, end_time in valid_availability_rows:
-            by_day.setdefault(day, []).append((start_time, end_time))
+                    if not start_time or not end_time:
+                        availability_errors.append(f"{day} slot {idx}: start and end time are both required.")
+                        continue
 
-        for day, slots in by_day.items():
-            slots.sort(key=lambda slot: slot[0])
-            for i in range(1, len(slots)):
-                prev_start, prev_end = slots[i - 1]
-                curr_start, curr_end = slots[i]
-                if curr_start < prev_end:
-                    availability_errors.append(
-                        f"{day}: overlapping slots ({prev_start}-{prev_end} and {curr_start}-{curr_end})."
-                    )
+                    if start_time >= end_time:
+                        availability_errors.append(f"{day} slot {idx}: end time must be later than start time.")
+                        continue
+
+                    valid_availability_rows.append((day, start_time, end_time))
+
+            by_day = {}
+            for day, start_time, end_time in valid_availability_rows:
+                by_day.setdefault(day, []).append((start_time, end_time))
+
+            for day, slots in by_day.items():
+                slots.sort(key=lambda slot: slot[0])
+                for i in range(1, len(slots)):
+                    prev_start, prev_end = slots[i - 1]
+                    curr_start, curr_end = slots[i]
+                    if curr_start < prev_end:
+                        availability_errors.append(
+                            f"{day}: overlapping slots ({prev_start}-{prev_end} and {curr_start}-{curr_end})."
+                        )
 
         if profile_errors or availability_errors:
+            fallback_availability_map = {day: [] for day in DAY_NAMES}
+            for item in user.availabilities:
+                fallback_availability_map.setdefault(item.day_of_week, []).append((item.start_time, item.end_time))
+
             return render_template(
                 "userpages.html",
                 current_user=user,
-                units=non_empty_units,
-                availability_map=submitted_availability_map,
+                units=non_empty_units if form_type == "subjects" else [item.subject_code.upper() for item in user.subjects],
+                availability_map=submitted_availability_map if form_type == "availability" else fallback_availability_map,
                 day_names=DAY_NAMES,
                 time_options=TIME_OPTIONS,
                 degree_options=degree_options,
@@ -1416,36 +1426,39 @@ def profile():
                 open_profile_modal=True,
             )
 
-        user.email = submitted_email
-        if selected_degree_option is not None:
-            user.degree_option_id = selected_degree_option.id
-            user.degree = selected_degree_option.name
-        else:
-            user.degree_option_id = None
-            user.degree = submitted_degree
-        user.major = submitted_major
-        user.second_major = second_major or None
-        user.minor = minor or None
-        user.bio = submitted_bio
-        user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
-        user.preferred_group_size = submitted_group_size or None
-        user.study_mode = submitted_study_mode or None
+        if form_type == "profile":
+            user.email = submitted_email
+            if selected_degree_option is not None:
+                user.degree_option_id = selected_degree_option.id
+                user.degree = selected_degree_option.name
+            else:
+                user.degree_option_id = None
+                user.degree = submitted_degree
+            user.major = submitted_major
+            user.second_major = second_major or None
+            user.minor = minor or None
+            user.bio = submitted_bio
+            user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
+            user.preferred_group_size = submitted_group_size or None
+            user.study_mode = submitted_study_mode or None
 
-        UserSubject.query.filter_by(user_id=user.id).delete()
-        for value in non_empty_units:
-            if value:
-                db.session.add(UserSubject(user_id=user.id, subject_code=value))
+        elif form_type == "subjects":
+            UserSubject.query.filter_by(user_id=user.id).delete()
+            for value in non_empty_units:
+                if value:
+                    db.session.add(UserSubject(user_id=user.id, subject_code=value))
 
-        UserAvailability.query.filter_by(user_id=user.id).delete()
-        for day, start_time, end_time in valid_availability_rows:
-            db.session.add(
-                UserAvailability(
-                    user_id=user.id,
-                    day_of_week=day,
-                    start_time=start_time,
-                    end_time=end_time,
+        elif form_type == "availability":
+            UserAvailability.query.filter_by(user_id=user.id).delete()
+            for day, start_time, end_time in valid_availability_rows:
+                db.session.add(
+                    UserAvailability(
+                        user_id=user.id,
+                        day_of_week=day,
+                        start_time=start_time,
+                        end_time=end_time,
+                    )
                 )
-            )
 
         db.session.commit()
         return redirect(url_for("main.profile"))
