@@ -1341,7 +1341,7 @@ def profile():
 
         non_empty_units = [value for value in unit_values if value]
         if len(non_empty_units) > MAX_PROFILE_UNITS:
-            profile_errors.append("You can add a maximum of 4 units.")
+            profile_errors.append(f"You can add a maximum of {MAX_PROFILE_UNITS} units.")
 
         if len(non_empty_units) != len(set(non_empty_units)):
             profile_errors.append("Units must be unique.")
