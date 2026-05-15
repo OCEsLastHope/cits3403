@@ -67,17 +67,19 @@
 
             </div>
 
-            {% if request.endpoint == 'main.profile' %}
+            {% if current_user.is_authenticated %}
             <div class="sidebar-section">
 
                 <div class="sidebar-title">
                     Settings
                 </div>
 
+                {% if request.endpoint == 'main.profile' %}
                 <a href="#" id="editProfileBtn">
                     <i class="bi bi-pencil"></i>
                     Edit Profile
                 </a>
+                {% endif %}
 
                 <a href="{{ url_for('main.logout') }}">
                     <i class="bi bi-box-arrow-right"></i>
