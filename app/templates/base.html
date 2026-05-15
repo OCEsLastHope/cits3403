@@ -59,6 +59,12 @@
                     Notifications
                 </a>
 
+                <a href="{{ url_for('main.messages_inbox') }}"
+                    class="{% if request.endpoint == 'messages_inbox' %}active{% endif %}">
+                    <i class="bi bi-chat"></i>
+                     Messages
+                </a>
+
             </div>
 
             {% if current_user.is_authenticated %}
