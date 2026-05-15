@@ -45,6 +45,9 @@ class EventUnitTests(unittest.TestCase):
             ))
             db.session.commit()
             self.event_id = self.event.id
+            self.user1_id = self.user1.id
+            self.user2_id = self.user2.id
+            self.user3_id = self.user3.id
 
     def tearDown(self):
         with app.app_context():
@@ -83,6 +86,9 @@ class EventUnitTests(unittest.TestCase):
             count = EventAttendee.query.filter_by(event_id=self.event_id, invite_status="accepted").count()
             self.assertEqual(count, 2)
         
+        # Logout user2 before logging in user3
+        self.client.get("/logout", follow_redirects=True)
+        
         # 2. User3 attempts to join the full event
         self.login("user3")
         response = self.client.post(f"/events/{self.event_id}/join", follow_redirects=True)
@@ -94,7 +100,7 @@ class EventUnitTests(unittest.TestCase):
             self.assertEqual(count, 2)
             
             # Verify user3 is not an accepted attendee
-            user3_attendee = EventAttendee.query.filter_by(event_id=self.event_id, user_id=self.user3.id).first()
+            user3_attendee = EventAttendee.query.filter_by(event_id=self.event_id, user_id=self.user3_id).first()
             if user3_attendee:
                 self.assertNotEqual(user3_attendee.invite_status, "accepted")
 
