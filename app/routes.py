@@ -468,7 +468,7 @@ def calculate_availability_score(overlap_by_day):
     }
 
 
-def find_matches(user_id, selected_degree_option_id=None, selected_unit_code=None):
+def find_matches(user_id, selected_degree_option_id=None, selected_unit_codes=None):
     requester = db.session.get(User, user_id)
 
     if not requester:
@@ -560,7 +560,7 @@ def find_matches(user_id, selected_degree_option_id=None, selected_unit_code=Non
             requester_units.intersection(candidate_units)
         )
 
-        if selected_unit_code and selected_unit_code not in shared_units:
+        if selected_unit_codes and not set(selected_unit_codes).intersection(shared_units):
             continue
 
         shared_unit_count = len(shared_units)
@@ -1255,15 +1255,27 @@ def leave_event(event_id):
 @login_required
 def matches():
     selected_degree_option_id = request.args.get("degree_option_id", type=int)
-    selected_unit_code = request.args.get("unit_code", "").strip().upper()
-    if selected_unit_code and not UNIT_CODE_PATTERN.match(selected_unit_code):
-        flash("Unit filter must use format AAAA1234.", "error")
-        selected_unit_code = ""
+    selected_unit_codes_raw = request.args.get("unit_codes", "")
+    selected_unit_codes = []
+    invalid_unit_codes = []
+
+    for item in selected_unit_codes_raw.split(","):
+        unit_code = item.strip().upper()
+        if not unit_code:
+            continue
+        if not UNIT_CODE_PATTERN.match(unit_code):
+            invalid_unit_codes.append(unit_code)
+            continue
+        if unit_code not in selected_unit_codes:
+            selected_unit_codes.append(unit_code)
+
+    if invalid_unit_codes:
+        flash("Unit filters must use format AAAA1234.", "error")
 
     degree_options = get_degree_options_by_category()
     requester = current_user
 
-    match_results = find_matches(requester.id, selected_degree_option_id, selected_unit_code)
+    match_results = find_matches(requester.id, selected_degree_option_id, selected_unit_codes)
 
     message = ""
     if not match_results:
@@ -1278,7 +1290,7 @@ def matches():
         matches=match_results[:10],
         degree_options=degree_options,
         selected_degree_option_id=selected_degree_option_id,
-        selected_unit_code=selected_unit_code,
+        selected_unit_codes=selected_unit_codes,
         message=message,
     )
 
