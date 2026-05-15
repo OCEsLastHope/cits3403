@@ -206,10 +206,15 @@
 
                     <input
                         type="text"
+                        id="major"
                         name="major"
+                        class="major-autocomplete"
                         placeholder="Enter your major"
+                        autocomplete="off"
+                        list="majorSuggestions"
                         required
                     >
+                    <datalist id="majorSuggestions"></datalist>
 
                 </div>
 
@@ -226,8 +231,12 @@
 
                         <input
                             type="text"
+                            id="second-major"
                             name="second_major"
+                            class="major-autocomplete"
                             placeholder="Enter second major"
+                            autocomplete="off"
+                            list="majorSuggestions"
                         >
 
                     </div>
@@ -243,9 +252,14 @@
 
                         <input
                             type="text"
+                            id="minor"
                             name="minor"
+                            class="minor-autocomplete"
                             placeholder="Enter minor"
+                            autocomplete="off"
+                            list="minorSuggestions"
                         >
+                        <datalist id="minorSuggestions"></datalist>
 
                     </div>
 
@@ -542,6 +556,12 @@
 
         let emailTimer;
         let usernameTimer;
+        let majorTimer;
+        let minorTimer;
+        const majorInputs = document.querySelectorAll('.major-autocomplete');
+        const majorSuggestions = document.getElementById('majorSuggestions');
+        const minorInputs = document.querySelectorAll('.minor-autocomplete');
+        const minorSuggestions = document.getElementById('minorSuggestions');
 
         emailInput.addEventListener("input", function() {
             clearTimeout(emailTimer);
@@ -568,6 +588,54 @@
             checkConfirmPassword();
         });
 
+        majorInputs.forEach((input) => {
+            input.addEventListener('input', () => {
+                const query = input.value.trim();
+
+                if (query.length < 2) {
+                    majorSuggestions.innerHTML = '';
+                    return;
+                }
+
+                clearTimeout(majorTimer);
+                majorTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`{{ url_for('main.search_majors') }}?q=${encodeURIComponent(query)}`);
+                        if (!response.ok) return;
+                        const payload = await response.json();
+                        const majors = Array.isArray(payload.majors) ? payload.majors : [];
+                        majorSuggestions.innerHTML = majors.map((major) => `<option value="${major}"></option>`).join('');
+                    } catch (_error) {
+                        majorSuggestions.innerHTML = '';
+                    }
+                }, 120);
+            });
+        });
+
+        minorInputs.forEach((input) => {
+            input.addEventListener('input', () => {
+                const query = input.value.trim();
+
+                if (query.length < 2) {
+                    minorSuggestions.innerHTML = '';
+                    return;
+                }
+
+                clearTimeout(minorTimer);
+                minorTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`{{ url_for('main.search_minors') }}?q=${encodeURIComponent(query)}`);
+                        if (!response.ok) return;
+                        const payload = await response.json();
+                        const minors = Array.isArray(payload.minors) ? payload.minors : [];
+                        minorSuggestions.innerHTML = minors.map((minor) => `<option value="${minor}"></option>`).join('');
+                    } catch (_error) {
+                        minorSuggestions.innerHTML = '';
+                    }
+                }, 120);
+            });
+        });
+
         form.addEventListener("submit", async function(event) {
             formError.textContent = "";
 
@@ -592,4 +660,3 @@
 
 </body>
 </html>
-
