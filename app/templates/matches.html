@@ -70,8 +70,8 @@
             </select>
         </div>
         <div class="col-md-4">
-            <label for="unitFilter" class="form-label">Filter by Unit (optional)</label>
-            <input id="unitFilter" name="unit_code" class="form-control text-uppercase unit-autocomplete matches-filter-input" placeholder="CITS3403" value="{{ selected_unit_code or '' }}" autocomplete="off" list="unitSuggestions">
+            <label for="unitFilter" class="form-label">Filter by Units (optional)</label>
+            <input id="unitFilter" name="unit_codes" class="form-control text-uppercase unit-autocomplete matches-filter-input" placeholder="CITS3403, STAT1400" value="{{ (selected_unit_codes or []) | join(', ') }}" autocomplete="off" list="unitSuggestions">
             <datalist id="unitSuggestions"></datalist>
         </div>
         <div class="col-md-3">
@@ -115,16 +115,20 @@
     let timer;
     const unitSearchUrl = "{{ url_for('main.search_units') }}";
     unitInput.addEventListener('input', () => {
-        const query = unitInput.value.trim().toUpperCase();
-        unitInput.value = query;
-        if (query.length < 2) {
+        const fullValue = unitInput.value.toUpperCase();
+        unitInput.value = fullValue;
+
+        const tokens = fullValue.split(',');
+        const activeToken = (tokens[tokens.length - 1] || '').trim();
+
+        if (activeToken.length < 2) {
             suggestions.innerHTML = '';
             return;
         }
         clearTimeout(timer);
         timer = setTimeout(async () => {
             try {
-                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(activeToken)}`);
                 if (!response.ok) return;
                 const payload = await response.json();
                 const units = Array.isArray(payload.units) ? payload.units : [];
