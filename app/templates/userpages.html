@@ -1,6 +1,101 @@
 {% extends "base.html" %}
 {% block title %}Profile{% endblock %}
 
+{% block head %}
+<style>
+    #profileModal .modal-content,
+    #subjectsModal .modal-content,
+    #availabilityModal .modal-content {
+        background: linear-gradient(155deg, rgba(15, 24, 46, 0.96), rgba(12, 19, 38, 0.98));
+        color: #ebefff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+    }
+
+    #profileModal .modal-header,
+    #subjectsModal .modal-header,
+    #availabilityModal .modal-header,
+    #profileModal .modal-footer,
+    #subjectsModal .modal-footer,
+    #availabilityModal .modal-footer {
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    #profileModal .modal-title,
+    #subjectsModal .modal-title,
+    #availabilityModal .modal-title,
+    #profileModal .form-label,
+    #subjectsModal .form-label,
+    #availabilityModal .form-label,
+    #availabilityModal .small {
+        color: #ebefff;
+    }
+
+    #profileModal .form-control,
+    #profileModal .form-select,
+    #subjectsModal .form-control,
+    #subjectsModal .form-select,
+    #availabilityModal .form-control,
+    #availabilityModal .form-select {
+        background: rgba(11, 18, 36, 0.72);
+        color: #f4f7ff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    #profileModal .form-control:focus,
+    #profileModal .form-select:focus,
+    #subjectsModal .form-control:focus,
+    #subjectsModal .form-select:focus,
+    #availabilityModal .form-control:focus,
+    #availabilityModal .form-select:focus {
+        border-color: rgba(109, 165, 255, 0.75);
+        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
+    }
+
+    #profileModal .nav-tabs,
+    #profileModal .nav-link {
+        border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    #profileModal .nav-link {
+        color: rgba(220, 228, 255, 0.86);
+    }
+
+    #profileModal .nav-link.active {
+        background: rgba(109, 165, 255, 0.2);
+        color: #ffffff;
+        border-color: rgba(109, 165, 255, 0.45);
+    }
+
+    #profileModal .btn-close,
+    #subjectsModal .btn-close,
+    #availabilityModal .btn-close {
+        filter: invert(1) grayscale(100%) brightness(1.2);
+    }
+
+    #editSubjectsBtn,
+    #editAvailabilityBtn {
+        border-radius: 999px;
+        border-color: rgba(109, 165, 255, 0.55);
+        color: #dbe6ff;
+        background: rgba(109, 165, 255, 0.12);
+        font-weight: 600;
+        padding: 0.28rem 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    #editSubjectsBtn:hover,
+    #editAvailabilityBtn:hover,
+    #editSubjectsBtn:focus,
+    #editAvailabilityBtn:focus {
+        color: #ffffff;
+        border-color: rgba(109, 165, 255, 0.8);
+        background: rgba(109, 165, 255, 0.26);
+        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header">
