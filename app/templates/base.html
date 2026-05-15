@@ -30,37 +30,37 @@
                 </div>
 
                 <a href="{{ url_for('main.dashboard') }}"
-                    class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    class="{% if request.endpoint == 'main.dashboarddashboard' %}active{% endif %}">
                     <i class="bi bi-grid"></i>
                     Dashboard
                 </a>
 
                 <a href="{{ url_for('main.profile') }}"
-                    class="{% if request.endpoint == 'profile' %}active{% endif %}">
+                    class="{% if request.endpoint == 'main.profile' %}active{% endif %}">
                     <i class="bi bi-person"></i>
                     Profile
                 </a>
 
                 <a href="{{ url_for('main.matches') }}"
-                    class="{% if request.endpoint == 'matches' %}active{% endif %}">
+                    class="{% if request.endpoint == 'main.matches' %}active{% endif %}">
                     <i class="bi bi-people"></i>
                     Matches
                 </a>
 
                 <a href="{{ url_for('main.events_page') }}"
-                    class="{% if request.endpoint == 'events_page' %}active{% endif %}">
+                    class="{% if request.endpoint == 'main.events_page' %}active{% endif %}">
                     <i class="bi bi-calendar-event"></i>
                     Events
                 </a>
 
                 <a href="{{ url_for('main.notifications') }}"
-                    class="{% if request.endpoint == 'notifications' %}active{% endif %}">
+                    class="{% if request.endpoint == 'main.notifications' %}active{% endif %}">
                     <i class="bi bi-bell"></i>
                     Notifications
                 </a>
 
                 <a href="{{ url_for('main.messages_inbox') }}"
-                    class="{% if request.endpoint == 'messages_inbox' %}active{% endif %}">
+                    class="{% if request.endpoint == 'main.messages_inbox' %}active{% endif %}">
                     <i class="bi bi-chat"></i>
                      Messages
                 </a>

@@ -361,7 +361,11 @@
             otherInput.required = false;
             otherInput.value = "";
 
+            degreeSelect.required = true;
+
             if (type === "other") {
+
+                degreeSelect.required = false;
 
                 degreeSelect.innerHTML =
                     '<option value="" selected>Other (enter below)</option>';
