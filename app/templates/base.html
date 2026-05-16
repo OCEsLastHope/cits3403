@@ -176,6 +176,35 @@
 
     </div>
 
+    {% if current_user and current_user.is_authenticated %}
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('main.profile') }}" class="{% if request.endpoint == 'main.profile' %}active{% endif %}">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+        </a>
+        <a href="{{ url_for('main.matches') }}" class="{% if request.endpoint == 'main.matches' %}active{% endif %}">
+            <i class="bi bi-people"></i>
+            <span>Matches</span>
+        </a>
+        <a href="{{ url_for('main.people') }}" class="{% if request.endpoint == 'main.people' %}active{% endif %}">
+            <i class="bi bi-person-lines-fill"></i>
+            <span>People</span>
+        </a>
+        <a href="{{ url_for('main.messages_inbox') }}" class="{% if request.endpoint == 'main.messages_inbox' %}active{% endif %}">
+            <i class="bi bi-chat"></i>
+            <span>Messages</span>
+        </a>
+        <a href="{{ url_for('main.notifications') }}" class="{% if request.endpoint == 'main.notifications' %}active{% endif %}">
+            <i class="bi bi-bell"></i>
+            <span>Notifications</span>
+        </a>
+    </nav>
+    {% endif %}
+
     {% block modals %}{% endblock %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
