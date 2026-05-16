@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<section class="info-card mb-4">
+<section class="info-card people-card mb-4">
     <ul class="nav nav-tabs mb-3" role="tablist">
         <li class="nav-item" role="presentation">
             <a class="nav-link {% if active_tab == 'discover' %}active{% endif %}" href="{{ url_for('main.people', tab='discover', q=query) }}">Discover</a>
@@ -20,9 +20,9 @@
     </ul>
 
     {% if active_tab == 'discover' %}
-    <form method="GET" action="{{ url_for('main.people') }}" class="row g-3 align-items-end">
+    <form method="GET" action="{{ url_for('main.people') }}" class="people-search-form">
         <input type="hidden" name="tab" value="discover">
-        <div class="col-md-8">
+        <div class="people-search-button">
             <label for="peopleSearch" class="form-label">Search by username</label>
             <input id="peopleSearch" name="q" class="form-control" placeholder="Type at least 2 characters" value="{{ query }}">
         </div>
@@ -38,7 +38,7 @@
     {% endif %}
 
     {% for row in search_results %}
-    <section class="info-card mt-3">
+    <section class="info-card people-result-card mt-3">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h5 class="mb-1">{{ row.user.username }}</h5>
