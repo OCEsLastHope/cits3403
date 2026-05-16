@@ -57,12 +57,12 @@ ONBOARDING_STEP_ENDPOINTS = {
 }
 ONBOARDING_STEP_COPY = {
     1: "This is your dashboard. You can track upcoming meetings and suggested matches here.",
-    2: "This is matches. StudySync ranks people by overlapping availability and profile fit.",
-    3: "This is people. Search students and send friend requests before starting conversations.",
-    4: "This is messages. Use it to chat and coordinate study sessions.",
-    5: "This is events. Create or join sessions to plan study time.",
-    6: "This is notifications. Track invites, mentions, and request updates in one place.",
-    7: "This is profile. Add at least one unit and one availability slot, then finish onboarding.",
+    2: "This is your matches page. StudySync ranks people by overlapping availability and profile fit.",
+    3: "This is your people page. Search students and send friend requests before starting conversations.",
+    4: "This is your messages page. Use it to chat and coordinate study sessions.",
+    5: "This is your events page. Create or join sessions to plan study time.",
+    6: "This is your notifications page. Track invites, mentions, and request updates in one place.",
+    7: "This is your profile. Add at least one unit and one availability slot, then finish onboarding.",
 }
 
 
@@ -257,7 +257,12 @@ def inject_onboarding_guide():
             "step": step,
             "total_steps": len(ONBOARDING_STEP_ENDPOINTS),
             "message": ONBOARDING_STEP_COPY.get(step, ""),
-            "show_finish": step == len(ONBOARDING_STEP_ENDPOINTS),
+            "show_finish": (
+                step == len(ONBOARDING_STEP_ENDPOINTS)
+                and can_finish_onboarding(current_user)
+            ),
+                
+                "can_finish": can_finish_onboarding(current_user),
         },
         "unread_notifications": unread_notifications,
     }
