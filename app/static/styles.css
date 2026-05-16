@@ -178,6 +178,22 @@ body {
 
     box-shadow:
         0 0 24px rgba(0, 0, 0, 0.18);
+
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.sidebar-user-main {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-user-details {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
 }
 
 .sidebar-user-avatar {
@@ -233,35 +249,6 @@ body {
 }
 
 
-
-.sidebar-user-footer {
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.sidebar-user-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #6d3fc7, #d63af9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: #fff;
-    flex-shrink: 0;
-}
-
-.sidebar-user-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: #ffffff;
-}
 
 .sidebar-user-email {
     font-size: 10px;
@@ -563,8 +550,15 @@ body {
 .hero-top {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 22px;
+}
+
+.hero-identity {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-width: 0;
 }
 
 .hero-text {
@@ -687,6 +681,49 @@ body {
     font-size: 15px;
 }
 
+.hero-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(151, 243, 255, 0.28);
+    background: rgba(42, 124, 179, 0.2);
+    color: #e6f7ff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.hero-edit-btn:hover,
+.hero-edit-btn:focus {
+    color: #ffffff;
+    background: rgba(42, 124, 179, 0.32);
+    border-color: rgba(151, 243, 255, 0.44);
+}
+
+@media (max-width: 640px) {
+    .hero-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .hero-identity {
+        width: 100%;
+        gap: 14px;
+    }
+
+    .hero-text {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .hero-edit-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
 /* Tags */
 
 .tag {
@@ -3856,4 +3893,3 @@ body {
     border-radius: 12px;
     font-weight: 600;
 }
-

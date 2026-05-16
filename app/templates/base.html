@@ -80,13 +80,6 @@
                     Settings
                 </div>
 
-                {% if request.endpoint == 'main.profile' %}
-                <a href="#" id="editProfileBtn">
-                    <i class="bi bi-pencil"></i>
-                    Edit Profile
-                </a>
-                {% endif %}
-
                 <a href="{{ url_for('main.logout') }}">
                     <i class="bi bi-box-arrow-right"></i>
                     Logout
@@ -97,21 +90,20 @@
 
             {% if current_user and current_user.is_authenticated %}
             <div class="sidebar-user-footer">
-
-                <div class="sidebar-user-avatar">
-                    {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
-                </div>
-
-                <div>
-
-                    <div class="sidebar-user-name">
-                        {{ current_user.first_name }} {{ current_user.last_name }}
+                <div class="sidebar-user-main">
+                    <div class="sidebar-user-avatar">
+                        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
                     </div>
 
-                    <div class="sidebar-user-username">
-                        @{{ current_user.username }}
-                    </div>
+                    <div class="sidebar-user-details">
+                        <div class="sidebar-user-name">
+                            {{ current_user.first_name }} {{ current_user.last_name }}
+                        </div>
 
+                        <div class="sidebar-user-username">
+                            @{{ current_user.username }}
+                        </div>
+                    </div>
                 </div>
 
             </div>
