@@ -260,6 +260,20 @@ class Invitation(db.Model):
         db.UniqueConstraint("sender_id", "receiver_id", "conversation_id", name="uq_invitation"),
     )
 
+
+class FriendRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_low_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_high_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    requested_by_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="pending")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_low_id", "user_high_id", name="uq_friend_pair"),
+    )
+
     def __repr__(self):
         return f"<Invitation {self.id} from {self.sender_id} to {self.receiver_id} [{self.status}]>"
 
