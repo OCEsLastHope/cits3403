@@ -953,4 +953,57 @@
     }
 }
 
+.onboarding-wrapper {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.onboarding-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.onboarding-badge {
+    width: fit-content;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.info-card {
+    border-radius: 24px;
+    padding: 32px;
+}
+
+.section-heading {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.progress {
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.info-list li {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .info-card {
+        padding: 22px;
+    }
+
+    .section-heading {
+        font-size: 1.5rem;
+    }
+}
+
+
 

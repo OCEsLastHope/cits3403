@@ -161,7 +161,7 @@
                     {% if onboarding_guide.step > 1 %}
                     <button type="submit" name="action" value="back" class="btn btn-outline-secondary btn-sm onboarding-btn onboarding-btn--secondary">Back</button>
                     {% endif %}
-                    {% if onboarding_guide.show_finish %}
+                    {% if onboarding_guide.step == onboarding_guide.total_steps %}
                     <button type="submit" name="action" value="finish" class="btn btn-primary btn-sm onboarding-btn onboarding-btn--primary">Finish Setup</button>
                     {% else %}
                     <button type="submit" name="action" value="next" class="btn btn-primary btn-sm onboarding-btn onboarding-btn--primary">Next Step</button>

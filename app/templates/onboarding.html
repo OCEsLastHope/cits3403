@@ -6,6 +6,7 @@
 Onboarding{% endblock %}
 
 {% block content %}
+<div class="onboarding-wrapper">
 <div class="page-header">
     <div>
         <h1>Welcome to StudySync</h1>
@@ -14,7 +15,7 @@ Onboarding{% endblock %}
 </div>
 
 <section class="info-card mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="onboarding-header">
         <div class="section-heading mb-0">Step {{ step }} of {{ total_steps }}</div>
         <span class="badge text-bg-info">{{ ((step / total_steps) * 100) | int }}% complete</span>
     </div>
@@ -261,4 +262,6 @@ unitInputs.forEach((input) => {
     });
 });
 </script>
+</div>
 {% endblock %}
+
