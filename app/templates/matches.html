@@ -1,48 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Matches{% endblock %}
 {% block head %}
-<style>
-    .sidebar .sidebar-section:nth-of-type(2) {
-        display: none !important;
-    }
-    .sidebar a#editProfileBtn {
-        display: none;
-    }
-    .matches-filter-form .form-label {
-        color: rgba(235, 239, 255, 0.9);
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    .matches-filter-input,
-    .matches-filter-select {
-        min-height: 44px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        background: rgba(11, 18, 36, 0.62);
-        color: #f4f7ff;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-    .matches-filter-input::placeholder {
-        color: rgba(208, 217, 255, 0.55);
-    }
-    .matches-filter-input:focus,
-    .matches-filter-select:focus {
-        border-color: rgba(109, 165, 255, 0.75);
-        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
-        background: rgba(18, 27, 52, 0.82);
-        color: #ffffff;
-    }
-    .matches-filter-select option,
-    .matches-filter-select optgroup {
-        background: #101b33;
-        color: #f4f7ff;
-    }
-    .matches-filter-btn {
-        min-height: 44px;
-        border-radius: 12px;
-        font-weight: 600;
-    }
-</style>
 {% endblock %}
 {% block content %}
 <div class="page-header">
@@ -83,41 +41,121 @@
     <section class="alert alert-info" role="alert">{{ message }}</section>
 {% endif %}
 {% if matches %}
-    {% for item in matches %}
-        <section class="info-card mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">{{ item.user.first_name }}</h5>
-                <span class="badge text-bg-primary">{{ item.overlap_minutes_total }} mins overlap</span>
+    <div class="row g-4">
+        {% for item in matches %}
+            <div class="col-12">
+                <section class="info-card match-card-simplified p-4" 
+                         onclick="openMatchModal(this)"
+                         data-user-id="{{ item.user.id }}"
+                         data-name="{{ item.user.first_name }} {{ item.user.last_name }}"
+                         data-username="{{ item.user.username }}"
+                         data-degree="{{ item.user.degree }}"
+                         data-bio="{{ item.user.bio or 'No bio provided.' }}"
+                         data-overlap-minutes="{{ item.overlap_minutes_total }}"
+                         data-shared-units-count="{{ item.shared_unit_count }}"
+                         data-overlap-html="{% for day, segments in item.overlap_by_day.items() %}<li><strong>{{ day }}:</strong> {% for segment in segments %}{{ segment[0] }}-{{ segment[1] }}{% if not loop.last %}, {% endif %}{% endfor %}</li>{% endfor %}"
+                         data-units-html="{% if item.shared_units %}{% for unit in item.shared_units %}<span class='tag'>{{ unit }}</span>{% endfor %}{% else %}<span class='text-muted'>No shared units</span>{% endif %}">
+                    
+                    <div class="card-content d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="initials-avatar">
+                                {{ item.user.first_name[0] }}{{ item.user.last_name[0] }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ item.user.first_name }} {{ item.user.last_name }}</h5>
+                                <p class="mb-0 text-muted small">{{ item.user.degree }}</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge badge-match rounded-pill d-none d-md-inline-block">
+                                {{ item.overlap_minutes_total }} mins overlap
+                            </span>
+                            
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('main.start_conversation', receiver_id=item.user.id) }}" class="m-0" onclick="event.stopPropagation()">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="custom-btn" style="padding: 8px 16px; font-size: 0.85rem;">
+                                        Accept
+                                    </button>
+                                </form>
+                                <button class="custom-btn secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="event.stopPropagation(); ignoreMatch(this, {{ item.user.id }})">
+                                    Ignore
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <p class="mb-2"><strong>Degree:</strong> {{ item.user.degree }}</p>
-            <div>
-                <strong>Overlap Summary:</strong>
-                <ul class="mb-0 mt-2">
-                    {% for day, segments in item.overlap_by_day.items() %}
-                        <li>{{ day }}:
-                            {% for segment in segments %}
-                                {{ segment[0] }}-{{ segment[1] }}{% if not loop.last %}, {% endif %}
-                            {% endfor %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            
-            <!-- Accept/Ignore buttons -->
-            <div style="display: flex; gap: 10px; margin-top: 16px;">
-                <form method="POST" action="{{ url_for('main.start_conversation', receiver_id=item.user.id) }}" style="display:inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="custom-btn">
-                        <i class="bi bi-check2"></i> Accept
-                    </button>
-                </form>
-                <button class="custom-btn secondary" onclick="ignoreMatch(this, {{ item.user.id }})">
-                    <i class="bi bi-x"></i> Ignore
-                </button>
-            </div>
-        </section>
-{% endfor %}
+        {% endfor %}
+    </div>
 {% endif %}
+
+<!-- Profile Detail Modal -->
+<div class="modal fade glass-modal" id="matchDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row align-items-center mb-4">
+                    <div class="col-auto">
+                        <div id="modalAvatar" class="initials-avatar lg"></div>
+                    </div>
+                    <div class="col">
+                        <h2 id="modalName" class="mb-1"></h2>
+                        <p id="modalDegree" class="text-muted mb-0"></p>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="match-stat-box">
+                            <span class="match-stat-label">Overlap Time</span>
+                            <span id="modalOverlapMins" class="match-stat-value"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="match-stat-box">
+                            <span class="match-stat-label">Shared Units</span>
+                            <span id="modalUnitsCount" class="match-stat-value"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="match-detail-section">
+                    <span class="match-detail-label">Bio</span>
+                    <p id="modalBio" class="mb-0"></p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="match-detail-section h-100 mb-0">
+                            <span class="match-detail-label">Common Units</span>
+                            <div id="modalUnitsList" class="d-flex flex-wrap gap-1"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="match-detail-section h-100 mb-0">
+                            <span class="match-detail-label">Overlap Schedule</span>
+                            <ul id="modalOverlapList" class="list-unstyled mb-0 small"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <div class="d-flex gap-3 w-100">
+                    <form id="modalAcceptForm" method="POST" action="" class="flex-grow-1 m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="custom-btn w-100">Accept Match</button>
+                    </form>
+                    <button id="modalIgnoreBtn" class="custom-btn secondary flex-grow-1" onclick="">Ignore</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block scripts %}
 <script>
