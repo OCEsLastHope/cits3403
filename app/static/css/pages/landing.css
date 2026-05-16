@@ -8,7 +8,7 @@
     font-family: Arial, sans-serif;
     background:
         linear-gradient(rgba(5, 8, 25, 0.14), rgba(5, 8, 25, 0.38)),
-        url("background/landingUI.png") center/cover no-repeat,
+        url("/static/background/landingUI.png") center/cover no-repeat,
         #070817;
     overflow-x: hidden;
 }
