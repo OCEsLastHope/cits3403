@@ -847,7 +847,7 @@
     min-height: 100vh;
     background:
         linear-gradient(rgba(5, 8, 25, 0.35), rgba(5, 8, 25, 0.65)),
-        url("/static/fgUI.png") center/cover no-repeat;
+        url("/static/background/fgUI.png") center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
