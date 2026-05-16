@@ -145,7 +145,7 @@
                 </div>
 
                 <ol class="onboarding-guide__steps" aria-label="Onboarding steps">
-                    {% for label in ["Dashboard", "Matches", "Messages", "Events", "Profile"] %}
+                    {% for label in ["Dashboard", "Matches", "People", "Messages", "Events", "Notifications", "Profile"] %}
                     <li class="onboarding-guide__step {% if loop.index == onboarding_guide.step %}is-current{% elif loop.index < onboarding_guide.step %}is-complete{% endif %}">
                         <span class="onboarding-guide__dot"></span>
                         <span class="onboarding-guide__label">{{ label }}</span>
