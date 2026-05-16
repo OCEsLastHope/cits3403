@@ -60,7 +60,7 @@ class AuthPageTests(unittest.TestCase):
         email_input.send_keys("notanemail")
         time.sleep(1)
         self.assertIn(
-            "Please enter a valid email address.",
+            "Enter a valid email format.",
             self.driver.page_source
         )
 
