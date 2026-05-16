@@ -1064,7 +1064,7 @@ def edit_event(event_id):
             Notification(
                 user_id=attendee.user_id,
                 sender_name=current_user.username,
-                type="mention",
+                type="event",
                 message=f"Event updated: <strong>{event.title}</strong> now starts at {event.start_at.strftime('%Y-%m-%d %H:%M')}.",
                 channel="Events",
             )
@@ -1094,7 +1094,7 @@ def cancel_event(event_id):
             Notification(
                 user_id=attendee.user_id,
                 sender_name=current_user.username,
-                type="mention",
+                type="event",
                 message=f"Event cancelled: <strong>{event.title}</strong>.",
                 channel="Events",
             )
@@ -1144,7 +1144,7 @@ def invite_to_event(event_id):
             Notification(
                 user_id=user.id,
                 sender_name=current_user.username,
-                type="mention",
+                type="event",
                 message=f"You were invited to <strong>{event.title}</strong>.",
                 channel="Events",
             )
@@ -1183,6 +1183,16 @@ def join_open_event(event_id):
 
     attendee.invite_status = "accepted"
     attendee.responded_at = datetime.utcnow()
+
+    if event.creator_user_id != current_user.id:
+        db.session.add(Notification(
+            user_id=event.creator_user_id,
+            sender_name=current_user.username,
+            type="event",
+            message=f"<strong>{current_user.username}</strong> joined your event: <strong>{event.title}</strong>.",
+            channel="Events",
+        ))
+
     db.session.commit()
     flash("You joined the event.", "success")
     return redirect(url_for("main.events_page"))
@@ -1612,11 +1622,13 @@ def notifications():
     user = current_user
     notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
     pending_invites = Invitation.query.filter_by(receiver_id=current_user.id, status="pending").all()
+    pending_invite_map = {invite.sender.username: invite.id for invite in pending_invites}
     return render_template(
         "notifications.html",
         current_user=user,
         notifications=notifs,
         pending_invites=pending_invites,
+        pending_invite_map=pending_invite_map,
         unread_count=sum(1 for n in notifs if not n.is_read),
         dm_count=sum(1 for n in notifs if n.type == "dm" and not n.is_read),
         mention_count=sum(1 for n in notifs if n.type == "mention" and not n.is_read),
@@ -1640,6 +1652,24 @@ def mark_all_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
     db.session.commit()
     return "", 204
+
+@main_bp.route("/matches/ignore/<int:user_id>", methods=["POST"])
+@login_required
+def ignore_match(user_id):
+    user = db.session.get(User, user_id)
+    if user is None:
+        return "", 404
+    db.session.add(Notification(
+        user_id=current_user.id,
+        sender_name=user.username,
+        type="match",
+        message=f"You passed on matching with <strong>{user.username}</strong>.",
+        channel="Matches",
+        is_read=True,
+    ))
+    db.session.commit()
+    return "", 204
+
 
 @main_bp.route("/invitations/send<int:receiver_id>", methods=["POST"])
 @login_required
@@ -1674,8 +1704,8 @@ def send_invitation(receiver_id):
     notif = Notification(
         user_id=receiver_id,
         sender_name=current_user.username,
-        type="mention",
-        message=f"<strong>{current_user.username}</strong> sent you a study invite.",
+        type="dm",
+        message=f"<strong>{current_user.username}</strong> wants to message you.",
         channel="Invitations",
     )
 
@@ -1726,10 +1756,10 @@ def accept_invitation(invite_id):
 
     notif = Notification(
         user_id=invite.sender_id,
-        sender_name= current_user.username,
-        type="dm",
+        sender_name=current_user.username,
+        type="match",
         message=f"<strong>{current_user.username}</strong> accepted your study invite!",
-        channel="Invitations",
+        channel=f"Conversation {conversation.id}",
     )
 
     db.session.add(notif)
@@ -1752,9 +1782,18 @@ def reject_invitation(invite_id):
 
     invite.status = "rejected"
     invite.responded_at = datetime.utcnow()
+
+    Notification.query.filter_by(
+        user_id=current_user.id,
+        sender_name=invite.sender.username,
+        channel="Invitations",
+        type="dm",
+        is_read=False,
+    ).update({"is_read": True})
+
     db.session.commit()
 
-    flash("Invitation rejected.", "info")
+    flash("Invitation declined.", "info")
     return redirect(url_for("main.notifications"))
 
 
@@ -1892,6 +1931,14 @@ def start_conversation(receiver_id):
         user_id=receiver.id,
     ))
 
+    db.session.add(Notification(
+        user_id=receiver.id,
+        sender_name=current_user.username,
+        type="match",
+        message=f"<strong>{current_user.username}</strong> accepted your match and wants to study with you!",
+        channel=f"Conversation {conversation.id}",
+    ))
+
     db.session.commit()
 
     return redirect(url_for("main.messages", conversation_id=conversation.id))
@@ -1979,18 +2026,20 @@ def handle_send_message(data):
 
     db.session.commit()
 
-    emit(
-        "receive_message",
-        {
-            "id": message.id,
-            "conversation_id": conversation_id,
-            "sender_id": current_user.id,
-            "sender_name": current_user.username,
-            "body": message.body,
-            "created_at": message.created_at.strftime("%H:%M"),
-        },
-        room=f"conversation-{conversation_id}",
-    )
+    # Create DM notification for other users in conversation
+    conversation = db.session.get(Conversation, conversation_id)
+    for member in conversation.members:
+        if member.user_id != current_user.id:
+            notif = Notification(
+                user_id=member.user_id,
+                sender_name=current_user.username,
+                type="dm",
+                message=f"<strong>{current_user.username}</strong>: {body[:80]}",
+                channel=f"Conversation {conversation_id}",
+            )
+            db.session.add(notif)
+
+    db.session.commit()
 @main_bp.route("/check_register_details")
 def check_register_details():
     email = request.args.get("email", "").strip()

@@ -1,201 +1,369 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages | StudySync</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <main class="messages-page">
-        <section class="messages-brand-panel" aria-labelledby="messages-heading">
-            <a class="brand" href="{{ url_for('main.dashboard') }}">Study<span>Sync</span></a>
+{% extends "base.html" %}
+{% block title %}Messages{% endblock %}
+{% block head %}
+<style>
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 250px);
+        min-height: 400px;
+    }
 
-            <div class="brand-copy">
-                <p class="eyebrow">Live study chat</p>
-                <h1 id="messages-heading">Messages</h1>
-                <p>Keep your study plans moving with real-time conversations.</p>
-            </div>
+    .chat-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #e8eaf6;
+        margin: 0;
+    }
 
-            <div class="status-card" aria-label="Messaging status">
-                <span class="status-dot"></span>
-                <div>
-                    <strong>Connected</strong>
-                    <p>Messages are saved and shared live.</p>
-                </div>
-            </div>
-        </section>
+    .chat-subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        margin: 3px 0 0;
+    }
 
-        <section class="chat-panel" aria-labelledby="chat-title">
-            <header class="chat-header">
-                <div>
-                    <p class="chat-kicker">Conversation</p>
-                    <h2 id="chat-title">
-                        {% if conversation.title %}
-                            {{ conversation.title }}
-                        {% else %}
-                            Direct Message
-                        {% endif %}
-                    </h2>
-                </div>
+    /* Message list */
+    .message-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-right: 4px;
+        margin-bottom: 16px;
+    }
 
-                <a class="back-link" href="{{ url_for('main.dashboard') }}">Back</a>
-            </header>
+    .message-list::-webkit-scrollbar { width: 4px; }
+    .message-list::-webkit-scrollbar-track { background: transparent; }
+    .message-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-            <section
-                id="message-list"
-                class="message-list"
-                aria-label="Message history"
-                data-conversation-id="{{ conversation.id }}"
-                data-current-user-id="{{ current_user.id }}"
-            >
-                {% if messages %}
-                    {% for message in messages %}
-                        <article
-                            class="message-row {% if message.sender_id == current_user.id %}message-own{% else %}message-other{% endif %}"
-                            data-message-id="{{ message.id }}"
-                        >
-                            <div class="message-bubble">
-                                <header class="message-meta">
-                                    <span>{{ message.sender.username }}</span>
-                                    <time datetime="{{ message.created_at.isoformat() }}">
-                                        {{ message.created_at.strftime("%H:%M") }}
-                                    </time>
-                                </header>
-                                <p>{{ message.display_body }}</p>
-                            </div>
-                        </article>
-                    {% endfor %}
-                {% else %}
-                    <p id="empty-message-state" class="empty-state">No messages yet. Start the conversation.</p>
+    .message-row {
+        display: flex;
+        flex-direction: column;
+        width: max-content;
+        max-width: 70%;
+    }
+
+    .message-own {
+        align-self: flex-end;
+        align-items: flex-end;
+    }
+
+    .message-other {
+        align-self: flex-start;
+        align-items: flex-start;
+    }
+
+    .message-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 4px;
+        font-size: 11px;
+        color: #6b7280;
+    }
+
+    .message-bubble {
+        padding: 10px 14px;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.5;
+        word-break: break-word;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .message-own .message-bubble {
+        background: linear-gradient(135deg, rgba(191,108,255,0.25), rgba(113,82,255,0.18));
+        border: 1px solid rgba(191,108,255,0.2);
+        color: #e8eaf6;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message-other .message-bubble {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #e8eaf6;
+        border-bottom-left-radius: 4px;
+    }
+
+    .message-bubble p { margin: 0; }
+
+    /* Mention highlight */
+    .message-bubble .mention {
+        color: #d56cff;
+        font-weight: 600;
+    }
+
+    /* Delete button */
+    .delete-btn {
+        opacity: 0;
+        transition: opacity 0.15s;
+        background: none;
+        border: none;
+        color: #6b7280;
+        font-size: 11px;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-top: 4px;
+    }
+
+    .message-row:hover .delete-btn { opacity: 1; }
+    .delete-btn:hover { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+
+    .deleted-msg { color: #4b5563; font-style: italic; font-size: 13px; }
+
+    /* Input area */
+    .message-input-area {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 12px;
+    }
+
+    .message-input-area textarea {
+        flex: 1;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #e8eaf6;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: none;
+        min-height: 40px;
+        max-height: 100px;
+        line-height: 1.5;
+        transition: border-color 0.2s;
+    }
+
+    .message-input-area textarea:focus {
+        outline: none;
+        border-color: rgba(191,108,255,0.4);
+    }
+
+    .message-input-area textarea::placeholder { color: #4b5563; }
+
+    .send-btn {
+        background: linear-gradient(135deg, #8b5cf6, #d63af9);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        padding: 8px 18px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .send-btn:hover { opacity: 0.85; }
+
+    .message-error {
+        color: #ff6b6b;
+        font-size: 12px;
+        margin-top: 6px;
+        min-height: 16px;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #4b5563;
+        font-size: 14px;
+        padding: 40px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2 class="chat-title">Direct Message</h2>
+        <p class="chat-subtitle">
+            {% set other_members = conversation.members | selectattr('user_id', '!=', current_user.id) | list %}
+            with {% for m in other_members %}{{ m.user.username }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.messages_inbox') }}" class="custom-btn secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Chat area -->
+<section class="info-card chat-container">
+    <div
+        id="message-list"
+        class="message-list"
+        data-conversation-id="{{ conversation.id }}"
+        data-current-user-id="{{ current_user.id }}"
+    >
+        {% if messages %}
+            {% for message in messages %}
+            <div class="message-row {% if message.sender_id == current_user.id %}message-own{% else %}message-other{% endif %}"
+                 data-message-id="{{ message.id }}">
+
+                {% if message.sender_id != current_user.id %}
+                <div class="message-meta">{{ message.sender.username }}</div>
                 {% endif %}
-            </section>
 
-            <form id="message-form" class="message-form" autocomplete="off">
-                <label class="sr-only" for="message-input">Message</label>
-                <textarea
-                    id="message-input"
-                    name="body"
-                    rows="1"
-                    maxlength="1000"
-                    placeholder="Write a message"
-                    required
-                ></textarea>
-                <button type="submit">Send</button>
-            </form>
+                <div class="message-bubble">
+                    <p>
+                        {% if message.is_deleted %}
+                            <span class="deleted-msg">This message was deleted.</span>
+                        {% else %}
+                            {{ message.display_body }}
+                        {% endif %}
+                    </p>
+                    {% if message.sender_id == current_user.id and not message.is_deleted %}
+                    <form method="POST"
+                          action="{{ url_for('main.delete_message', message_id=message.id) }}"
+                          style="display:inline"
+                          onsubmit="return confirm('Delete this message?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="delete-btn" title="Delete">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
 
-            <p id="message-error" class="message-error" role="alert" aria-live="polite"></p>
-        </section>
-    </main>
+                <div class="message-meta">
+                    <time>{{ message.created_at.strftime("%H:%M") }}</time>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p id="empty-message-state" class="empty-state">
+                No messages yet. Say hello!
+            </p>
+        {% endif %}
+    </div>
 
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script>
-        const messageList = document.querySelector("#message-list");
-        const messageForm = document.querySelector("#message-form");
-        const messageInput = document.querySelector("#message-input");
-        const messageError = document.querySelector("#message-error");
-        const emptyMessageState = document.querySelector("#empty-message-state");
+    <!-- Input -->
+    <div class="message-input-area">
+        <textarea
+            id="message-input"
+            rows="1"
+            maxlength="1000"
+            placeholder="Write a message… use @username to mention someone"
+        ></textarea>
+        <button class="send-btn" id="send-btn">
+            <i class="bi bi-send"></i> Send
+        </button>
+    </div>
+    <p id="message-error" class="message-error"></p>
+</section>
 
-        const conversationId = Number(messageList.dataset.conversationId);
-        const currentUserId = Number(messageList.dataset.currentUserId);
-        const socket = io();
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    const messageList  = document.getElementById("message-list");
+    const messageInput = document.getElementById("message-input");
+    const messageError = document.getElementById("message-error");
+    const sendBtn      = document.getElementById("send-btn");
+    const emptyState   = document.getElementById("empty-message-state");
 
-        socket.emit("join_conversation", {
-            conversation_id: conversationId
-        });
+    const conversationId = Number(messageList.dataset.conversationId);
+    const currentUserId  = Number(messageList.dataset.currentUserId);
+    const socket = io();
 
-        function scrollToLatestMessage() {
-            messageList.scrollTop = messageList.scrollHeight;
+    socket.emit("join_conversation", { conversation_id: conversationId });
+
+    function scrollToBottom() {
+        messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    function showError(text) { messageError.textContent = text; }
+    function clearError()    { messageError.textContent = ""; }
+
+    // Auto-grow textarea
+    messageInput.addEventListener("input", () => {
+        messageInput.style.height = "auto";
+        messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + "px";
+    });
+
+    // Send on Enter (Shift+Enter for new line)
+    messageInput.addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    function sendMessage() {
+        const body = messageInput.value.trim();
+        if (!body) { showError("Message cannot be empty."); return; }
+        if (body.length > 1000) { showError("Message must be 1000 characters or fewer."); return; }
+        clearError();
+        socket.emit("send_message", { conversation_id: conversationId, body });
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+        messageInput.focus();
+    }
+
+    function highlightMentions(text) {
+        return text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+    }
+
+    function createMessageEl(message) {
+        const isOwn = message.sender_id === currentUserId;
+
+        const row = document.createElement("div");
+        row.classList.add("message-row", isOwn ? "message-own" : "message-other");
+        row.dataset.messageId = message.id;
+
+        if (!isOwn) {
+            const meta = document.createElement("div");
+            meta.className = "message-meta";
+            meta.textContent = message.sender_name;
+            row.appendChild(meta);
         }
 
-        function showError(text) {
-            messageError.textContent = text;
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+
+        const p = document.createElement("p");
+        p.innerHTML = highlightMentions(message.body);
+        bubble.appendChild(p);
+
+        row.appendChild(bubble);
+
+        const timeMeta = document.createElement("div");
+        timeMeta.className = "message-meta";
+        timeMeta.textContent = message.created_at;
+        row.appendChild(timeMeta);
+
+        return row;
+    }
+
+    socket.on("receive_message", message => {
+        if (message.conversation_id !== conversationId) return;
+        if (emptyState) emptyState.remove();
+        messageList.appendChild(createMessageEl(message));
+        scrollToBottom();
+    });
+
+    socket.on("message_deleted", data => {
+        const row = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (row) {
+            const p = row.querySelector(".message-bubble p");
+            if (p) p.innerHTML = '<span class="deleted-msg">This message was deleted.</span>';
+            const deleteForm = row.querySelector("form");
+            if (deleteForm) deleteForm.remove();
         }
+    });
 
-        function clearError() {
-            messageError.textContent = "";
-        }
+    socket.on("connect_error", () => showError("Could not connect to live messaging."));
 
-        function createMessageElement(message) {
-            const row = document.createElement("article");
-            row.classList.add("message-row");
-            row.classList.add(message.sender_id === currentUserId ? "message-own" : "message-other");
-            row.dataset.messageId = message.id;
-
-            const bubble = document.createElement("div");
-            bubble.classList.add("message-bubble");
-
-            const meta = document.createElement("header");
-            meta.classList.add("message-meta");
-
-            const sender = document.createElement("span");
-            sender.textContent = message.sender_name;
-
-            const time = document.createElement("time");
-            time.textContent = message.created_at;
-
-            const body = document.createElement("p");
-            body.textContent = message.body;
-
-            meta.appendChild(sender);
-            meta.appendChild(time);
-            bubble.appendChild(meta);
-            bubble.appendChild(body);
-            row.appendChild(bubble);
-
-            return row;
-        }
-
-        messageForm.addEventListener("submit", function (event) {
-            event.preventDefault();
-
-            const body = messageInput.value.trim();
-
-            if (!body) {
-                showError("Message cannot be empty.");
-                return;
-            }
-
-            if (body.length > 1000) {
-                showError("Message must be 1000 characters or fewer.");
-                return;
-            }
-
-            clearError();
-
-            socket.emit("send_message", {
-                conversation_id: conversationId,
-                body: body
-            });
-
-            messageInput.value = "";
-            messageInput.focus();
-        });
-
-        socket.on("receive_message", function (message) {
-            if (message.conversation_id !== conversationId) {
-                return;
-            }
-
-            if (emptyMessageState) {
-                emptyMessageState.remove();
-            }
-
-            messageList.appendChild(createMessageElement(message));
-            scrollToLatestMessage();
-        });
-
-        socket.on("connect_error", function () {
-            showError("Could not connect to live messaging.");
-        });
-
-        scrollToLatestMessage();
-    </script>
-</body>
-</html>
-
-
-
-
-
-
+    scrollToBottom();
+</script>
+{% endblock %}

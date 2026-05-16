@@ -1739,6 +1739,16 @@ body {
     color: #aab3d9;
 }
 
+.notif-avatar-event {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.3), rgba(249, 115, 22, 0.15));
+    color: #fb923c;
+}
+
+.notif-avatar-match {
+    background: linear-gradient(135deg, rgba(74, 222, 128, 0.3), rgba(34, 197, 94, 0.15));
+    color: #4ade80;
+}
+
 .notif-online {
     position: absolute;
     bottom: -2px;
@@ -1798,6 +1808,18 @@ body {
     background: rgba(255, 255, 255, 0.05);
     color: #aab3d9;
     border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notif-pill-event {
+    background: rgba(251, 146, 60, 0.12);
+    color: #fb923c;
+    border: 1px solid rgba(251, 146, 60, 0.25);
+}
+
+.notif-pill-match {
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.25);
 }
 
 .notif-time {
@@ -1873,6 +1895,24 @@ body {
 
 .notif-action-btn.reply:hover {
     background: rgba(191, 108, 255, 0.08);
+}
+
+.notif-action-btn.accept {
+    border-color: rgba(74, 222, 128, 0.35);
+    color: #4ade80;
+}
+
+.notif-action-btn.accept:hover {
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.notif-action-btn.decline {
+    border-color: rgba(255, 107, 107, 0.3);
+    color: #ff6b6b;
+}
+
+.notif-action-btn.decline:hover {
+    background: rgba(255, 107, 107, 0.08);
 }
 
 
@@ -3157,4 +3197,45 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0 12px 12px 12px;
     padding: 14px;
+}
+
+/* ── Global action buttons ── */
+.custom-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.18s, transform 0.12s;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.custom-btn:hover {
+    opacity: 0.82;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.custom-btn:active {
+    transform: scale(0.96);
+}
+
+.custom-btn.secondary {
+    background: rgba(139, 92, 246, 0.12);
+    color: #c084fc;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
+.custom-btn.secondary:hover {
+    background: rgba(139, 92, 246, 0.22);
+    color: #d8b4fe;
+    opacity: 1;
 }

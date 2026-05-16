@@ -102,12 +102,40 @@
                     {% endfor %}
                 </ul>
             </div>
+            
+            <!-- Accept/Ignore buttons -->
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <form method="POST" action="{{ url_for('main.start_conversation', receiver_id=item.user.id) }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="custom-btn">
+                        <i class="bi bi-check2"></i> Accept
+                    </button>
+                </form>
+                <button class="custom-btn secondary" onclick="ignoreMatch(this, {{ item.user.id }})">
+                    <i class="bi bi-x"></i> Ignore
+                </button>
+            </div>
         </section>
-    {% endfor %}
+{% endfor %}
 {% endif %}
 {% endblock %}
 {% block scripts %}
 <script>
+const csrfToken = "{{ csrf_token() }}";
+
+function ignoreMatch(btn, userId) {
+    const card = btn.closest('section.info-card');
+    if (!card) return;
+    card.style.transition = 'opacity 0.25s, transform 0.25s';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.97)';
+    setTimeout(() => { card.style.display = 'none'; }, 260);
+    fetch(`/matches/ignore/${userId}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+    });
+}
+
 (() => {
     const unitInput = document.querySelector('.unit-autocomplete');
     const suggestions = document.getElementById('unitSuggestions');
