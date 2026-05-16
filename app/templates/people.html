@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/people.css') }}">
+{% endblock %}
 {% block title %}People{% endblock %}
 
 {% block content %}

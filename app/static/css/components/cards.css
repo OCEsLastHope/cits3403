@@ -1,0 +1,55 @@
+.profile-card,
+.info-card {
+    border-radius: 22px;
+
+    padding: 22px;
+
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+
+    border: 1px solid rgba(168, 85, 247, 0.22);
+
+    box-shadow:
+        0 0 35px rgba(124, 58, 237, 0.14),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+
+    backdrop-filter: blur(12px);
+
+    background-color: rgba(8, 12, 35, 0.26);
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    transition: 0.25s ease;
+}
+
+/* LIGHTING OVERLAY */
+
+.profile-card::before,
+.info-card::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        radial-gradient(circle at top left,
+        rgba(168, 85, 247, 0.12),
+        transparent 34%);
+
+    pointer-events: none;
+
+    z-index: -1;
+}
+
+.info-card:hover,
+.profile-card:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(192, 132, 252, 0.42);
+
+    box-shadow:
+        0 0 40px rgba(168, 85, 247, 0.18);
+}
