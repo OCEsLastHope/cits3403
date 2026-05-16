@@ -232,19 +232,30 @@ def can_finish_onboarding(user):
 
 @main_bp.app_context_processor
 def inject_onboarding_guide():
+    unread_notifications = 0
+    if current_user.is_authenticated:
+        unread_notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+
     if not current_user.is_authenticated or current_user.onboarding_completed:
-        return {"onboarding_guide": None}
+        return {
+            "onboarding_guide": None,
+            "unread_notifications": unread_notifications,
+        }
     step = get_onboarding_step_for_user(current_user)
     target_endpoint = f"main.{ONBOARDING_STEP_ENDPOINTS[step]}"
     if request.endpoint != target_endpoint:
-        return {"onboarding_guide": None}
+        return {
+            "onboarding_guide": None,
+            "unread_notifications": unread_notifications,
+        }
     return {
         "onboarding_guide": {
             "step": step,
             "total_steps": len(ONBOARDING_STEP_ENDPOINTS),
             "message": ONBOARDING_STEP_COPY.get(step, ""),
             "show_finish": step == len(ONBOARDING_STEP_ENDPOINTS),
-        }
+        },
+        "unread_notifications": unread_notifications,
     }
 
 
@@ -1498,6 +1509,19 @@ def accept_friend_request(friend_request_id):
         abort(403)
 
     friend_request.status = "accepted"
+
+    requester = db.session.get(User, friend_request.requested_by_id)
+    if requester is not None:
+        db.session.add(
+            Notification(
+                user_id=requester.id,
+                sender_name=current_user.username,
+                type="friend_request",
+                message=f"<strong>{current_user.username}</strong> accepted your friend request.",
+                channel="friends",
+            )
+        )
+
     db.session.commit()
     flash("Friend request accepted.", "success")
     return redirect(url_for("main.people", tab="friends"))
