@@ -836,6 +836,30 @@ body {
     color: #edf0ff;
 }
 
+.availability-card .info-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.availability-card .info-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.availability-card .info-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.availability-card .info-list::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.45);
+    border-radius: 20px;
+}
+
+
 /* Subjects */
 
 .subject-container {
@@ -3573,6 +3597,77 @@ body {
     opacity: 1;
 }
 
+.people-card {
+    background: rgba(10, 13, 32, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.32);
+    border-radius: 24px;
+    padding: 28px 32px;
+}
+
+.people-card .nav-tabs {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.22);
+    margin-bottom: 24px;
+}
+
+.people-card .nav-link {
+    color: #b8c0ff;
+    background: transparent;
+    border: none;
+    padding: 12px 22px;
+    font-weight: 700;
+}
+
+.people-card .nav-link.active {
+    color: #ffffff;
+    background: rgba(124, 58, 237, 0.28);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+}
+
+.people-search-form {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 18px;
+    align-items: end;
+}
+
+.people-search-form .form-control {
+    height: 52px;
+    background: rgba(15, 23, 42, 0.95);
+    color: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 14px;
+    padding: 0 18px;
+}
+
+.people-search-form .form-control::placeholder {
+    color: #9ca3c7;
+}
+
+.people-search-form .btn-primary {
+    height: 52px;
+    border-radius: 14px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    border: none;
+}
+
+.people-result-card {
+    background: rgba(30, 20, 65, 0.78);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 20px;
+    padding: 22px 26px;
+}
+
+.people-result-card .text-muted,
+.people-card .text-muted {
+    color: #b8c0ff !important;
+}
+
+@media (max-width: 768px) {
+    .people-search-form {
+        grid-template-columns: 1fr;
 .mobile-bottom-nav {
     display: none;
 }
