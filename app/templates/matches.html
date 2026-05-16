@@ -160,14 +160,51 @@
 {% block scripts %}
 <script>
 const csrfToken = "{{ csrf_token() }}";
+let activeCard = null;
 
-function ignoreMatch(btn, userId) {
-    const card = btn.closest('section.info-card');
+function openMatchModal(card) {
+    activeCard = card;
+    const data = card.dataset;
+    const modal = new bootstrap.Modal(document.getElementById('matchDetailModal'));
+    
+    // Populate text fields
+    document.getElementById('modalName').textContent = data.name;
+    document.getElementById('modalDegree').textContent = data.degree;
+    document.getElementById('modalBio').textContent = data.bio;
+    document.getElementById('modalOverlapMins').textContent = data.overlapMinutes + 'm';
+    document.getElementById('modalUnitsCount').textContent = data.sharedUnitsCount;
+    
+    // Populate HTML fields
+    document.getElementById('modalUnitsList').innerHTML = data.unitsHtml;
+    document.getElementById('modalOverlapList').innerHTML = data.overlapHtml;
+    
+    // Avatar
+    const initials = data.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    document.getElementById('modalAvatar').textContent = initials;
+    
+    // Form Action for Accept
+    const acceptForm = document.getElementById('modalAcceptForm');
+    acceptForm.action = `/messages/start/${data.userId}`;
+    
+    // Ignore button handler
+    const ignoreBtn = document.getElementById('modalIgnoreBtn');
+    ignoreBtn.onclick = () => {
+        ignoreMatch(card, data.userId);
+        modal.hide();
+    };
+    
+    modal.show();
+}
+
+function ignoreMatch(btnOrCard, userId) {
+    const card = btnOrCard.classList.contains('info-card') ? btnOrCard : btnOrCard.closest('section.info-card');
     if (!card) return;
+    
     card.style.transition = 'opacity 0.25s, transform 0.25s';
     card.style.opacity = '0';
     card.style.transform = 'scale(0.97)';
     setTimeout(() => { card.style.display = 'none'; }, 260);
+    
     fetch(`/matches/ignore/${userId}`, {
         method: 'POST',
         headers: { 'X-CSRFToken': csrfToken }
