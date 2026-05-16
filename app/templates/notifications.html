@@ -31,6 +31,9 @@
                 <a href="{{ url_for('main.matches') }}">
                     <i class="bi bi-people"></i> Matches
                 </a>
+                <a href="{{ url_for('main.people') }}">
+                    <i class="bi bi-person-lines-fill"></i> People
+                </a>
                 <a href="{{ url_for('main.events_page') }}">
                     <i class="bi bi-calendar-event"></i> Events
                 </a>
@@ -80,7 +83,7 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 notif-header-actions">
                     <button class="custom-btn secondary" onclick="markAllRead()">Clear all</button>
                     <button class="custom-btn" onclick="markAllRead()">
                         <i class="bi bi-check2-all"></i> Mark all read
@@ -98,22 +101,23 @@
                     <i class="bi bi-chat"></i> Messages
                     {% if dm_count > 0 %}<span class="notif-badge">{{ dm_count }}</span>{% endif %}
                 </button>
-                <button class="notif-tab" onclick="switchTab(this, 'mention')">
-                    <i class="bi bi-at"></i> Mentions
-                    {% if mention_count > 0 %}<span class="notif-badge mention">{{ mention_count }}</span>{% endif %}
+                <button class="notif-tab" onclick="switchTab(this, 'friend_request')">
+                    <i class="bi bi-person-plus"></i> Friend Requests
+                    {% if friend_request_count > 0 %}<span class="notif-badge mention">{{ friend_request_count }}</span>{% endif %}
                 </button>
             </div>
 
             {% macro notif_type_icon(type) %}
                 {% if type == 'dm' %}<i class="bi bi-chat-fill"></i>{% endif %}
                 {% if type == 'mention' %}<i class="bi bi-at"></i>{% endif %}
+                {% if type == 'friend_request' %}<i class="bi bi-person-plus-fill"></i>{% endif %}
                 {% if type == 'event' %}<i class="bi bi-calendar-event-fill"></i>{% endif %}
                 {% if type == 'match' %}<i class="bi bi-people-fill"></i>{% endif %}
                 {% if type == 'system' %}<i class="bi bi-gear-fill"></i>{% endif %}
             {% endmacro %}
 
             {% macro notif_type_label(type) %}
-                {% if type == 'dm' %}Message{% elif type == 'mention' %}Mention{% elif type == 'event' %}Event{% elif type == 'match' %}Match{% else %}System{% endif %}
+                {% if type == 'dm' %}Message{% elif type == 'mention' %}Mention{% elif type == 'friend_request' %}Friend Request{% elif type == 'event' %}Event{% elif type == 'match' %}Match{% else %}System{% endif %}
             {% endmacro %}
 
             {% macro notif_actions(notif) %}
@@ -137,9 +141,32 @@
                         <i class="bi bi-reply"></i> Reply
                     </button>
                 {% elif notif.type == 'mention' %}
-                    <button class="notif-action-btn reply" onclick="event.stopPropagation()">
+                    <button class="notif-action-btn reply" onclick="event.stopPropagation(); handleNotifClick(event, {{ notif.id }}, 'mention')">
                         <i class="bi bi-reply"></i> Reply
                     </button>
+                {% elif notif.type == 'friend_request' %}
+                    {% set channel_parts = notif.channel.split(':', 1) %}
+                    {% if channel_parts|length == 2 and channel_parts[0] == 'friend_request' and channel_parts[1].isdigit() and channel_parts[1]|int in pending_friend_request_ids %}
+                    <form method="POST" action="{{ url_for('main.accept_friend_request', friend_request_id=channel_parts[1]|int) }}"
+                          style="display:inline" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="notif-action-btn accept">
+                            <i class="bi bi-check"></i> Accept
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.reject_friend_request', friend_request_id=channel_parts[1]|int) }}"
+                          style="display:inline" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="notif-action-btn decline">
+                            <i class="bi bi-x"></i> Decline
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{{ url_for('main.people', tab='friends') }}" class="notif-action-btn"
+                       onclick="event.stopPropagation(); markRead({{ notif.id }})">
+                        <i class="bi bi-people"></i> View
+                    </a>
+                    {% endif %}
                 {% elif notif.type == 'event' %}
                     <a href="{{ url_for('main.events_page') }}" class="notif-action-btn"
                        onclick="event.stopPropagation(); markRead({{ notif.id }})">
@@ -240,6 +267,35 @@
         </main>
     </div>
 
+    {% if current_user and current_user.is_authenticated %}
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <a href="{{ url_for('main.dashboard') }}">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('main.profile') }}">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+        </a>
+        <a href="{{ url_for('main.matches') }}">
+            <i class="bi bi-people"></i>
+            <span>Matches</span>
+        </a>
+        <a href="{{ url_for('main.people') }}">
+            <i class="bi bi-person-lines-fill"></i>
+            <span>People</span>
+        </a>
+        <a href="{{ url_for('main.messages_inbox') }}">
+            <i class="bi bi-chat"></i>
+            <span>Messages</span>
+        </a>
+        <a href="{{ url_for('main.notifications') }}" class="active">
+            <i class="bi bi-bell"></i>
+            <span>Notifications</span>
+        </a>
+    </nav>
+    {% endif %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const csrfToken = "{{ csrf_token() }}";
@@ -305,6 +361,26 @@
                     window.location.href = `/messages/${conversationId[0]}`;
                     return;
                 }
+            }
+
+            if (type === 'mention') {
+                const item = document.querySelector(`[data-id="${notifId}"]`);
+                const channel = item.querySelector('.notif-channel').textContent.trim();
+                const conversationId = channel.match(/conversation:(\d+)/);
+                if (conversationId) {
+                    markRead(notifId);
+                    window.location.href = `/messages/${conversationId[1]}`;
+                    return;
+                }
+                markRead(notifId);
+                window.location.href = "{{ url_for('main.messages_inbox') }}";
+                return;
+            }
+
+            if (type === 'friend_request') {
+                markRead(notifId);
+                window.location.href = "{{ url_for('main.people', tab='friends') }}";
+                return;
             }
 
             if (type === 'match') {
