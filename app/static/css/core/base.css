@@ -1,0 +1,22 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow-x: auto;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top left, rgba(144, 95, 255, 0.18), transparent 25%),
+                radial-gradient(circle at bottom right, rgba(0, 224, 255, 0.12), transparent 20%),
+                linear-gradient(135deg, #111528, #0b1020 60%, #0a0e1b);
+    color: #ffffff;
+}
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+    padding: 24px;
+    gap: 24px;
+}
+

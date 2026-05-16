@@ -1,0 +1,41 @@
+/* ── Global action buttons ── */
+.custom-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.18s, transform 0.12s;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.custom-btn:hover {
+    opacity: 0.82;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.custom-btn:active {
+    transform: scale(0.96);
+}
+
+.custom-btn.secondary {
+    background: rgba(139, 92, 246, 0.12);
+    color: #c084fc;
+    border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
+.custom-btn.secondary:hover {
+    background: rgba(139, 92, 246, 0.22);
+    color: #d8b4fe;
+    opacity: 1;
+}
+
