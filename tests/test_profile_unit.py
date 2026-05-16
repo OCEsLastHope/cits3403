@@ -262,5 +262,70 @@ class ProfileUnitTests(unittest.TestCase):
             self.assertIsNotNone(avail)
             self.assertEqual(avail.start_time, "09:00")
 
+    def test_onboarding_next_follows_sidebar_sequence(self):
+        with app.app_context():
+            ordered_user = User(
+                first_name="Order",
+                last_name="User",
+                email="order@test.com",
+                username="orderuser",
+                degree="Bachelor of Science",
+                major="Computer Science",
+                onboarding_completed=False,
+                onboarding_step=1,
+            )
+            ordered_user.set_password("password123")
+            db.session.add(ordered_user)
+            db.session.commit()
+
+        self.client.post(
+            "/login",
+            data={"username": "orderuser", "password": "password123"},
+            follow_redirects=True,
+        )
+
+        expected_locations = [
+            "/matches",
+            "/people",
+            "/messages",
+            "/events",
+            "/notifications",
+            "/profile",
+        ]
+
+        for expected in expected_locations:
+            response = self.client.post(
+                "/onboarding/advance",
+                data={"action": "next"},
+                follow_redirects=False,
+            )
+            self.assertEqual(response.status_code, 302)
+            self.assertIn(expected, response.headers.get("Location", ""))
+
+    def test_notifications_page_accessible_during_onboarding(self):
+        with app.app_context():
+            nav_user = User(
+                first_name="Nav",
+                last_name="User",
+                email="nav@test.com",
+                username="navuser",
+                degree="Bachelor of Science",
+                major="Computer Science",
+                onboarding_completed=False,
+                onboarding_step=6,
+            )
+            nav_user.set_password("password123")
+            db.session.add(nav_user)
+            db.session.commit()
+
+        self.client.post(
+            "/login",
+            data={"username": "navuser", "password": "password123"},
+            follow_redirects=True,
+        )
+
+        response = self.client.get("/notifications", follow_redirects=False)
+        self.assertEqual(response.status_code, 200)
+
 if __name__ == "__main__":
     unittest.main()

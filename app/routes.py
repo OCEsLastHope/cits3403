@@ -49,16 +49,20 @@ UNIT_CODE_PATTERN = re.compile(r"^[A-Z]{4}[0-9]{4}$")
 ONBOARDING_STEP_ENDPOINTS = {
     1: "dashboard",
     2: "matches",
-    3: "messages_inbox",
-    4: "events_page",
-    5: "profile",
+    3: "people",
+    4: "messages_inbox",
+    5: "events_page",
+    6: "notifications",
+    7: "profile",
 }
 ONBOARDING_STEP_COPY = {
     1: "This is your dashboard. You can track upcoming meetings and suggested matches here.",
     2: "This is matches. StudySync ranks people by overlapping availability and profile fit.",
-    3: "This is messages. Use it to chat and coordinate study sessions.",
-    4: "This is events. Create or join sessions to plan study time.",
-    5: "This is profile. Add at least one unit and one availability slot, then finish onboarding.",
+    3: "This is people. Search students and send friend requests before starting conversations.",
+    4: "This is messages. Use it to chat and coordinate study sessions.",
+    5: "This is events. Create or join sessions to plan study time.",
+    6: "This is notifications. Track invites, mentions, and request updates in one place.",
+    7: "This is profile. Add at least one unit and one availability slot, then finish onboarding.",
 }
 
 
@@ -254,7 +258,8 @@ def require_onboarding_completion():
         return None
     if request.endpoint is None:
         return None
-    allowed_endpoints = {"main.onboarding", "main.onboarding_advance", "main.logout", "static"}
+    onboarding_nav_endpoints = {f"main.{endpoint}" for endpoint in ONBOARDING_STEP_ENDPOINTS.values()}
+    allowed_endpoints = {"main.onboarding", "main.onboarding_advance", "main.logout", "static"}.union(onboarding_nav_endpoints)
     if request.endpoint in allowed_endpoints:
         return None
     target_endpoint = f"main.{get_onboarding_target_endpoint(current_user)}"
