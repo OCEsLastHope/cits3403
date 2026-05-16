@@ -1,0 +1,181 @@
+/* ================= MATCHES PAGE OVERHAUL (COMMIT 1) ================= */
+
+/* Simplified Match Card */
+.match-card-simplified {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    background: rgba(13, 18, 38, 0.45);
+    position: relative;
+    overflow: hidden;
+}
+
+.match-card-simplified:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(168, 85, 247, 0.5);
+    background: rgba(18, 25, 53, 0.65);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 
+                0 0 20px rgba(139, 92, 246, 0.15);
+}
+
+.match-card-simplified .text-muted {
+    color: rgba(216, 222, 252, 0.7) !important;
+}
+
+/* Initials Avatar */
+.initials-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.initials-avatar.lg {
+    width: 80px;
+    height: 80px;
+    font-size: 1.8rem;
+    border-radius: 22px;
+}
+
+/* Glassmorphism Modal */
+.glass-modal .modal-content {
+    background: linear-gradient(145deg, rgba(15, 20, 45, 0.95), rgba(10, 14, 30, 0.98));
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 28px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+}
+
+.glass-modal .text-muted {
+    color: rgba(216, 222, 252, 0.7) !important;
+}
+
+.glass-modal .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 24px 30px;
+}
+
+.glass-modal .modal-body {
+    padding: 30px;
+}
+
+.glass-modal .modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px 30px;
+}
+
+.glass-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Modal Internal Layout */
+.match-detail-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.match-detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #a855f7;
+    font-weight: 800;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.overlap-pill {
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #d8b4fe;
+}
+
+.match-stat-box {
+    text-align: center;
+    padding: 15px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.match-stat-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.match-stat-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Badge Match */
+.badge-match {
+    background: linear-gradient(90deg, #7c3aed, #4f46e5);
+    border: none;
+    padding: 6px 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+}
+
+/* Matches Filter Form */
+.matches-filter-form .form-label {
+    color: rgba(235, 239, 255, 0.9);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.matches-filter-input,
+.matches-filter-select {
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(11, 18, 36, 0.62);
+    color: #f4f7ff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.matches-filter-input::placeholder {
+    color: rgba(208, 217, 255, 0.55);
+}
+
+.matches-filter-input:focus,
+.matches-filter-select:focus {
+    border-color: rgba(109, 165, 255, 0.75);
+    box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
+    background: rgba(18, 27, 52, 0.82);
+    color: #ffffff;
+}
+
+.matches-filter-select option,
+.matches-filter-select optgroup {
+    background: #101b33;
+    color: #f4f7ff;
+}
+
+.matches-filter-btn {
+    min-height: 44px;
+    border-radius: 12px;
+    font-weight: 600;
+}
