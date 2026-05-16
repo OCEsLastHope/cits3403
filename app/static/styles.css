@@ -663,7 +663,7 @@ body {
     background-repeat: no-repeat;
 }
 
-/* AVAILABILITY */
+/* Availability */
 
 .availability-card {
     background:
@@ -675,7 +675,7 @@ body {
     background-repeat: no-repeat;
 }
 
-/* STUDY PREFERENCES */
+/* Study Preferences */
 
 .study-pref-card {
     background:
@@ -687,7 +687,7 @@ body {
     background-repeat: no-repeat;
 }
 
-/* ABOUT */
+/* About */
 
 .about-card {
     min-height: 210px;
@@ -701,7 +701,7 @@ body {
     background-repeat: no-repeat;
 }
 
-/* AVATAR */
+/* Avatar */
 
 .avatar {
     width: 82px;
@@ -732,30 +732,8 @@ body {
         0 0 65px rgba(65, 217, 255, 0.20);
 }
 
-/* VERIFIED BADGE */
 
-.verified-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-
-    padding: 6px 12px;
-
-    border-radius: 999px;
-
-    background: rgba(124, 58, 237, 0.24);
-
-    border: 1px solid rgba(192, 132, 252, 0.28);
-
-    color: #e9d5ff;
-
-    font-size: 12px;
-    font-weight: 700;
-
-    margin-left: 12px;
-}
-
-/* TEXT */
+/* Text */
 
 .profile-name {
     font-size: 30px;
@@ -773,7 +751,7 @@ body {
     font-size: 15px;
 }
 
-/* TAGS */
+/* Tags */
 
 .tag {
     display: inline-block;
@@ -814,130 +792,8 @@ body {
     color: #c084fc;
 }
 
-/* BASIC INFO */
 
-.info-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-
-    margin-bottom: 22px;
-}
-
-.info-item i {
-    color: #c084fc;
-    font-size: 18px;
-    margin-top: 2px;
-}
-
-.info-label {
-    color: #d8defc;
-    font-size: 13px;
-    margin-bottom: 3px;
-}
-
-.info-value {
-    color: white;
-    font-weight: 600;
-}
-
-/* AVAILABILITY */
-
-.availability-card .info-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-}
-
-.availability-card .info-list li {
-    display: flex;
-    justify-content: space-between;
-
-    margin-bottom: 12px;
-
-    color: #edf0ff;
-}
-
-/* SUBJECTS */
-
-.subject-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.subject-chip {
-    padding: 8px 14px;
-
-    border-radius: 999px;
-
-    background: rgba(124, 58, 237, 0.18);
-
-    border: 1px solid rgba(192, 132, 252, 0.26);
-
-    color: #ffffff;
-
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.empty-subject-state {
-    width: 100%;
-
-    border: 1px dashed rgba(192, 132, 252, 0.18);
-
-    border-radius: 16px;
-
-    padding: 28px 18px;
-
-    text-align: center;
-
-    background: rgba(5, 10, 30, 0.08);
-}
-
-.empty-subject-icon {
-    font-size: 34px;
-    margin-bottom: 10px;
-    color: #d8b4fe;
-}
-
-/* STATS */
-
-.stats-box {
-    background: rgba(10, 14, 35, 0.16);
-
-    border-radius: 16px;
-
-    padding: 14px;
-
-    text-align: center;
-
-    border: 1px solid rgba(192, 132, 252, 0.10);
-
-    backdrop-filter: blur(8px);
-}
-
-.stats-label {
-    color: #d8defc;
-    font-size: 12px;
-    margin-bottom: 6px;
-}
-
-.stats-value {
-    font-size: 18px;
-    font-weight: 800;
-}
-
-/* ABOUT */
-
-.about-text {
-    max-width: 62%;
-    line-height: 1.8;
-    color: #ffffff;
-    font-size: 15px;
-}
-
-/* GRID SPACING */
+/* Grid Spacing */
 
 .row.g-4 {
     --bs-gutter-x: 1rem;
@@ -948,6 +804,9 @@ body {
 
 .events-page {
     position: relative;
+    min-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
 }
 
 .events-dashboard-grid {
@@ -1133,8 +992,11 @@ body {
 }
 
 .events-footer-quote {
-    margin-top: 34px;
-    padding-bottom: 12px;
+    position: sticky;
+    bottom: 0;
+
+    margin-top: auto;
+    padding: 12px 16px;
 
     display: flex;
     align-items: center;
@@ -1143,20 +1005,27 @@ body {
 
     text-align: center;
 
-    color: rgba(255, 255, 255, 0.68);
+    color: rgba(255, 255, 255, 0.72);
     font-size: 1rem;
     font-weight: 500;
+
+    background: rgba(5, 7, 24, 0.82);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(139, 92, 246, 0.18);
+    z-index: 20;
 }
 
-.events-footer-quote i {
-    color: #a855f7;
-    font-size: 1.1rem;
+.events-footer-quote i,
+.events-footer-quote svg {
+    color: #a855f7 !important;
+    fill: #a855f7 !important;
 
     text-shadow:
-        0 0 12px rgba(168, 85, 247, 0.55);
+        0 0 12px rgba(168, 85, 247, 0.75);
 }
 
-/* ================= EVENT MODAL ================= */
+
+/* event modal */
 
 .modal-content {
     background:
@@ -1287,8 +1156,7 @@ body {
 
 
 
-/* Login page */
-
+/* ================= LOGIN PAGE ================= */
 .login-page {
     min-height: 100vh;
     margin: 0;
