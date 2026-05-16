@@ -109,36 +109,24 @@
                     </div>
                 </div>
 
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="match-stat-box">
-                            <span class="match-stat-label">Overlap Time</span>
-                            <span id="modalOverlapMins" class="match-stat-value"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="match-stat-box">
-                            <span class="match-stat-label">Shared Units</span>
-                            <span id="modalUnitsCount" class="match-stat-value"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="match-detail-section">
+                <div class="match-detail-section mb-4">
                     <span class="match-detail-label">Bio</span>
                     <p id="modalBio" class="mb-0"></p>
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <div class="match-detail-section h-100 mb-0">
                             <span class="match-detail-label">Common Units</span>
                             <div id="modalUnitsList" class="d-flex flex-wrap gap-1"></div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-7">
                         <div class="match-detail-section h-100 mb-0">
-                            <span class="match-detail-label">Overlap Schedule</span>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="match-detail-label mb-0">Shared Times</span>
+                                <span id="modalOverlapMins" class="badge badge-match rounded-pill"></span>
+                            </div>
                             <ul id="modalOverlapList" class="list-unstyled mb-0 small"></ul>
                         </div>
                     </div>
@@ -172,7 +160,6 @@ function openMatchModal(card) {
     document.getElementById('modalDegree').textContent = data.degree;
     document.getElementById('modalBio').textContent = data.bio;
     document.getElementById('modalOverlapMins').textContent = data.overlapMinutes + 'm';
-    document.getElementById('modalUnitsCount').textContent = data.sharedUnitsCount;
     
     // Populate HTML fields
     document.getElementById('modalUnitsList').innerHTML = data.unitsHtml;

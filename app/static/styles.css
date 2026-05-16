@@ -3695,9 +3695,8 @@ body {
                 0 0 20px rgba(139, 92, 246, 0.15);
 }
 
-.match-card-simplified .card-content {
-    position: relative;
-    z-index: 2;
+.match-card-simplified .text-muted {
+    color: rgba(216, 222, 252, 0.7) !important;
 }
 
 /* Initials Avatar */
