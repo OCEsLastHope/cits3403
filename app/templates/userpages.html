@@ -495,6 +495,7 @@
 
                 <form id="profileForm" method="POST" action="{{ url_for('main.profile') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_type" value="profile">
 
                     <ul class="nav nav-tabs mb-3" id="editProfileTabs" role="tablist">
                         <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab">Profile</button></li>
@@ -598,6 +599,7 @@
             <div class="modal-body">
                 <form id="subjectsForm" method="POST" action="{{ url_for('main.profile') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_type" value="subjects">
                     <div class="mb-3">
                         <label class="form-label">Units (max 6)</label>
                         <div id="unitRows" class="row g-2">
@@ -642,6 +644,7 @@
             <div class="modal-body">
                 <form id="availabilityForm" method="POST" action="{{ url_for('main.profile') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_type" value="availability">
                     <label class="form-label">Availability</label>
                     {% for day in day_names %}
                     {% set day_key = day|lower %}

@@ -64,13 +64,13 @@ class Notification(db.Model):
 
     @property
     def avatar_bg(self):
-        return {"dm": "rgba(0, 212, 232, 0.15)", "mention": "rgba(214,58,249,0.15)"}.get(
+        return {"dm": "rgba(0, 212, 232, 0.15)", "mention": "rgba(214,58,249,0.15)", "friend_request": "rgba(56, 189, 248, 0.18)"}.get(
             self.type, "rgba(255,255,255,0.05)"
         )
 
     @property
     def avatar_color(self):
-        return {"dm": "#00d4e8", "mention": "#d63af9"}.get(self.type, "#6b7280")
+        return {"dm": "#00d4e8", "mention": "#d63af9", "friend_request": "#38bdf8"}.get(self.type, "#6b7280")
 
     @property
     def time_ago(self):
@@ -258,6 +258,20 @@ class Invitation(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint("sender_id", "receiver_id", "conversation_id", name="uq_invitation"),
+    )
+
+
+class FriendRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_low_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_high_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    requested_by_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="pending")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_low_id", "user_high_id", name="uq_friend_pair"),
     )
 
     def __repr__(self):

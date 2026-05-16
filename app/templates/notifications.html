@@ -15,72 +15,54 @@
     <div class="app-shell">
         <!-- ── Sidebar ── -->
         <aside class="sidebar">
-            <h2><span class="logo-study">Study</span><span class="logo-sync">Sync</span></h2>
+            <h2>
+                <span class="logo-study">Study</span><span class="logo-sync">Sync</span>
+            </h2>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">Navigation</div>
 
-                <a href="{{ url_for('main.landing') }}">
-                    <i class="bi bi-house"></i> Home
-                </a>
                 <a href="{{ url_for('main.dashboard') }}">
                     <i class="bi bi-grid"></i> Dashboard
                 </a>
-                <a href="{{ url_for('main.profile', user_id=current_user.id if current_user else 1) }}">
+                <a href="{{ url_for('main.profile') }}">
                     <i class="bi bi-person"></i> Profile
                 </a>
-                <a href="{{ url_for('main.matches', user_id=current_user.id if current_user else 1) }}">
+                <a href="{{ url_for('main.matches') }}">
                     <i class="bi bi-people"></i> Matches
                 </a>
+                <a href="{{ url_for('main.people') }}">
+                    <i class="bi bi-person-lines-fill"></i> People
+                </a>
+                <a href="{{ url_for('main.events_page') }}">
+                    <i class="bi bi-calendar-event"></i> Events
+                </a>
+                <a href="{{ url_for('main.notifications') }}" class="active">
+                    <i class="bi bi-bell"></i> Notifications
+                </a>
 
-                <!-- Messages dropdown -->
-                <div class="notif-dropdown-toggle" onclick="toggleDropdown()">
+                <a href="{{ url_for('main.messages_inbox') }}">
                     <i class="bi bi-chat"></i> Messages
-                    {% if unread_count > 0 %}
-                    <span class="sidebar-notif-badge">{{ unread_count }}</span>
-                    {% endif %}
-                    <i class="bi bi-chevron-down ms-auto notif-arrow" id="arrow"></i>
-                </div>
-
-                <div class="notif-dropdown" id="msg-dropdown">
-                    <a href="{{ url_for('main.notifications') }}" class="notif-sub-item active">
-                        <i class="bi bi-bell"></i> Notifications
-                        {% if unread_count > 0 %}
-                        <span class="sidebar-notif-badge ms-auto">{{ unread_count }}</span>
-                        {% endif %}
-                    </a>
-                    <a href="{{ url_for('main.messages_inbox') }}" class="notif-sub-item">
-                        <i class="bi bi-chat-dots"></i> Direct Messages
-                    </a>
-                    <a href="#" class="notif-sub-item">
-                        <i class="bi bi-envelope"></i> Email
-                    </a>
-                    <div class="notif-sub-label">Channels</div>
-                    <a href="#" class="notif-sub-item">
-                        <i class="bi bi-telephone"></i> Phone Call
-                    </a>
-                    <a href="#" class="notif-sub-item">
-                        <i class="bi bi-laptop"></i> Online Chat
-                    </a>
-                </div>
-
+                </a>
             </div>
 
+            {% if current_user.is_authenticated %}
             <div class="sidebar-section">
                 <div class="sidebar-title">Settings</div>
-                <a href="#"><i class="bi bi-pencil"></i> Edit Profile</a>
-                <a href="{{ url_for('main.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                <a href="{{ url_for('main.logout') }}">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
             </div>
+            {% endif %}
 
-            <!-- Logged in user -->
-            {% if current_user %}
+            {% if current_user and current_user.is_authenticated %}
             <div class="sidebar-user-footer">
                 <div class="sidebar-user-avatar">
                     {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
                 </div>
                 <div>
                     <div class="sidebar-user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-                    <div class="sidebar-user-email">{{ current_user.email }}</div>
+                    <div class="sidebar-user-username">@{{ current_user.username }}</div>
                 </div>
             </div>
             {% endif %}
@@ -101,7 +83,7 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 notif-header-actions">
                     <button class="custom-btn secondary" onclick="markAllRead()">Clear all</button>
                     <button class="custom-btn" onclick="markAllRead()">
                         <i class="bi bi-check2-all"></i> Mark all read
@@ -119,11 +101,86 @@
                     <i class="bi bi-chat"></i> Messages
                     {% if dm_count > 0 %}<span class="notif-badge">{{ dm_count }}</span>{% endif %}
                 </button>
-                <button class="notif-tab" onclick="switchTab(this, 'mention')">
-                    <i class="bi bi-at"></i> Mentions
-                    {% if mention_count > 0 %}<span class="notif-badge mention">{{ mention_count }}</span>{% endif %}
+                <button class="notif-tab" onclick="switchTab(this, 'friend_request')">
+                    <i class="bi bi-person-plus"></i> Friend Requests
+                    {% if friend_request_count > 0 %}<span class="notif-badge mention">{{ friend_request_count }}</span>{% endif %}
                 </button>
             </div>
+
+            {% macro notif_type_icon(type) %}
+                {% if type == 'dm' %}<i class="bi bi-chat-fill"></i>{% endif %}
+                {% if type == 'mention' %}<i class="bi bi-at"></i>{% endif %}
+                {% if type == 'friend_request' %}<i class="bi bi-person-plus-fill"></i>{% endif %}
+                {% if type == 'event' %}<i class="bi bi-calendar-event-fill"></i>{% endif %}
+                {% if type == 'match' %}<i class="bi bi-people-fill"></i>{% endif %}
+                {% if type == 'system' %}<i class="bi bi-gear-fill"></i>{% endif %}
+            {% endmacro %}
+
+            {% macro notif_type_label(type) %}
+                {% if type == 'dm' %}Message{% elif type == 'mention' %}Mention{% elif type == 'friend_request' %}Friend Request{% elif type == 'event' %}Event{% elif type == 'match' %}Match{% else %}System{% endif %}
+            {% endmacro %}
+
+            {% macro notif_actions(notif) %}
+                {% if notif.type == 'dm' and notif.channel == 'Invitations' and notif.sender_name in pending_invite_map %}
+                    <form method="POST" action="{{ url_for('main.accept_invitation', invite_id=pending_invite_map[notif.sender_name]) }}"
+                          style="display:inline" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="notif-action-btn accept">
+                            <i class="bi bi-check"></i> Accept
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.reject_invitation', invite_id=pending_invite_map[notif.sender_name]) }}"
+                          style="display:inline" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="notif-action-btn decline">
+                            <i class="bi bi-x"></i> Decline
+                        </button>
+                    </form>
+                {% elif notif.type == 'dm' %}
+                    <button class="notif-action-btn reply" onclick="event.stopPropagation(); handleNotifClick(event, {{ notif.id }}, 'dm')">
+                        <i class="bi bi-reply"></i> Reply
+                    </button>
+                {% elif notif.type == 'mention' %}
+                    <button class="notif-action-btn reply" onclick="event.stopPropagation(); handleNotifClick(event, {{ notif.id }}, 'mention')">
+                        <i class="bi bi-reply"></i> Reply
+                    </button>
+                {% elif notif.type == 'friend_request' %}
+                    {% set channel_parts = notif.channel.split(':', 1) %}
+                    {% if channel_parts|length == 2 and channel_parts[0] == 'friend_request' and channel_parts[1].isdigit() and channel_parts[1]|int in pending_friend_request_ids %}
+                    <form method="POST" action="{{ url_for('main.accept_friend_request', friend_request_id=channel_parts[1]|int) }}"
+                          style="display:inline" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="notif-action-btn accept">
+                            <i class="bi bi-check"></i> Accept
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.reject_friend_request', friend_request_id=channel_parts[1]|int) }}"
+                          style="display:inline" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="notif-action-btn decline">
+                            <i class="bi bi-x"></i> Decline
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{{ url_for('main.people', tab='friends') }}" class="notif-action-btn"
+                       onclick="event.stopPropagation(); markRead({{ notif.id }})">
+                        <i class="bi bi-people"></i> View
+                    </a>
+                    {% endif %}
+                {% elif notif.type == 'event' %}
+                    <a href="{{ url_for('main.events_page') }}" class="notif-action-btn"
+                       onclick="event.stopPropagation(); markRead({{ notif.id }})">
+                        <i class="bi bi-calendar-check"></i> View Events
+                    </a>
+                {% elif notif.type == 'match' %}
+                    <button class="notif-action-btn reply" onclick="event.stopPropagation(); handleNotifClick(event, {{ notif.id }}, 'match')">
+                        <i class="bi bi-chat"></i> Message
+                    </button>
+                {% endif %}
+                <button class="notif-action-btn" onclick="dismiss(event, {{ notif.id }})">
+                    <i class="bi bi-x"></i> Dismiss
+                </button>
+            {% endmacro %}
 
             <!-- New notifications -->
             {% set new_notifs = notifications | selectattr('is_read', 'equalto', False) | list %}
@@ -132,7 +189,7 @@
             <section class="info-card mb-3">
                 {% for notif in new_notifs %}
                 <div class="notif-item unread" data-id="{{ notif.id }}" data-type="{{ notif.type }}"
-                    onclick="markRead({{ notif.id }})">
+                    onclick="handleNotifClick(event, {{ notif.id }}, '{{ notif.type }}')">
                     <div class="notif-unread-dot"></div>
                     <div class="notif-avatar notif-avatar-{{ notif.type }}">
                         {{ notif.sender_initial }}
@@ -142,10 +199,8 @@
                         <div class="notif-top">
                             <span class="notif-name">{{ notif.sender_name }}</span>
                             <span class="notif-pill notif-pill-{{ notif.type }}">
-                                {% if notif.type == 'dm' %}<i class="bi bi-chat-fill"></i>{% endif %}
-                                {% if notif.type == 'mention' %}<i class="bi bi-at"></i>{% endif %}
-                                {% if notif.type == 'system' %}<i class="bi bi-gear-fill"></i>{% endif %}
-                                {{ notif.type }}
+                                {{ notif_type_icon(notif.type) }}
+                                {{ notif_type_label(notif.type) }}
                             </span>
                             <span class="notif-time">{{ notif.time_ago }}</span>
                         </div>
@@ -155,14 +210,7 @@
                                 <i class="bi bi-hash"></i> {{ notif.channel }}
                             </span>
                             <div class="notif-actions">
-                                {% if notif.type in ['dm', 'mention'] %}
-                                <button class="notif-action-btn reply" onclick="event.stopPropagation()">
-                                    <i class="bi bi-reply"></i> Reply
-                                </button>
-                                {% endif %}
-                                <button class="notif-action-btn" onclick="dismiss(event, {{ notif.id }})">
-                                    <i class="bi bi-x"></i> Dismiss
-                                </button>
+                                {{ notif_actions(notif) }}
                             </div>
                         </div>
                     </div>
@@ -177,14 +225,18 @@
             <div class="notif-section-label" style="margin-top: 24px">Earlier</div>
             <section class="info-card">
                 {% for notif in old_notifs %}
-                <div class="notif-item read" data-id="{{ notif.id }}" data-type="{{ notif.type }}">
+                <div class="notif-item read" data-id="{{ notif.id }}" data-type="{{ notif.type }}"
+                    onclick="handleNotifClick(event, {{ notif.id }}, '{{ notif.type }}')">
                     <div class="notif-avatar notif-avatar-{{ notif.type }}" style="opacity:0.5">
                         {{ notif.sender_initial }}
                     </div>
                     <div class="notif-body">
                         <div class="notif-top">
                             <span class="notif-name" style="opacity:0.6">{{ notif.sender_name }}</span>
-                            <span class="notif-pill notif-pill-{{ notif.type }}">{{ notif.type }}</span>
+                            <span class="notif-pill notif-pill-{{ notif.type }}">
+                                {{ notif_type_icon(notif.type) }}
+                                {{ notif_type_label(notif.type) }}
+                            </span>
                             <span class="notif-time">{{ notif.time_ago }}</span>
                         </div>
                         <div class="notif-text" style="opacity:0.5">{{ notif.message | safe }}</div>
@@ -192,6 +244,11 @@
                             <span class="notif-channel">
                                 <i class="bi bi-hash"></i> {{ notif.channel }}
                             </span>
+                            {% if notif.type == 'dm' and notif.channel == 'Invitations' and notif.sender_name in pending_invite_map %}
+                            <div class="notif-actions">
+                                {{ notif_actions(notif) }}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -210,19 +267,42 @@
         </main>
     </div>
 
+    {% if current_user and current_user.is_authenticated %}
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <a href="{{ url_for('main.dashboard') }}">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('main.profile') }}">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+        </a>
+        <a href="{{ url_for('main.matches') }}">
+            <i class="bi bi-people"></i>
+            <span>Matches</span>
+        </a>
+        <a href="{{ url_for('main.people') }}">
+            <i class="bi bi-person-lines-fill"></i>
+            <span>People</span>
+        </a>
+        <a href="{{ url_for('main.messages_inbox') }}">
+            <i class="bi bi-chat"></i>
+            <span>Messages</span>
+        </a>
+        <a href="{{ url_for('main.notifications') }}" class="active">
+            <i class="bi bi-bell"></i>
+            <span>Notifications</span>
+        </a>
+    </nav>
+    {% endif %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const csrfToken = "{{ csrf_token() }}";
 
-        function toggleDropdown() {
-            const dd = document.getElementById('msg-dropdown');
-            const arrow = document.getElementById('arrow');
-            dd.classList.toggle('open');
-            arrow.classList.toggle('open');
-        }
-
         function markRead(id) {
             const item = document.querySelector(`[data-id="${id}"]`);
+            if (!item) return;
             const dot = item.querySelector('.notif-unread-dot');
             if (dot) { dot.style.transition = 'opacity 0.3s'; dot.style.opacity = '0'; setTimeout(() => dot.remove(), 300); }
             item.classList.remove('unread');
@@ -246,11 +326,19 @@
         function dismiss(e, id) {
             e.stopPropagation();
             const item = document.querySelector(`[data-id="${id}"]`);
-            item.style.transition = 'opacity 0.25s, max-height 0.35s, padding 0.35s, margin 0.35s';
+            if (!item) return;
+            item.style.overflow = 'hidden';
+            item.style.height = item.getBoundingClientRect().height + 'px';
+            void item.offsetHeight; // force reflow
+            item.style.transition = 'opacity 0.2s, height 0.3s, padding 0.3s, margin 0.3s, border-width 0.3s';
             item.style.opacity = '0';
-            item.style.maxHeight = item.offsetHeight + 'px';
-            setTimeout(() => { item.style.maxHeight = '0'; item.style.padding = '0'; item.style.margin = '0'; item.style.border = 'none'; }, 200);
-            setTimeout(() => item.remove(), 500);
+            item.style.height = '0';
+            item.style.paddingTop = '0';
+            item.style.paddingBottom = '0';
+            item.style.marginTop = '0';
+            item.style.marginBottom = '0';
+            item.style.borderWidth = '0';
+            item.addEventListener('transitionend', () => item.remove(), { once: true });
         }
 
         function switchTab(el, type) {
@@ -261,9 +349,62 @@
             });
         }
 
-        // Open dropdown by default since this is the notifications page
-        document.getElementById('msg-dropdown').classList.add('open');
-        document.getElementById('arrow').classList.add('open');
+        function handleNotifClick(event, notifId, type) {
+            if (event.target.closest('form') || event.target.closest('a')) return;
+
+            if (type === 'dm') {
+                const item = document.querySelector(`[data-id="${notifId}"]`);
+                const channel = item.querySelector('.notif-channel').textContent.trim();
+                const conversationId = channel.match(/\d+/);
+                if (conversationId) {
+                    markRead(notifId);
+                    window.location.href = `/messages/${conversationId[0]}`;
+                    return;
+                }
+            }
+
+            if (type === 'mention') {
+                const item = document.querySelector(`[data-id="${notifId}"]`);
+                const channel = item.querySelector('.notif-channel').textContent.trim();
+                const conversationId = channel.match(/conversation:(\d+)/);
+                if (conversationId) {
+                    markRead(notifId);
+                    window.location.href = `/messages/${conversationId[1]}`;
+                    return;
+                }
+                markRead(notifId);
+                window.location.href = "{{ url_for('main.messages_inbox') }}";
+                return;
+            }
+
+            if (type === 'friend_request') {
+                markRead(notifId);
+                window.location.href = "{{ url_for('main.people', tab='friends') }}";
+                return;
+            }
+
+            if (type === 'match') {
+                const item = document.querySelector(`[data-id="${notifId}"]`);
+                const channel = item.querySelector('.notif-channel').textContent.trim();
+                const conversationId = channel.match(/\d+/);
+                if (conversationId) {
+                    markRead(notifId);
+                    window.location.href = `/messages/${conversationId[0]}`;
+                    return;
+                }
+                markRead(notifId);
+                window.location.href = "{{ url_for('main.messages_inbox') }}";
+                return;
+            }
+
+            if (type === 'event') {
+                markRead(notifId);
+                window.location.href = "{{ url_for('main.events_page') }}";
+                return;
+            }
+
+            markRead(notifId);
+        }
     </script>
 </body>
 </html>

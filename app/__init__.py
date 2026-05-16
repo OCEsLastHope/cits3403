@@ -393,8 +393,7 @@ def create_app(config_object=Config):
         app.register_blueprint(main_bp)
 
     with app.app_context():
-        # keep this as pass while fixing the migration
-        pass
+        ensure_test_data()
 
     return app
 

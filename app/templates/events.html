@@ -1,175 +1,273 @@
 {% extends "base.html" %}
 {% block title %}Events{% endblock %}
 
-{% block head %}
-<style>
-    .sidebar .sidebar-section:nth-of-type(2) {
-        display: none !important;
-    }
-
-    .sidebar a#editProfileBtn {
-        display: none;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="page-header d-flex justify-content-between align-items-center">
-    <div>
-        <h1>Events</h1>
-        <p>Create and manage study meetings.</p>
+
+<div class="events-page">
+
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Events</h1>
+            <p>Create and manage study meetings.</p>
+        </div>
+
+        <button class="btn btn-primary create-event-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#createEventModal">
+            <i class="bi bi-calendar-plus"></i>
+            Create Event
+        </button>
     </div>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEventModal">
-        <i class="bi bi-calendar-plus"></i> Create Event
-    </button>
-</div>
 
-<section class="info-card mb-4">
-    <h4 class="mb-3">Upcoming Events</h4>
-    {% if my_upcoming_events %}
-        <div class="row g-3">
-            {% for item in my_upcoming_events %}
-                {% set event = item.event %}
-                <div class="col-md-6">
-                    <div class="border rounded p-3 h-100" style="border-color: rgba(255,255,255,0.08) !important;">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="mb-0">{{ event.title }}</h5>
-                            <span class="badge text-bg-secondary">{{ event.visibility_mode.replace('_', ' ')|title }}</span>
-                        </div>
-                        <p class="mb-1"><strong>Time:</strong> {{ event.start_at.strftime("%Y-%m-%d %H:%M") }} - {{ event.end_at.strftime("%H:%M") }}</p>
-                        <p class="mb-1"><strong>Role:</strong> {% if item.is_creator %}Creator{% else %}Attendee{% endif %}</p>
-                        <p class="mb-1"><strong>Location:</strong> {{ event.location_or_link or "Not set" }}</p>
-                        <p class="mb-2"><strong>Attendees:</strong> {{ item.accepted_count }}{% if event.max_attendees %}/{{ event.max_attendees }}{% endif %}</p>
-                        <p class="mb-2 text-light" style="opacity:0.8;">{{ event.description or "No description." }}</p>
+    <div class="events-dashboard-grid">
 
-                        <div class="mb-2">
-                            <small class="text-light" style="opacity:0.85;">Accepted {{ item.status_counts.accepted }} • Invited {{ item.status_counts.invited }} • Declined {{ item.status_counts.declined }} • Left {{ item.status_counts.left }}</small>
-                        </div>
+        <!-- UPCOMING EVENTS -->
+        <section class="event-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="bi bi-calendar-event"></i>
+                    <h4>Upcoming Events</h4>
+                </div>
+            </div>
 
-                        {% if item.is_creator %}
-                            <div class="d-flex flex-wrap gap-2">
-                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#editEventModal{{ event.id }}">Edit</button>
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteEventModal{{ event.id }}">Invite</button>
-                                <form method="POST" action="{{ url_for('main.cancel_event', event_id=event.id) }}">
+            {% if my_upcoming_events %}
+                <div class="event-list">
+                    {% for item in my_upcoming_events %}
+                        {% set event = item.event %}
+
+                        <div class="event-card">
+                            <div class="event-card-top">
+                                <h5>{{ event.title }}</h5>
+                                <span class="event-badge">
+                                    {{ event.visibility_mode.replace('_', ' ')|title }}
+                                </span>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-clock"></i>
+                                <span>{{ event.start_at.strftime("%Y-%m-%d %H:%M") }} - {{ event.end_at.strftime("%H:%M") }}</span>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>{{ event.location_or_link or "Location not set" }}</span>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-people"></i>
+                                <span>
+                                    {{ item.accepted_count }}
+                                    {% if event.max_attendees %}/{{ event.max_attendees }}{% endif %}
+                                    attendees
+                                </span>
+                            </div>
+
+                            <p class="event-description">
+                                {{ event.description or "No description provided." }}
+                            </p>
+
+                            {% if item.is_creator %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-sm btn-outline-info"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editEventModal{{ event.id }}">
+                                        Edit
+                                    </button>
+
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#inviteEventModal{{ event.id }}">
+                                        Invite
+                                    </button>
+
+                                    <form method="POST" action="{{ url_for('main.cancel_event', event_id=event.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-events">
+                    <div class="empty-icon">
+                        <i class="bi bi-stars"></i>
+                    </div>
+                    <h5>No upcoming events</h5>
+                    <p>Create a study session and invite your matches.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- PENDING INVITES -->
+        <section class="event-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="bi bi-envelope"></i>
+                    <h4>Pending Invites</h4>
+                </div>
+            </div>
+
+            {% if invitation_events %}
+                <div class="event-list">
+                    {% for item in invitation_events %}
+                        {% set event = item.event %}
+
+                        <div class="event-card">
+                            <div class="event-card-top">
+                                <h5>{{ event.title }}</h5>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-person"></i>
+                                <span>{{ event.creator.username }}</span>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-clock"></i>
+                                <span>{{ event.start_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                            </div>
+
+                            <p class="event-description">
+                                {{ event.description or "No description provided." }}
+                            </p>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="action" value="accept">
+                                    <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                </form>
+
+                                <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="action" value="decline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
                                 </form>
                             </div>
-                        {% else %}
-                            <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
-                            </form>
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="mb-0 text-light">No upcoming events yet.</p>
-    {% endif %}
-</section>
-
-<section class="info-card mb-4">
-    <h4 class="mb-3">Pending Invites</h4>
-    {% if invitation_events %}
-        <div class="row g-3">
-            {% for item in invitation_events %}
-                {% set event = item.event %}
-                <div class="col-md-6">
-                    <div class="border rounded p-3 h-100" style="border-color: rgba(255,255,255,0.08) !important;">
-                        <h5 class="mb-1">{{ event.title }}</h5>
-                        <p class="mb-1"><strong>Host:</strong> {{ event.creator.username }}</p>
-                        <p class="mb-1"><strong>Time:</strong> {{ event.start_at.strftime("%Y-%m-%d %H:%M") }} - {{ event.end_at.strftime("%H:%M") }}</p>
-                        <p class="mb-2"><strong>Location:</strong> {{ event.location_or_link or "Not set" }}</p>
-                        <p class="mb-2 text-light" style="opacity:0.8;">{{ event.description or "No description." }}</p>
-
-                        {% if item.attendee_record and item.attendee_record.invite_status == "accepted" %}
-                            <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
-                            </form>
-                        {% else %}
-                            <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="action" value="accept">
-                                <button type="submit" class="btn btn-sm btn-success">Accept</button>
-                            </form>
-                            <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="action" value="accept">
-                                <input type="hidden" name="confirm_conflict" value="1">
-                                <button type="submit" class="btn btn-sm btn-outline-success">Accept (confirm conflict)</button>
-                            </form>
-                            <form method="POST" action="{{ url_for('main.respond_to_event_invite', event_id=event.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="action" value="decline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
-                            </form>
-                        {% endif %}
+            {% else %}
+                <div class="empty-events">
+                    <div class="empty-icon">
+                        <i class="bi bi-envelope-open"></i>
                     </div>
+                    <h5>No pending invites</h5>
+                    <p>You are all caught up.</p>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="mb-0 text-light">No pending event invitations.</p>
-    {% endif %}
-</section>
+            {% endif %}
+        </section>
 
-<section class="info-card mb-4">
-    <h4 class="mb-3">Open Events</h4>
-    {% if open_events %}
-        <div class="row g-3">
-            {% for item in open_events %}
-                {% set event = item.event %}
-                <div class="col-md-6">
-                    <div class="border rounded p-3 h-100" style="border-color: rgba(255,255,255,0.08) !important;">
-                        <h5 class="mb-1">{{ event.title }}</h5>
-                        <p class="mb-1"><strong>Host:</strong> {{ event.creator.username }}</p>
-                        <p class="mb-1"><strong>Time:</strong> {{ event.start_at.strftime("%Y-%m-%d %H:%M") }} - {{ event.end_at.strftime("%H:%M") }}</p>
-                        <p class="mb-2"><strong>Capacity:</strong> {{ item.accepted_count }}{% if event.max_attendees %}/{{ event.max_attendees }}{% endif %}</p>
-                        <p class="mb-2 text-light" style="opacity:0.8;">{{ event.description or "No description." }}</p>
+        <!-- OPEN EVENTS -->
+        <section class="event-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="bi bi-globe"></i>
+                    <h4>Open Events</h4>
+                </div>
+            </div>
 
-                        {% if item.attendee_record and item.attendee_record.invite_status == "accepted" %}
-                            <form method="POST" action="{{ url_for('main.leave_event', event_id=event.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-warning">Leave</button>
-                            </form>
-                        {% elif item.is_full %}
-                            <button class="btn btn-sm btn-secondary" disabled>Event Full</button>
-                        {% else %}
-                            <form method="POST" action="{{ url_for('main.join_open_event', event_id=event.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-primary">Join Event</button>
-                            </form>
-                        {% endif %}
+            {% if open_events %}
+                <div class="event-list">
+                    {% for item in open_events %}
+                        {% set event = item.event %}
+
+                        <div class="event-card">
+                            <div class="event-card-top">
+                                <h5>{{ event.title }}</h5>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-clock"></i>
+                                <span>{{ event.start_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-people"></i>
+                                <span>{{ item.accepted_count }} attending</span>
+                            </div>
+
+                            <p class="event-description">
+                                {{ event.description or "No description provided." }}
+                            </p>
+
+                            {% if item.is_full %}
+                                <button class="btn btn-secondary btn-sm" disabled>Event Full</button>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('main.join_open_event', event_id=event.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-primary btn-sm">Join Event</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-events">
+                    <div class="empty-icon">
+                        <i class="bi bi-globe2"></i>
                     </div>
+                    <h5>No open events</h5>
+                    <p>There are currently no public study sessions.</p>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="mb-0 text-light">No open events available right now.</p>
-    {% endif %}
-</section>
+            {% endif %}
+        </section>
 
-<section class="info-card">
-    <h4 class="mb-3">Past Events</h4>
-    {% if past_events %}
-        <ul class="list-unstyled mb-0">
-            {% for item in past_events %}
-                <li class="mb-2">
-                    <strong>{{ item.event.title }}</strong>
-                    <span class="text-light" style="opacity:0.8;">({{ item.event.start_at.strftime("%Y-%m-%d %H:%M") }})</span>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="mb-0 text-light">No past events yet.</p>
-    {% endif %}
-</section>
+        <!-- PAST EVENTS -->
+        <section class="event-panel">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="bi bi-clock-history"></i>
+                    <h4>Past Events</h4>
+                </div>
+            </div>
+
+            {% if past_events %}
+                <div class="event-list">
+                    {% for item in past_events %}
+                        <div class="event-card">
+                            <div class="event-card-top">
+                                <h5>{{ item.event.title }}</h5>
+                            </div>
+
+                            <div class="event-meta">
+                                <i class="bi bi-calendar"></i>
+                                <span>{{ item.event.start_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-events">
+                    <div class="empty-icon">
+                        <i class="bi bi-moon-stars"></i>
+                    </div>
+                    <h5>No past events</h5>
+                    <p>Your completed study sessions will appear here.</p>
+                </div>
+            {% endif %}
+        </section>
+
+    </div>
+
+    <div class="events-footer-quote">
+        <i class="bi bi-stars"></i>
+        <span>Great things are seldom done alone. Study together, succeed together.</span>
+    </div>
+
+</div>
+
 {% endblock %}
 
 {% block modals %}
+
 <div class="modal fade" id="createEventModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -177,31 +275,38 @@
                 <h5 class="modal-title">Create Event</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <form method="POST" action="{{ url_for('main.create_event') }}">
                 <div class="modal-body">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <div class="mb-3">
                         <label class="form-label">Title</label>
                         <input type="text" class="form-control" name="title" required minlength="3" maxlength="120">
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea class="form-control" name="description" rows="3"></textarea>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Location or Link</label>
                         <input type="text" class="form-control" name="location_or_link" maxlength="255">
                     </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Start</label>
                             <input type="datetime-local" class="form-control" name="start_at" required>
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">End</label>
                             <input type="datetime-local" class="form-control" name="end_at" required>
                         </div>
                     </div>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Event Type</label>
@@ -210,12 +315,14 @@
                                 <option value="open">Open</option>
                             </select>
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">Max Attendees (required for open)</label>
                             <input type="number" class="form-control" name="max_attendees" min="2" max="100">
                         </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create</button>
@@ -228,6 +335,7 @@
 {% for item in my_upcoming_events %}
     {% if item.is_creator %}
         {% set event = item.event %}
+
         <div class="modal fade" id="editEventModal{{ event.id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -235,31 +343,38 @@
                         <h5 class="modal-title">Edit Event</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
+
                     <form method="POST" action="{{ url_for('main.edit_event', event_id=event.id) }}">
                         <div class="modal-body">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                             <div class="mb-3">
                                 <label class="form-label">Title</label>
                                 <input type="text" class="form-control" name="title" value="{{ event.title }}" required minlength="3" maxlength="120">
                             </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Description</label>
                                 <textarea class="form-control" name="description" rows="3">{{ event.description or '' }}</textarea>
                             </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Location or Link</label>
                                 <input type="text" class="form-control" name="location_or_link" value="{{ event.location_or_link or '' }}" maxlength="255">
                             </div>
+
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Start</label>
                                     <input type="datetime-local" class="form-control" name="start_at" value="{{ event.start_at.strftime('%Y-%m-%dT%H:%M') }}" required>
                                 </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">End</label>
                                     <input type="datetime-local" class="form-control" name="end_at" value="{{ event.end_at.strftime('%Y-%m-%dT%H:%M') }}" required>
                                 </div>
                             </div>
+
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Event Type</label>
@@ -268,12 +383,14 @@
                                         <option value="open" {% if event.visibility_mode == 'open' %}selected{% endif %}>Open</option>
                                     </select>
                                 </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">Max Attendees</label>
                                     <input type="number" class="form-control" name="max_attendees" min="2" max="100" value="{{ event.max_attendees if event.max_attendees else '' }}">
                                 </div>
                             </div>
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save</button>
@@ -290,13 +407,19 @@
                         <h5 class="modal-title">Invite Users to {{ event.title }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
+
                     <form method="POST" action="{{ url_for('main.invite_to_event', event_id=event.id) }}">
                         <div class="modal-body">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                             <label class="form-label">Enter usernames or emails (comma separated)</label>
                             <input type="text" class="form-control mb-3" name="invite_identifiers" placeholder="alice1, ben1, user@example.com" required>
-                            <small class="text-light" style="opacity:0.8;">You can send up to 20 invites per submission.</small>
+
+                            <small class="text-light" style="opacity:0.8;">
+                                You can send up to 20 invites per submission.
+                            </small>
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Send Invites</button>
@@ -305,6 +428,9 @@
                 </div>
             </div>
         </div>
+
     {% endif %}
 {% endfor %}
+
 {% endblock %}
+

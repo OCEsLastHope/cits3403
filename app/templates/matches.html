@@ -1,58 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Matches{% endblock %}
-
 {% block head %}
-<style>
-    .sidebar .sidebar-section:nth-of-type(2) {
-        display: none !important;
-    }
-
-    .sidebar a#editProfileBtn {
-        display: none;
-    }
-
-    .matches-filter-form .form-label {
-        color: rgba(235, 239, 255, 0.9);
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .matches-filter-input,
-    .matches-filter-select {
-        min-height: 44px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        background: rgba(11, 18, 36, 0.62);
-        color: #f4f7ff;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .matches-filter-input::placeholder {
-        color: rgba(208, 217, 255, 0.55);
-    }
-
-    .matches-filter-input:focus,
-    .matches-filter-select:focus {
-        border-color: rgba(109, 165, 255, 0.75);
-        box-shadow: 0 0 0 0.2rem rgba(109, 165, 255, 0.2);
-        background: rgba(18, 27, 52, 0.82);
-        color: #ffffff;
-    }
-
-    .matches-filter-select option,
-    .matches-filter-select optgroup {
-        background: #101b33;
-        color: #f4f7ff;
-    }
-
-    .matches-filter-btn {
-        min-height: 44px;
-        border-radius: 12px;
-        font-weight: 600;
-    }
-</style>
 {% endblock %}
-
 {% block content %}
 <div class="page-header">
     <div>
@@ -60,7 +9,6 @@
         <p>Top 10 users with overlapping study times.</p>
     </div>
 </div>
-
 <section class="info-card mb-4">
     <form method="GET" action="{{ url_for('main.matches') }}" class="row g-3 align-items-end matches-filter-form">
         <input type="hidden" name="user_id" value="{{ current_user.id if current_user else request.args.get('user_id', '') }}">
@@ -80,8 +28,8 @@
             </select>
         </div>
         <div class="col-md-4">
-            <label for="unitFilter" class="form-label">Filter by Unit (optional)</label>
-            <input id="unitFilter" name="unit_code" class="form-control text-uppercase unit-autocomplete matches-filter-input" placeholder="CITS3403" value="{{ selected_unit_code or '' }}" autocomplete="off" list="unitSuggestions">
+            <label for="unitFilter" class="form-label">Filter by Units (optional)</label>
+            <input id="unitFilter" name="unit_codes" class="form-control text-uppercase unit-autocomplete matches-filter-input" placeholder="CITS3403, STAT1400" value="{{ (selected_unit_codes or []) | join(', ') }}" autocomplete="off" list="unitSuggestions">
             <datalist id="unitSuggestions"></datalist>
         </div>
         <div class="col-md-3">
@@ -89,59 +37,186 @@
         </div>
     </form>
 </section>
-
 {% if message %}
     <section class="alert alert-info" role="alert">{{ message }}</section>
 {% endif %}
-
 {% if matches %}
-    {% for item in matches %}
-        <section class="info-card mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">{{ item.user.first_name }}</h5>
-                <span class="badge text-bg-primary">{{ item.overlap_minutes_total }} mins overlap</span>
-            </div>
-            <p class="mb-2"><strong>Degree:</strong> {{ item.user.degree }}</p>
-            <div>
-                <strong>Overlap Summary:</strong>
-                <ul class="mb-0 mt-2">
-                    {% for day, segments in item.overlap_by_day.items() %}
-                        <li>{{ day }}:
-                            {% for segment in segments %}
-                                {{ segment[0] }}-{{ segment[1] }}{% if not loop.last %}, {% endif %}
-                            {% endfor %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </section>
-    {% endfor %}
-{% endif %}
-{% endblock %}
+    <div class="row g-4">
+        {% for item in matches %}
+            <div class="col-12">
+                <section class="info-card match-card-simplified p-4" 
+                         onclick="openMatchModal(this)"
+                         data-user-id="{{ item.user.id }}"
+                         data-name="{{ item.user.first_name }} {{ item.user.last_name }}"
+                         data-username="{{ item.user.username }}"
+                         data-degree="{{ item.user.degree }}"
+                         data-bio="{{ item.user.bio or 'No bio provided.' }}"
+                         data-overlap-minutes="{{ item.overlap_minutes_total }}"
+                         data-shared-units-count="{{ item.shared_unit_count }}"
+                         data-overlap-html="{% for day, segments in item.overlap_by_day.items() %}<li><strong>{{ day }}:</strong> {% for segment in segments %}{{ segment[0] }}-{{ segment[1] }}{% if not loop.last %}, {% endif %}{% endfor %}</li>{% endfor %}"
+                         data-units-html="{% if item.shared_units %}{% for unit in item.shared_units %}<span class='tag'>{{ unit }}</span>{% endfor %}{% else %}<span class='text-muted'>No shared units</span>{% endif %}">
+                    
+                    <div class="card-content d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="initials-avatar">
+                                {{ item.user.first_name[0] }}{{ item.user.last_name[0] }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ item.user.first_name }} {{ item.user.last_name }}</h5>
+                                <p class="mb-0 text-muted small">{{ item.user.degree }}</p>
+                            </div>
+                        </div>
 
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge badge-match rounded-pill d-none d-md-inline-block">
+                                {{ item.overlap_minutes_total }} mins overlap
+                            </span>
+                            
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('main.start_conversation', receiver_id=item.user.id) }}" class="m-0" onclick="event.stopPropagation()">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="custom-btn" style="padding: 8px 16px; font-size: 0.85rem;">
+                                        Accept
+                                    </button>
+                                </form>
+                                <button class="custom-btn secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="event.stopPropagation(); ignoreMatch(this, {{ item.user.id }})">
+                                    Ignore
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Profile Detail Modal -->
+<div class="modal fade glass-modal" id="matchDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row align-items-center mb-4">
+                    <div class="col-auto">
+                        <div id="modalAvatar" class="initials-avatar lg"></div>
+                    </div>
+                    <div class="col">
+                        <h2 id="modalName" class="mb-1"></h2>
+                        <p id="modalDegree" class="text-muted mb-0"></p>
+                    </div>
+                </div>
+
+                <div class="match-detail-section mb-4">
+                    <span class="match-detail-label">Bio</span>
+                    <p id="modalBio" class="mb-0"></p>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="match-detail-section h-100 mb-0">
+                            <span class="match-detail-label">Common Units</span>
+                            <div id="modalUnitsList" class="d-flex flex-wrap gap-1"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="match-detail-section h-100 mb-0">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="match-detail-label mb-0">Shared Times</span>
+                            </div>
+                            <ul id="modalOverlapList" class="list-unstyled mb-0 small"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <form id="modalAcceptForm" method="POST" action="" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="custom-btn" style="min-width: 180px; justify-content: center;">Accept Match</button>
+                    </form>
+                    <button id="modalIgnoreBtn" class="custom-btn secondary" style="min-width: 180px; justify-content: center;" onclick="">Ignore</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 {% block scripts %}
 <script>
+const csrfToken = "{{ csrf_token() }}";
+let activeCard = null;
+
+function openMatchModal(card) {
+    activeCard = card;
+    const data = card.dataset;
+    const modal = new bootstrap.Modal(document.getElementById('matchDetailModal'));
+    
+    // Populate text fields
+    document.getElementById('modalName').textContent = data.name;
+    document.getElementById('modalDegree').textContent = data.degree;
+    document.getElementById('modalBio').textContent = data.bio;
+    
+    // Populate HTML fields
+    document.getElementById('modalUnitsList').innerHTML = data.unitsHtml;
+    document.getElementById('modalOverlapList').innerHTML = data.overlapHtml;
+    
+    // Avatar
+    const initials = data.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    document.getElementById('modalAvatar').textContent = initials;
+    
+    // Form Action for Accept
+    const acceptForm = document.getElementById('modalAcceptForm');
+    acceptForm.action = `/messages/start/${data.userId}`;
+    
+    // Ignore button handler
+    const ignoreBtn = document.getElementById('modalIgnoreBtn');
+    ignoreBtn.onclick = () => {
+        ignoreMatch(card, data.userId);
+        modal.hide();
+    };
+    
+    modal.show();
+}
+
+function ignoreMatch(btnOrCard, userId) {
+    const card = btnOrCard.classList.contains('info-card') ? btnOrCard : btnOrCard.closest('section.info-card');
+    if (!card) return;
+    
+    card.style.transition = 'opacity 0.25s, transform 0.25s';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.97)';
+    setTimeout(() => { card.style.display = 'none'; }, 260);
+    
+    fetch(`/matches/ignore/${userId}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+    });
+}
+
 (() => {
     const unitInput = document.querySelector('.unit-autocomplete');
     const suggestions = document.getElementById('unitSuggestions');
     if (!unitInput || !suggestions) return;
-
     let timer;
     const unitSearchUrl = "{{ url_for('main.search_units') }}";
-
     unitInput.addEventListener('input', () => {
-        const query = unitInput.value.trim().toUpperCase();
-        unitInput.value = query;
+        const fullValue = unitInput.value.toUpperCase();
+        unitInput.value = fullValue;
 
-        if (query.length < 2) {
+        const tokens = fullValue.split(',');
+        const activeToken = (tokens[tokens.length - 1] || '').trim();
+
+        if (activeToken.length < 2) {
             suggestions.innerHTML = '';
             return;
         }
-
         clearTimeout(timer);
         timer = setTimeout(async () => {
             try {
-                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`${unitSearchUrl}?q=${encodeURIComponent(activeToken)}`);
                 if (!response.ok) return;
                 const payload = await response.json();
                 const units = Array.isArray(payload.units) ? payload.units : [];

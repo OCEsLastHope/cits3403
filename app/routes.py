@@ -19,6 +19,7 @@ from .database import (
     DegreeOption,
     Event,
     EventAttendee,
+    FriendRequest,
     Invitation,
     Message,
     MessageRead,
@@ -182,6 +183,15 @@ def get_current_user():
     if not current_user.is_authenticated:
         return None
     return current_user
+
+
+def get_friend_pair_ids(user_a_id, user_b_id):
+    return (user_a_id, user_b_id) if user_a_id < user_b_id else (user_b_id, user_a_id)
+
+
+def get_friend_request_between(user_a_id, user_b_id):
+    low_id, high_id = get_friend_pair_ids(user_a_id, user_b_id)
+    return FriendRequest.query.filter_by(user_low_id=low_id, user_high_id=high_id).first()
 
 
 def get_onboarding_step_for_user(user):
@@ -468,7 +478,7 @@ def calculate_availability_score(overlap_by_day):
     }
 
 
-def find_matches(user_id, selected_degree_option_id=None, selected_unit_code=None):
+def find_matches(user_id, selected_degree_option_id=None, selected_unit_codes=None):
     requester = db.session.get(User, user_id)
 
     if not requester:
@@ -560,7 +570,7 @@ def find_matches(user_id, selected_degree_option_id=None, selected_unit_code=Non
             requester_units.intersection(candidate_units)
         )
 
-        if selected_unit_code and selected_unit_code not in shared_units:
+        if selected_unit_codes and not set(selected_unit_codes).intersection(shared_units):
             continue
 
         shared_unit_count = len(shared_units)
@@ -1064,7 +1074,7 @@ def edit_event(event_id):
             Notification(
                 user_id=attendee.user_id,
                 sender_name=current_user.username,
-                type="mention",
+                type="event",
                 message=f"Event updated: <strong>{event.title}</strong> now starts at {event.start_at.strftime('%Y-%m-%d %H:%M')}.",
                 channel="Events",
             )
@@ -1094,7 +1104,7 @@ def cancel_event(event_id):
             Notification(
                 user_id=attendee.user_id,
                 sender_name=current_user.username,
-                type="mention",
+                type="event",
                 message=f"Event cancelled: <strong>{event.title}</strong>.",
                 channel="Events",
             )
@@ -1144,7 +1154,7 @@ def invite_to_event(event_id):
             Notification(
                 user_id=user.id,
                 sender_name=current_user.username,
-                type="mention",
+                type="event",
                 message=f"You were invited to <strong>{event.title}</strong>.",
                 channel="Events",
             )
@@ -1183,6 +1193,16 @@ def join_open_event(event_id):
 
     attendee.invite_status = "accepted"
     attendee.responded_at = datetime.utcnow()
+
+    if event.creator_user_id != current_user.id:
+        db.session.add(Notification(
+            user_id=event.creator_user_id,
+            sender_name=current_user.username,
+            type="event",
+            message=f"<strong>{current_user.username}</strong> joined your event: <strong>{event.title}</strong>.",
+            channel="Events",
+        ))
+
     db.session.commit()
     flash("You joined the event.", "success")
     return redirect(url_for("main.events_page"))
@@ -1255,15 +1275,27 @@ def leave_event(event_id):
 @login_required
 def matches():
     selected_degree_option_id = request.args.get("degree_option_id", type=int)
-    selected_unit_code = request.args.get("unit_code", "").strip().upper()
-    if selected_unit_code and not UNIT_CODE_PATTERN.match(selected_unit_code):
-        flash("Unit filter must use format AAAA1234.", "error")
-        selected_unit_code = ""
+    selected_unit_codes_raw = request.args.get("unit_codes", "")
+    selected_unit_codes = []
+    invalid_unit_codes = []
+
+    for item in selected_unit_codes_raw.split(","):
+        unit_code = item.strip().upper()
+        if not unit_code:
+            continue
+        if not UNIT_CODE_PATTERN.match(unit_code):
+            invalid_unit_codes.append(unit_code)
+            continue
+        if unit_code not in selected_unit_codes:
+            selected_unit_codes.append(unit_code)
+
+    if invalid_unit_codes:
+        flash("Unit filters must use format AAAA1234.", "error")
 
     degree_options = get_degree_options_by_category()
     requester = current_user
 
-    match_results = find_matches(requester.id, selected_degree_option_id, selected_unit_code)
+    match_results = find_matches(requester.id, selected_degree_option_id, selected_unit_codes)
 
     message = ""
     if not match_results:
@@ -1278,9 +1310,239 @@ def matches():
         matches=match_results[:10],
         degree_options=degree_options,
         selected_degree_option_id=selected_degree_option_id,
-        selected_unit_code=selected_unit_code,
+        selected_unit_codes=selected_unit_codes,
         message=message,
     )
+
+
+@main_bp.route("/people")
+@login_required
+def people():
+    query = request.args.get("q", "").strip()
+    active_tab = request.args.get("tab", "discover")
+    if active_tab not in {"discover", "friends"}:
+        active_tab = "discover"
+
+    search_results = []
+    if len(query) >= 2:
+        matches = (
+            User.query
+            .filter(User.id != current_user.id)
+            .filter(User.username.ilike(f"{query}%"))
+            .order_by(User.username.asc())
+            .limit(20)
+            .all()
+        )
+
+        candidate_ids = [user.id for user in matches]
+        relationship_rows = []
+        if candidate_ids:
+            relationship_rows = FriendRequest.query.filter(
+                or_(
+                    (FriendRequest.user_low_id == current_user.id) & FriendRequest.user_high_id.in_(candidate_ids),
+                    (FriendRequest.user_high_id == current_user.id) & FriendRequest.user_low_id.in_(candidate_ids),
+                )
+            ).all()
+
+        relationship_map = {}
+        for relation in relationship_rows:
+            other_user_id = relation.user_high_id if relation.user_low_id == current_user.id else relation.user_low_id
+            relationship_map[other_user_id] = relation
+
+        for user in matches:
+            relation = relationship_map.get(user.id)
+            relation_state = "none"
+
+            if relation is not None:
+                if relation.status == "pending":
+                    if relation.requested_by_id == current_user.id:
+                        relation_state = "outgoing_pending"
+                    else:
+                        relation_state = "incoming_pending"
+                elif relation.status == "accepted":
+                    relation_state = "accepted"
+
+            search_results.append({
+                "user": user,
+                "state": relation_state,
+                "friend_request_id": relation.id if relation else None,
+            })
+
+    incoming_requests = (
+        FriendRequest.query.filter(FriendRequest.status == "pending")
+        .filter(FriendRequest.requested_by_id != current_user.id)
+        .filter(
+            or_(
+                FriendRequest.user_low_id == current_user.id,
+                FriendRequest.user_high_id == current_user.id,
+            )
+        )
+        .order_by(FriendRequest.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    outgoing_requests = (
+        FriendRequest.query.filter_by(status="pending", requested_by_id=current_user.id)
+        .order_by(FriendRequest.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    accepted_relationships = (
+        FriendRequest.query.filter_by(status="accepted")
+        .filter(
+            or_(
+                FriendRequest.user_low_id == current_user.id,
+                FriendRequest.user_high_id == current_user.id,
+            )
+        )
+        .order_by(FriendRequest.updated_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    def other_user(friend_request):
+        other_id = friend_request.user_high_id if friend_request.user_low_id == current_user.id else friend_request.user_low_id
+        return db.session.get(User, other_id)
+
+    incoming_payload = [{"request": item, "user": other_user(item)} for item in incoming_requests]
+    outgoing_payload = [{"request": item, "user": other_user(item)} for item in outgoing_requests]
+    accepted_payload = [{"request": item, "user": other_user(item)} for item in accepted_relationships]
+
+    return render_template(
+        "people.html",
+        current_user=current_user,
+        query=query,
+        active_tab=active_tab,
+        search_results=search_results,
+        incoming_requests=incoming_payload,
+        outgoing_requests=outgoing_payload,
+        friends=accepted_payload,
+    )
+
+
+@main_bp.route("/friends/request/<int:user_id>", methods=["POST"])
+@login_required
+def send_friend_request(user_id):
+    if user_id == current_user.id:
+        flash("You cannot send a friend request to yourself.", "error")
+        return redirect(url_for("main.people", tab="discover"))
+
+    target_user = db.session.get(User, user_id)
+    if target_user is None:
+        flash("User not found.", "error")
+        return redirect(url_for("main.people", tab="discover"))
+
+    existing = get_friend_request_between(current_user.id, user_id)
+    if existing is None:
+        low_id, high_id = get_friend_pair_ids(current_user.id, user_id)
+        friend_request = FriendRequest(
+            user_low_id=low_id,
+            user_high_id=high_id,
+            requested_by_id=current_user.id,
+            status="pending",
+        )
+        db.session.add(friend_request)
+        db.session.flush()
+        db.session.add(
+            Notification(
+                user_id=target_user.id,
+                sender_name=current_user.username,
+                type="friend_request",
+                message=f"<strong>{current_user.username}</strong> sent you a friend request.",
+                channel=f"friend_request:{friend_request.id}",
+            )
+        )
+        db.session.commit()
+        flash("Friend request sent.", "success")
+        return redirect(url_for("main.people", tab="discover"))
+
+    if existing.status == "pending":
+        flash("A friend request is already pending.", "info")
+        return redirect(url_for("main.people", tab="discover"))
+
+    if existing.status == "accepted":
+        flash("You are already friends.", "info")
+        return redirect(url_for("main.people", tab="discover"))
+
+    existing.requested_by_id = current_user.id
+    existing.status = "pending"
+    db.session.add(
+        Notification(
+            user_id=target_user.id,
+            sender_name=current_user.username,
+            type="friend_request",
+            message=f"<strong>{current_user.username}</strong> sent you a friend request.",
+            channel=f"friend_request:{existing.id}",
+        )
+    )
+    db.session.commit()
+    flash("Friend request sent.", "success")
+    return redirect(url_for("main.people", tab="discover"))
+
+
+@main_bp.route("/friends/<int:friend_request_id>/accept", methods=["POST"])
+@login_required
+def accept_friend_request(friend_request_id):
+    friend_request = FriendRequest.query.get_or_404(friend_request_id)
+
+    if friend_request.status != "pending":
+        flash("This friend request is no longer pending.", "info")
+        return redirect(url_for("main.people", tab="friends"))
+
+    if friend_request.requested_by_id == current_user.id:
+        abort(403)
+
+    if current_user.id not in {friend_request.user_low_id, friend_request.user_high_id}:
+        abort(403)
+
+    friend_request.status = "accepted"
+    db.session.commit()
+    flash("Friend request accepted.", "success")
+    return redirect(url_for("main.people", tab="friends"))
+
+
+@main_bp.route("/friends/<int:friend_request_id>/reject", methods=["POST"])
+@login_required
+def reject_friend_request(friend_request_id):
+    friend_request = FriendRequest.query.get_or_404(friend_request_id)
+
+    if friend_request.status != "pending":
+        flash("This friend request is no longer pending.", "info")
+        return redirect(url_for("main.people", tab="friends"))
+
+    if friend_request.requested_by_id == current_user.id:
+        abort(403)
+
+    if current_user.id not in {friend_request.user_low_id, friend_request.user_high_id}:
+        abort(403)
+
+    friend_request.status = "rejected"
+    db.session.commit()
+    flash("Friend request rejected.", "info")
+    return redirect(url_for("main.people", tab="friends"))
+
+
+@main_bp.route("/friends/<int:friend_request_id>/cancel", methods=["POST"])
+@login_required
+def cancel_friend_request(friend_request_id):
+    friend_request = FriendRequest.query.get_or_404(friend_request_id)
+
+    if friend_request.status != "pending":
+        flash("This friend request is no longer pending.", "info")
+        return redirect(url_for("main.people", tab="friends"))
+
+    if friend_request.requested_by_id != current_user.id:
+        abort(403)
+
+    if current_user.id not in {friend_request.user_low_id, friend_request.user_high_id}:
+        abort(403)
+
+    friend_request.status = "cancelled"
+    db.session.commit()
+    flash("Friend request cancelled.", "info")
+    return redirect(url_for("main.people", tab="friends"))
 
 
 @main_bp.route("/profile", methods=["GET", "POST"])
@@ -1290,6 +1552,8 @@ def profile():
     user = current_user
 
     if request.method == "POST":
+        form_type = request.form.get("form_type", "profile").strip().lower()
+
         submitted_email = request.form.get("email", "").strip()
         submitted_degree = request.form.get("degree", "").strip()
         submitted_degree_option_id = request.form.get("degree_option_id", type=int)
@@ -1317,86 +1581,94 @@ def profile():
         submitted_availability_map = {day: [] for day in DAY_NAMES}
         valid_availability_rows = []
 
-        if not submitted_email:
-            profile_errors.append("Email is required.")
-        elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", submitted_email):
-            profile_errors.append("Email format is invalid.")
-        else:
-            existing_user = User.query.filter_by(email=submitted_email).first()
-            if existing_user and existing_user.id != user.id:
-                profile_errors.append("Email is already in use by another account.")
-
         selected_degree_option = None
-        if submitted_degree_option_id:
-            selected_degree_option = DegreeOption.query.filter_by(id=submitted_degree_option_id, is_active=True).first()
-            if selected_degree_option is None:
-                profile_errors.append("Selected degree is invalid.")
-
-        if not selected_degree_option and not submitted_degree:
-            profile_errors.append("Degree is required.")
-        if not submitted_major:
-            profile_errors.append("Major is required.")
-        if submitted_sessions_per_week and not submitted_sessions_per_week.isdigit():
-            profile_errors.append("Sessions per week must be a valid number.")
-
         non_empty_units = [value for value in unit_values if value]
-        if len(non_empty_units) > MAX_PROFILE_UNITS:
-            profile_errors.append("You can add a maximum of 4 units.")
 
-        if len(non_empty_units) != len(set(non_empty_units)):
-            profile_errors.append("Units must be unique.")
+        if form_type == "profile":
+            if not submitted_email:
+                profile_errors.append("Email is required.")
+            elif not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", submitted_email):
+                profile_errors.append("Email format is invalid.")
+            else:
+                existing_user = User.query.filter_by(email=submitted_email).first()
+                if existing_user and existing_user.id != user.id:
+                    profile_errors.append("Email is already in use by another account.")
 
-        for value in non_empty_units:
-            if not UNIT_CODE_PATTERN.match(value):
-                profile_errors.append(f"{value} is invalid. Use 4 letters followed by 4 numbers.")
-                continue
-            if VALID_UWA_2026_UNIT_CODES and value not in VALID_UWA_2026_UNIT_CODES:
-                profile_errors.append(f"{value} is not a valid UWA 2026 unit code.")
+            if submitted_degree_option_id:
+                selected_degree_option = DegreeOption.query.filter_by(id=submitted_degree_option_id, is_active=True).first()
+                if selected_degree_option is None:
+                    profile_errors.append("Selected degree is invalid.")
 
-        for day in DAY_NAMES:
-            day_key = day.lower()
-            start_times = request.form.getlist(f"{day_key}_start")
-            end_times = request.form.getlist(f"{day_key}_end")
+            if not selected_degree_option and not submitted_degree:
+                profile_errors.append("Degree is required.")
+            if not submitted_major:
+                profile_errors.append("Major is required.")
+            if submitted_sessions_per_week and not submitted_sessions_per_week.isdigit():
+                profile_errors.append("Sessions per week must be a valid number.")
 
-            for idx, (start_time, end_time) in enumerate(zip(start_times, end_times), start=1):
-                start_time = start_time.strip()
-                end_time = end_time.strip()
+        if form_type == "subjects":
+            if len(non_empty_units) > MAX_PROFILE_UNITS:
+                profile_errors.append(f"You can add a maximum of {MAX_PROFILE_UNITS} units.")
 
-                if not start_time and not end_time:
+            if len(non_empty_units) != len(set(non_empty_units)):
+                profile_errors.append("Units must be unique.")
+
+            for value in non_empty_units:
+                if not UNIT_CODE_PATTERN.match(value):
+                    profile_errors.append(f"{value} is invalid. Use 4 letters followed by 4 numbers.")
                     continue
+                if VALID_UWA_2026_UNIT_CODES and value not in VALID_UWA_2026_UNIT_CODES:
+                    profile_errors.append(f"{value} is not a valid UWA 2026 unit code.")
 
-                submitted_availability_map[day].append((start_time, end_time))
+        if form_type == "availability":
+            for day in DAY_NAMES:
+                day_key = day.lower()
+                start_times = request.form.getlist(f"{day_key}_start")
+                end_times = request.form.getlist(f"{day_key}_end")
 
-                if not start_time or not end_time:
-                    availability_errors.append(f"{day} slot {idx}: start and end time are both required.")
-                    continue
+                for idx, (start_time, end_time) in enumerate(zip(start_times, end_times), start=1):
+                    start_time = start_time.strip()
+                    end_time = end_time.strip()
 
-                if start_time >= end_time:
-                    availability_errors.append(f"{day} slot {idx}: end time must be later than start time.")
-                    continue
+                    if not start_time and not end_time:
+                        continue
 
-                valid_availability_rows.append((day, start_time, end_time))
+                    submitted_availability_map[day].append((start_time, end_time))
 
-        by_day = {}
-        for day, start_time, end_time in valid_availability_rows:
-            by_day.setdefault(day, []).append((start_time, end_time))
+                    if not start_time or not end_time:
+                        availability_errors.append(f"{day} slot {idx}: start and end time are both required.")
+                        continue
 
-        for day, slots in by_day.items():
-            slots.sort(key=lambda slot: slot[0])
-            for i in range(1, len(slots)):
-                prev_start, prev_end = slots[i - 1]
-                curr_start, curr_end = slots[i]
-                if curr_start < prev_end:
-                    availability_errors.append(
-                        f"{day}: overlapping slots ({prev_start}-{prev_end} and {curr_start}-{curr_end})."
-                    )
+                    if start_time >= end_time:
+                        availability_errors.append(f"{day} slot {idx}: end time must be later than start time.")
+                        continue
+
+                    valid_availability_rows.append((day, start_time, end_time))
+
+            by_day = {}
+            for day, start_time, end_time in valid_availability_rows:
+                by_day.setdefault(day, []).append((start_time, end_time))
+
+            for day, slots in by_day.items():
+                slots.sort(key=lambda slot: slot[0])
+                for i in range(1, len(slots)):
+                    prev_start, prev_end = slots[i - 1]
+                    curr_start, curr_end = slots[i]
+                    if curr_start < prev_end:
+                        availability_errors.append(
+                            f"{day}: overlapping slots ({prev_start}-{prev_end} and {curr_start}-{curr_end})."
+                        )
 
         if profile_errors or availability_errors:
+            fallback_availability_map = {day: [] for day in DAY_NAMES}
+            for item in user.availabilities:
+                fallback_availability_map.setdefault(item.day_of_week, []).append((item.start_time, item.end_time))
+
             return render_template(
                 "userpages.html",
                 current_user=user,
-                units=non_empty_units,
-                availability_map=submitted_availability_map,
+                units=non_empty_units if form_type == "subjects" else [item.subject_code.upper() for item in user.subjects],
+                availability_map=submitted_availability_map if form_type == "availability" else fallback_availability_map,
                 day_names=DAY_NAMES,
                 time_options=TIME_OPTIONS,
                 degree_options=degree_options,
@@ -1404,36 +1676,39 @@ def profile():
                 open_profile_modal=True,
             )
 
-        user.email = submitted_email
-        if selected_degree_option is not None:
-            user.degree_option_id = selected_degree_option.id
-            user.degree = selected_degree_option.name
-        else:
-            user.degree_option_id = None
-            user.degree = submitted_degree
-        user.major = submitted_major
-        user.second_major = second_major or None
-        user.minor = minor or None
-        user.bio = submitted_bio
-        user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
-        user.preferred_group_size = submitted_group_size or None
-        user.study_mode = submitted_study_mode or None
+        if form_type == "profile":
+            user.email = submitted_email
+            if selected_degree_option is not None:
+                user.degree_option_id = selected_degree_option.id
+                user.degree = selected_degree_option.name
+            else:
+                user.degree_option_id = None
+                user.degree = submitted_degree
+            user.major = submitted_major
+            user.second_major = second_major or None
+            user.minor = minor or None
+            user.bio = submitted_bio
+            user.sessions_per_week = int(submitted_sessions_per_week) if submitted_sessions_per_week else None
+            user.preferred_group_size = submitted_group_size or None
+            user.study_mode = submitted_study_mode or None
 
-        UserSubject.query.filter_by(user_id=user.id).delete()
-        for value in non_empty_units:
-            if value:
-                db.session.add(UserSubject(user_id=user.id, subject_code=value))
+        elif form_type == "subjects":
+            UserSubject.query.filter_by(user_id=user.id).delete()
+            for value in non_empty_units:
+                if value:
+                    db.session.add(UserSubject(user_id=user.id, subject_code=value))
 
-        UserAvailability.query.filter_by(user_id=user.id).delete()
-        for day, start_time, end_time in valid_availability_rows:
-            db.session.add(
-                UserAvailability(
-                    user_id=user.id,
-                    day_of_week=day,
-                    start_time=start_time,
-                    end_time=end_time,
+        elif form_type == "availability":
+            UserAvailability.query.filter_by(user_id=user.id).delete()
+            for day, start_time, end_time in valid_availability_rows:
+                db.session.add(
+                    UserAvailability(
+                        user_id=user.id,
+                        day_of_week=day,
+                        start_time=start_time,
+                        end_time=end_time,
+                    )
                 )
-            )
 
         db.session.commit()
         return redirect(url_for("main.profile"))
@@ -1587,14 +1862,29 @@ def notifications():
     user = current_user
     notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
     pending_invites = Invitation.query.filter_by(receiver_id=current_user.id, status="pending").all()
+    pending_invite_map = {invite.sender.username: invite.id for invite in pending_invites}
+    incoming_friend_requests = (
+        FriendRequest.query.filter_by(status="pending")
+        .filter(FriendRequest.requested_by_id != current_user.id)
+        .filter(
+            or_(
+                FriendRequest.user_low_id == current_user.id,
+                FriendRequest.user_high_id == current_user.id,
+            )
+        )
+        .all()
+    )
+    pending_friend_request_ids = {friend_request.id for friend_request in incoming_friend_requests}
     return render_template(
         "notifications.html",
         current_user=user,
         notifications=notifs,
         pending_invites=pending_invites,
+        pending_invite_map=pending_invite_map,
+        pending_friend_request_ids=pending_friend_request_ids,
         unread_count=sum(1 for n in notifs if not n.is_read),
         dm_count=sum(1 for n in notifs if n.type == "dm" and not n.is_read),
-        mention_count=sum(1 for n in notifs if n.type == "mention" and not n.is_read),
+        friend_request_count=sum(1 for n in notifs if n.type == "friend_request" and not n.is_read),
     )
 
 
@@ -1615,6 +1905,24 @@ def mark_all_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
     db.session.commit()
     return "", 204
+
+@main_bp.route("/matches/ignore/<int:user_id>", methods=["POST"])
+@login_required
+def ignore_match(user_id):
+    user = db.session.get(User, user_id)
+    if user is None:
+        return "", 404
+    db.session.add(Notification(
+        user_id=current_user.id,
+        sender_name=user.username,
+        type="match",
+        message=f"You passed on matching with <strong>{user.username}</strong>.",
+        channel="Matches",
+        is_read=True,
+    ))
+    db.session.commit()
+    return "", 204
+
 
 @main_bp.route("/invitations/send<int:receiver_id>", methods=["POST"])
 @login_required
@@ -1649,8 +1957,8 @@ def send_invitation(receiver_id):
     notif = Notification(
         user_id=receiver_id,
         sender_name=current_user.username,
-        type="mention",
-        message=f"<strong>{current_user.username}</strong> sent you a study invite.",
+        type="dm",
+        message=f"<strong>{current_user.username}</strong> wants to message you.",
         channel="Invitations",
     )
 
@@ -1701,10 +2009,10 @@ def accept_invitation(invite_id):
 
     notif = Notification(
         user_id=invite.sender_id,
-        sender_name= current_user.username,
-        type="dm",
+        sender_name=current_user.username,
+        type="match",
         message=f"<strong>{current_user.username}</strong> accepted your study invite!",
-        channel="Invitations",
+        channel=f"Conversation {conversation.id}",
     )
 
     db.session.add(notif)
@@ -1727,9 +2035,18 @@ def reject_invitation(invite_id):
 
     invite.status = "rejected"
     invite.responded_at = datetime.utcnow()
+
+    Notification.query.filter_by(
+        user_id=current_user.id,
+        sender_name=invite.sender.username,
+        channel="Invitations",
+        type="dm",
+        is_read=False,
+    ).update({"is_read": True})
+
     db.session.commit()
 
-    flash("Invitation rejected.", "info")
+    flash("Invitation declined.", "info")
     return redirect(url_for("main.notifications"))
 
 
@@ -1867,6 +2184,14 @@ def start_conversation(receiver_id):
         user_id=receiver.id,
     ))
 
+    db.session.add(Notification(
+        user_id=receiver.id,
+        sender_name=current_user.username,
+        type="match",
+        message=f"<strong>{current_user.username}</strong> accepted your match and wants to study with you!",
+        channel=f"Conversation {conversation.id}",
+    ))
+
     db.session.commit()
 
     return redirect(url_for("main.messages", conversation_id=conversation.id))
@@ -1954,18 +2279,20 @@ def handle_send_message(data):
 
     db.session.commit()
 
-    emit(
-        "receive_message",
-        {
-            "id": message.id,
-            "conversation_id": conversation_id,
-            "sender_id": current_user.id,
-            "sender_name": current_user.username,
-            "body": message.body,
-            "created_at": message.created_at.strftime("%H:%M"),
-        },
-        room=f"conversation-{conversation_id}",
-    )
+    # Create DM notification for other users in conversation
+    conversation = db.session.get(Conversation, conversation_id)
+    for member in conversation.members:
+        if member.user_id != current_user.id:
+            notif = Notification(
+                user_id=member.user_id,
+                sender_name=current_user.username,
+                type="dm",
+                message=f"<strong>{current_user.username}</strong>: {body[:80]}",
+                channel=f"Conversation {conversation_id}",
+            )
+            db.session.add(notif)
+
+    db.session.commit()
 @main_bp.route("/check_register_details")
 def check_register_details():
     email = request.args.get("email", "").strip()
