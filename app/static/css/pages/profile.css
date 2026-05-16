@@ -450,3 +450,77 @@
     --bs-gutter-y: 1rem;
 }
 
+
+#profileModal .modal-content {
+    background: linear-gradient(160deg, rgba(14, 22, 48, 0.98), rgba(10, 16, 36, 0.98));
+    border: 1px solid rgba(137, 183, 255, 0.2);
+    color: #e7eeff;
+    border-radius: 18px;
+}
+
+#profileModal .modal-header,
+#profileModal .modal-footer {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+#profileModal .modal-title,
+#profileModal .form-label,
+#profileModal .small,
+#profileModal .btn-outline-light {
+    color: #e7eeff;
+}
+
+#profileModal .form-control,
+#profileModal .form-select {
+    background: rgba(7, 12, 28, 0.8);
+    border: 1px solid rgba(163, 195, 255, 0.18);
+    color: #f5f8ff;
+}
+
+#profileModal .form-control:focus,
+#profileModal .form-select:focus {
+    background: rgba(7, 12, 28, 0.95);
+    border-color: rgba(95, 180, 255, 0.65);
+    box-shadow: 0 0 0 0.2rem rgba(79, 158, 255, 0.22);
+}
+
+#profileModal .form-control::placeholder {
+    color: #9daed4;
+}
+
+#profileModal .btn-close {
+    filter: invert(1) grayscale(1) brightness(2);
+}
+
+#profileModal .nav-tabs {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#profileModal .nav-tabs .nav-link {
+    color: #cddcff;
+    border: 1px solid transparent;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background: transparent;
+}
+
+#profileModal .nav-tabs .nav-link:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #f2f7ff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+#profileModal .nav-tabs .nav-link.active,
+#profileModal .nav-tabs .nav-item.show .nav-link {
+    color: #f6fbff;
+    background: rgba(70, 143, 255, 0.2);
+    border-color: rgba(126, 185, 255, 0.45) rgba(126, 185, 255, 0.45) transparent;
+}
+
+#profileModal .tab-content {
+    background: rgba(5, 10, 24, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0 12px 12px 12px;
+    padding: 14px;
+}
+
