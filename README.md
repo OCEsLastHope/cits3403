@@ -2,7 +2,7 @@
 
 StudyCollabz is a responsive, modern Flask-based web application designed to connect university students, facilitate academic collaboration, and coordinate study sessions.
 ### Purpose
-This web app is a platform where undergraduate UWA students can discover study partners based on matching academic criteria.
+Many students entering university often feel isolated and struggle to build meaningful academic connections. To address this, we developed StudyCollabz: a platform designed to help students find compatible study partners, using matching academic criteria. The platform aims to support students’ academic progress while also giving them opportunities to connect with the broader university community.
 ### Design
 - **Backend (Flask)**: Handles page routing (like going to `/register` or `/dashboard`), user log-ins, and dynamically creates the HTML pages using the Jinja2 engine.
 - **Database (Flask-SQLAlchemy & SQLite)**: A single database file securely stores user accounts, profiles, and friendship data. 
