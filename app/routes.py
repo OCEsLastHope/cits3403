@@ -1578,6 +1578,36 @@ def cancel_friend_request(friend_request_id):
     flash("Friend request cancelled.", "info")
     return redirect(url_for("main.people", tab="friends"))
 
+@main_bp.route("/friends/<int:user_id>/remove", methods=["POST"])
+@login_required
+def unfriend_user(user_id):
+
+    friend_request = FriendRequest.query.filter_by(status="accepted").filter(
+        or_(
+            db.and_(
+                FriendRequest.user_low_id == current_user.id,
+                FriendRequest.user_high_id == user_id,
+            ),
+            db.and_(
+                FriendRequest.user_high_id == current_user.id,
+                FriendRequest.user_low_id == user_id,
+            ),
+        )
+    ).first()
+
+    if friend_request is None:
+        flash("Friendship not found.", "error")
+        return redirect(url_for("main.people", tab="friends"))
+
+    db.session.delete(friend_request)
+
+    db.session.commit()
+
+    flash("Friend removed.", "success")
+
+    return redirect(url_for("main.people", tab="friends"))
+
+
 
 @main_bp.route("/profile", methods=["GET", "POST"])
 @login_required
