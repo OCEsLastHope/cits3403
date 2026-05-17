@@ -234,6 +234,8 @@
 .notif-meta {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 6px;
 }
@@ -248,7 +250,10 @@
 
 .notif-actions {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 6px;
+    margin-left: auto;
     opacity: 0;
     transition: opacity 0.15s;
 }
@@ -304,4 +309,9 @@
     background: rgba(255, 107, 107, 0.08);
 }
 
+@media (max-width: 900px) {
+    .notif-actions {
+        opacity: 1;
+    }
+}
 
