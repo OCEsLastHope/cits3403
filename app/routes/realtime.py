@@ -5,6 +5,7 @@ from ..database import Conversation, ConversationMember, Message, MessageRead, N
 from .common import get_current_user, notify_mentions
 
 
+# Subscribe an authorized user to a conversation room.
 @socketio.on("join_conversation")
 def handle_join_conversation(data):
     current_user = get_current_user()
@@ -27,6 +28,7 @@ def handle_join_conversation(data):
     join_room(f"conversation-{conversation_id}")
 
 
+# Persist and broadcast a new realtime chat message.
 @socketio.on("send_message")
 def handle_send_message(data):
     user = get_current_user()

@@ -7,6 +7,7 @@ from ..blueprints import main_bp
 from ..database import FriendRequest, Invitation, Notification
 
 
+# Render notifications feed and pending request context.
 @main_bp.route("/notifications")
 @login_required
 def notifications():
@@ -39,6 +40,7 @@ def notifications():
     )
 
 
+# Mark one notification as read.
 @main_bp.route("/notifications/read/<int:notif_id>", methods=["POST"])
 @login_required
 def mark_read(notif_id):
@@ -50,6 +52,7 @@ def mark_read(notif_id):
     return "", 204
 
 
+# Mark all unread notifications as read.
 @main_bp.route("/notifications/read/all", methods=["POST"])
 @login_required
 def mark_all_read():

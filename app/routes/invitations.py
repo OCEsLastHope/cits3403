@@ -8,6 +8,7 @@ from ..blueprints import main_bp
 from ..database import Conversation, ConversationMember, Invitation, Notification, User
 
 
+# Send a direct-message invitation to another user.
 @main_bp.route("/invitations/send<int:receiver_id>", methods=["POST"])
 @login_required
 def send_invitation(receiver_id):
@@ -53,6 +54,7 @@ def send_invitation(receiver_id):
     return redirect(request.referrer or url_for("main.matches"))
 
 
+# Accept an invitation and open/create a 1:1 conversation.
 @main_bp.route("/invitations/<int:invite_id>/accept", methods=["POST"])
 @login_required
 def accept_invitation(invite_id):
@@ -106,6 +108,7 @@ def accept_invitation(invite_id):
     return redirect(url_for("main.messages", conversation_id=conversation.id))
 
 
+# Reject an invitation and clear related unread invite notifications.
 @main_bp.route("/invitations/<int:invite_id>/reject", methods=["POST"])
 @login_required
 def reject_invitation(invite_id):

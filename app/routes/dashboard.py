@@ -9,6 +9,7 @@ from ..database import Event, EventAttendee, Invitation, User
 from .common import find_matches, get_current_user
 
 
+# Render dashboard summary stats, top matches, and upcoming sessions.
 @main_bp.route("/dashboard")
 @login_required
 def dashboard():

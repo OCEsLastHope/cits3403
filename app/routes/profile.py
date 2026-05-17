@@ -18,6 +18,7 @@ from .common import (
 )
 
 
+# Render profile and process modal-scoped profile/subjects/availability updates.
 @main_bp.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
@@ -204,6 +205,7 @@ def profile():
     )
 
 
+# Return unit-code autocomplete suggestions.
 @main_bp.route("/units/search")
 @login_required
 def search_units():
@@ -219,6 +221,7 @@ def search_units():
     return {"units": matches[:12]}
 
 
+# Return major-name autocomplete suggestions.
 @main_bp.route("/majors/search")
 def search_majors():
     query = request.args.get("q", "").strip().lower()
@@ -232,6 +235,7 @@ def search_majors():
     return {"majors": matches[:12]}
 
 
+# Return minor-name autocomplete suggestions.
 @main_bp.route("/minors/search")
 def search_minors():
     query = request.args.get("q", "").strip().lower()

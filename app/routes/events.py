@@ -17,6 +17,7 @@ from .common import (
 )
 
 
+# Show upcoming, invited, open, and past event buckets.
 @main_bp.route("/events")
 @login_required
 def events_page():
@@ -72,6 +73,7 @@ def events_page():
     )
 
 
+# Create a new study event from form input.
 @main_bp.route("/events/create", methods=["POST"])
 @login_required
 def create_event():
@@ -142,6 +144,7 @@ def create_event():
     return redirect(url_for("main.events_page"))
 
 
+# Edit a scheduled event owned by the current user.
 @main_bp.route("/events/<int:event_id>/edit", methods=["POST"])
 @login_required
 def edit_event(event_id):
@@ -217,6 +220,7 @@ def edit_event(event_id):
     return redirect(url_for("main.events_page"))
 
 
+# Cancel an event and notify affected attendees.
 @main_bp.route("/events/<int:event_id>/cancel", methods=["POST"])
 @login_required
 def cancel_event(event_id):
@@ -247,6 +251,7 @@ def cancel_event(event_id):
     return redirect(url_for("main.events_page"))
 
 
+# Invite users to an existing event by username/email list.
 @main_bp.route("/events/<int:event_id>/invite", methods=["POST"])
 @login_required
 def invite_to_event(event_id):
@@ -302,6 +307,7 @@ def invite_to_event(event_id):
     return redirect(url_for("main.events_page"))
 
 
+# Join an open event when capacity allows.
 @main_bp.route("/events/<int:event_id>/join", methods=["POST"])
 @login_required
 def join_open_event(event_id):
@@ -342,6 +348,7 @@ def join_open_event(event_id):
     return redirect(url_for("main.events_page"))
 
 
+# Accept or decline an event invitation.
 @main_bp.route("/events/<int:event_id>/respond", methods=["POST"])
 @login_required
 def respond_to_event_invite(event_id):
@@ -387,6 +394,7 @@ def respond_to_event_invite(event_id):
     return redirect(url_for("main.events_page"))
 
 
+# Leave an event as a non-creator attendee.
 @main_bp.route("/events/<int:event_id>/leave", methods=["POST"])
 @login_required
 def leave_event(event_id):

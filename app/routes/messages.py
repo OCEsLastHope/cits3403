@@ -6,6 +6,7 @@ from ..blueprints import main_bp
 from ..database import Conversation, ConversationMember, Message, MessageRead, Notification, User
 
 
+# Render one conversation and mark newly seen messages as read.
 @main_bp.route("/messages/<int:conversation_id>")
 @login_required
 def messages(conversation_id):
@@ -44,6 +45,7 @@ def messages(conversation_id):
     )
 
 
+# Render the user's conversation inbox with unread counts.
 @main_bp.route("/messages")
 @login_required
 def messages_inbox():
@@ -98,6 +100,7 @@ def messages_inbox():
     )
 
 
+# Start or reuse a direct conversation with another user.
 @main_bp.route("/messages/start/<int:receiver_id>", methods=["POST"])
 @login_required
 def start_conversation(receiver_id):
@@ -156,6 +159,7 @@ def start_conversation(receiver_id):
     return redirect(url_for("main.messages", conversation_id=conversation.id))
 
 
+# Soft-delete a sent message and broadcast removal.
 @main_bp.route("/messages/delete/<int:message_id>", methods=["POST"])
 @login_required
 def delete_message(message_id):

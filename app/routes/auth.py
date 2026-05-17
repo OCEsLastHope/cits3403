@@ -13,6 +13,7 @@ from .common import (
 )
 
 
+# Handle login form display and authentication.
 @main_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
@@ -42,6 +43,7 @@ def login():
     return render_template("loginpage.html")
 
 
+# Start forgot-password flow and send reset email when account exists.
 @main_bp.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
@@ -67,6 +69,7 @@ def forgot_password():
     return render_template("forgot_password.html")
 
 
+# Validate reset token and set a new password.
 @main_bp.route("/reset_password/<token>", methods=["GET", "POST"])
 def reset_password(token):
     email = verify_reset_token(token)
@@ -98,6 +101,7 @@ def reset_password(token):
     return render_template("reset_password.html")
 
 
+# End the authenticated session.
 @main_bp.route("/logout")
 @login_required
 def logout():
@@ -106,6 +110,7 @@ def logout():
     return redirect(url_for("main.login"))
 
 
+# Check live availability for register email/username fields.
 @main_bp.route("/check_register_details")
 def check_register_details():
     email = request.args.get("email", "").strip()
@@ -117,6 +122,7 @@ def check_register_details():
     }
 
 
+# Create a new user account and start onboarding.
 @main_bp.route("/register", methods=["GET", "POST"])
 def register():
     degree_options = get_degree_options_by_category()

@@ -7,6 +7,7 @@ from ..database import Notification, User, UserAvailability
 from .common import UNIT_CODE_PATTERN, find_matches, get_degree_options_by_category
 
 
+# Render ranked match results with optional degree/unit filters.
 @main_bp.route("/matches")
 @login_required
 def matches():
@@ -50,6 +51,7 @@ def matches():
     )
 
 
+# Dismiss a suggested match from the current view.
 @main_bp.route("/matches/ignore/<int:user_id>", methods=["POST"])
 @login_required
 def ignore_match(user_id):

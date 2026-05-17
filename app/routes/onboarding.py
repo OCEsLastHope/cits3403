@@ -13,6 +13,7 @@ from .common import (
 )
 
 
+# Provide onboarding helper data to templates.
 @main_bp.app_context_processor
 def inject_onboarding_guide():
     unread_notifications = 0
@@ -45,6 +46,7 @@ def inject_onboarding_guide():
     }
 
 
+# Enforce onboarding completion before unrestricted navigation.
 @main_bp.before_app_request
 def require_onboarding_completion():
     if not current_user.is_authenticated or current_user.onboarding_completed:
@@ -71,6 +73,7 @@ def require_onboarding_completion():
     return None
 
 
+# Redirect user to the route that matches their onboarding step.
 @main_bp.route("/onboarding", methods=["GET"])
 @login_required
 def onboarding():
@@ -79,6 +82,7 @@ def onboarding():
     return redirect(url_for(f"main.{get_onboarding_target_endpoint(current_user)}"))
 
 
+# Move onboarding forward/backward and handle finish validation.
 @main_bp.route("/onboarding/advance", methods=["POST"])
 @login_required
 def onboarding_advance():

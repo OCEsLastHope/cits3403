@@ -8,6 +8,7 @@ from ..database import FriendRequest, Notification, User
 from .common import get_friend_pair_ids, get_friend_request_between
 
 
+# Show people discovery/search and friendship state tabs.
 @main_bp.route("/people")
 @login_required
 def people():
@@ -116,6 +117,7 @@ def people():
     )
 
 
+# Create or re-open a friend request to another user.
 @main_bp.route("/friends/request/<int:user_id>", methods=["POST"])
 @login_required
 def send_friend_request(user_id):
@@ -176,6 +178,7 @@ def send_friend_request(user_id):
     return redirect(url_for("main.people", tab="discover"))
 
 
+# Accept an incoming friend request.
 @main_bp.route("/friends/<int:friend_request_id>/accept", methods=["POST"])
 @login_required
 def accept_friend_request(friend_request_id):
@@ -210,6 +213,7 @@ def accept_friend_request(friend_request_id):
     return redirect(url_for("main.people", tab="friends"))
 
 
+# Reject an incoming friend request.
 @main_bp.route("/friends/<int:friend_request_id>/reject", methods=["POST"])
 @login_required
 def reject_friend_request(friend_request_id):
@@ -231,6 +235,7 @@ def reject_friend_request(friend_request_id):
     return redirect(url_for("main.people", tab="friends"))
 
 
+# Cancel an outgoing pending friend request.
 @main_bp.route("/friends/<int:friend_request_id>/cancel", methods=["POST"])
 @login_required
 def cancel_friend_request(friend_request_id):
@@ -252,6 +257,7 @@ def cancel_friend_request(friend_request_id):
     return redirect(url_for("main.people", tab="friends"))
 
 
+# Remove an existing friend relationship.
 @main_bp.route("/friends/<int:user_id>/remove", methods=["POST"])
 @login_required
 def unfriend_user(user_id):
