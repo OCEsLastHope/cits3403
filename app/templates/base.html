@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}StudySync{% endblock %}</title>
+    <title>{% block title %}StudyCollabz{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -23,7 +23,7 @@
         <aside class="sidebar">
 
             <h2>
-                <span class="logo-study">Study</span><span class="logo-sync">Sync</span>
+                <span class="logo-study">Study</span><span class="logo-sync">Collabz</span>
             </h2>
 
             <div class="sidebar-section">
@@ -191,6 +191,10 @@
         <a href="{{ url_for('main.people') }}" class="{% if request.endpoint == 'main.people' %}active{% endif %}">
             <i class="bi bi-person-lines-fill"></i>
             <span>People</span>
+        </a>
+        <a href="{{ url_for('main.events_page') }}" class="{% if request.endpoint == 'main.events_page' %}active{% endif %}">
+            <i class="bi bi-calendar-event"></i>
+            <span>Events</span>
         </a>
         <a href="{{ url_for('main.messages_inbox') }}" class="{% if request.endpoint == 'main.messages_inbox' %}active{% endif %}">
             <i class="bi bi-chat"></i>
