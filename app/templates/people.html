@@ -114,7 +114,7 @@
                 <h5>Outgoing Requests</h5>
                 {% if outgoing_requests %}
                     {% for row in outgoing_requests %}
-                    <div class="mt-3 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <div class="mt-3 pb-3 border-bottom d-flex justify-content-between align-items-center">
                         <div class="fw-semibold">
                             {{ row.user.username if row.user else 'Unknown user' }}
                         </div>
@@ -148,7 +148,7 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-outline-danger btn-sm">Unfriend</button>
                         </form>
-                    </div>
+                    
                     
                         {% endif %}
                     </div>
