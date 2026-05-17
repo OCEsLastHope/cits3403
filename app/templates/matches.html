@@ -78,7 +78,7 @@
                                 <form method="POST" action="{{ url_for('main.start_conversation', receiver_id=item.user.id) }}" class="m-0" onclick="event.stopPropagation()">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="custom-btn" style="padding: 8px 16px; font-size: 0.85rem;">
-                                        Accept
+                                        Message
                                     </button>
                                 </form>
                                 <button class="custom-btn secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="event.stopPropagation(); ignoreMatch(this, {{ item.user.id }})">
@@ -137,7 +137,7 @@
                 <div class="d-flex justify-content-center gap-3 mt-4">
                     <form id="modalAcceptForm" method="POST" action="" class="m-0">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="custom-btn" style="min-width: 180px; justify-content: center;">Accept Match</button>
+                        <button type="submit" class="custom-btn" style="min-width: 180px; justify-content: center;">Message</button>
                     </form>
                     <button id="modalIgnoreBtn" class="custom-btn secondary" style="min-width: 180px; justify-content: center;" onclick="">Ignore</button>
                 </div>
@@ -169,7 +169,7 @@ function openMatchModal(card) {
     const initials = data.name.split(' ').map(n => n[0]).join('').toUpperCase();
     document.getElementById('modalAvatar').textContent = initials;
     
-    // Form Action for Accept
+    // Form action for message start
     const acceptForm = document.getElementById('modalAcceptForm');
     acceptForm.action = `/messages/start/${data.userId}`;
     
