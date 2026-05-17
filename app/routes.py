@@ -803,6 +803,10 @@ def reset_password(token):
         user.set_password(password)
 
         db.session.commit()
+        
+        
+    
+            
 
         flash("Password reset successful. Please log in.", "success")
 
@@ -1838,6 +1842,15 @@ def search_minors():
     matches = [minor for minor in UWA_MINORS if query in minor.lower()]
     return {"minors": matches[:12]}
 
+@main_bp.route("/check_register_details")
+def check_register_details():
+    email = request.args.get("email", "").strip()
+    username = request.args.get("username", "").strip()
+
+    return {
+        "email_exists": User.query.filter_by(email=email).first() is not None if email else False,
+        "username_exists": User.query.filter_by(username=username).first() is not None if username else False,
+    }
 
 @main_bp.route("/register", methods=["GET", "POST"])
 def register():
@@ -2303,8 +2316,8 @@ def handle_join_conversation(data):
 
 @socketio.on("send_message")
 def handle_send_message(data):
-    current_user = get_current_user()
-    if current_user is None:
+    user = get_current_user()
+    if user is None:
         return
 
     try:
@@ -2322,7 +2335,7 @@ def handle_send_message(data):
 
     membership = ConversationMember.query.filter_by(
         conversation_id=conversation_id,
-        user_id=current_user.id,
+        user_id=user.id,
     ).first()
 
     if membership is None:
@@ -2330,50 +2343,42 @@ def handle_send_message(data):
 
     message = Message(
         conversation_id=conversation_id,
-        sender_id=current_user.id,
+        sender_id=user.id,
         body=body,
     )
 
     db.session.add(message)
     db.session.flush()
 
-    db.session.add(MessageRead(message_id=message.id, user_id=current_user.id))
+    db.session.add(MessageRead(message_id=message.id, user_id=user.id))
 
     notify_mentions(message, conversation_id)
 
-    db.session.commit()
-
-    # Create DM notification for other users in conversation
     conversation = db.session.get(Conversation, conversation_id)
+
     for member in conversation.members:
-        if member.user_id != current_user.id:
+        if member.user_id != user.id:
             notif = Notification(
                 user_id=member.user_id,
-                sender_name=current_user.username,
+                sender_name=user.username,
                 type="dm",
-                message=f"<strong>{current_user.username}</strong>: {body[:80]}",
+                message=f"<strong>{user.username}</strong>: {body[:80]}",
                 channel=f"Conversation {conversation_id}",
             )
             db.session.add(notif)
 
     db.session.commit()
-@main_bp.route("/check_register_details")
-def check_register_details():
-    email = request.args.get("email", "").strip()
-    username = request.args.get("username", "").strip()
 
-    email_exists = False
-    username_exists = False
-
-    if email:
-        email_exists = User.query.filter_by(email=email).first() is not None
-
-    if username:
-        username_exists = User.query.filter_by(username=username).first() is not None
-
-    return {
-        "email_exists": email_exists,
-        "username_exists": username_exists
-    }
-    
+    socketio.emit(
+        "new_message",
+        {
+            "id": message.id,
+            "conversation_id": conversation_id,
+            "sender_id": user.id,
+            "sender_name": user.username,
+            "body": message.body,
+            "created_at": message.created_at.strftime("%H:%M"),
+        },
+        room=f"conversation-{conversation_id}",
+    )
     
