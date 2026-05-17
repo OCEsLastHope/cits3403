@@ -8,20 +8,35 @@
 
 {% block content %}
 
-<div class="page-header">
-    <div>
-        <h2 class="chat-title">Direct Message</h2>
-        <p class="chat-subtitle">
-            {% set other_members = conversation.members | selectattr('user_id', '!=', current_user.id) | list %}
-            with {% for m in other_members %}{{ m.user.username }}{% if not loop.last %}, {% endif %}{% endfor %}
-        </p>
+{% set other_members = conversation.members | selectattr('user_id', '!=', current_user.id) | list %}
+
+<div class="chat-header">
+
+    <div class="chat-user">
+
+        <div class="chat-avatar">
+            {{ other_members[0].user.first_name[0] }}
+        </div>
+
+        <div>
+            <h2 class="chat-title">
+                {{ other_members[0].user.first_name }}
+            </h2>
+
+            <p class="chat-subtitle">
+                Direct Message
+            </p>
+        </div>
+
     </div>
+
     <div>
         <a href="{{ url_for('main.messages_inbox') }}" class="custom-btn secondary">
             <i class="bi bi-arrow-left"></i> Back
         </a>
     </div>
 </div>
+
 
 <!-- Chat area -->
 <section class="info-card chat-container">
