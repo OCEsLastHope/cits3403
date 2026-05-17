@@ -143,3 +143,18 @@
     }
 }
 
+.friends-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 16px;
+}
+
+.friends-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+
