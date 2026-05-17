@@ -1842,6 +1842,15 @@ def search_minors():
     matches = [minor for minor in UWA_MINORS if query in minor.lower()]
     return {"minors": matches[:12]}
 
+@main_bp.route("/check_register_details")
+def check_register_details():
+    email = request.args.get("email", "").strip()
+    username = request.args.get("username", "").strip()
+
+    return {
+        "email_exists": User.query.filter_by(email=email).first() is not None if email else False,
+        "username_exists": User.query.filter_by(username=username).first() is not None if username else False,
+    }
 
 @main_bp.route("/register", methods=["GET", "POST"])
 def register():
