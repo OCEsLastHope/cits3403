@@ -24,10 +24,10 @@ Many students entering university often feel isolated and struggle to build mean
 
 | UWA ID  | Name            | GitHub Username |
 |---------|-----------------|-----------------|
-| 23284373| Mineth Perara   | ethnimp         |
+| 23284373| Mineth Perera   | ethnimp         |
 | 24342886| Sarah Siddiqui  | onioncodes      |
 | 24463471| Robert Ho       | OCEsLastHope    |
-| 24230704| Laila Aamin     | lailaaamin70    |
+| 24230704| Laila Amin     | lailaaamin70    |
 ---
 ## 3. How to Launch the Application
 
