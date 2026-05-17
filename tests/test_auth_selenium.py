@@ -20,6 +20,59 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class AuthPageTests(unittest.TestCase):
+    server_thread = None
+    server_url = "http://127.0.0.1:5050"
+
+    @classmethod
+    def setUpClass(cls):
+        # Configure app for testing
+        app.config.from_object(TestConfig)
+
+        # Initialize the database
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.create_all()
+
+            # Seed a default user for login tests
+            user = User(
+                first_name="Selenium",
+                last_name="Test",
+                email="selenium@example.com",
+                username="seleniumuser",
+                degree="Computer Science",
+                major="Computer Science",
+            )
+            user.set_password("password123")
+            db.session.add(user)
+            db.session.commit()
+
+        # Start the live server in a background daemon thread
+        def run_server():
+            # Disable reloader and debugger to avoid process issues in tests
+            app.run(port=5050, debug=False, use_reloader=False)
+
+        cls.server_thread = threading.Thread(target=run_server, daemon=True)
+        cls.server_thread.start()
+
+        # Give the server a moment to start up and bind to the port
+        time.sleep(0.5)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up database tables
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+        # Try to delete the test database file
+        try:
+            if os.path.exists("instance/test_selenium.db"):
+                os.remove("instance/test_selenium.db")
+            elif os.path.exists("test_selenium.db"):
+                os.remove("test_selenium.db")
+        except Exception:
+            pass
 
     def setUp(self):
         self.driver = webdriver.Chrome(
