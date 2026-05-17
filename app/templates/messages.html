@@ -176,6 +176,32 @@
         p.innerHTML = highlightMentions(message.body);
         bubble.appendChild(p);
 
+        if (isOwn) {
+            const csrfTokenElement = document.querySelector('input[name="csrf_token"]');
+            const csrfToken = csrfTokenElement ? csrfTokenElement.value : "";
+
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = `/messages/delete/${message.id}`;
+            form.style.display = "inline";
+            form.onsubmit = () => confirm("Delete this message?");
+
+            const csrfInput = document.createElement("input");
+            csrfInput.type = "hidden";
+            csrfInput.name = "csrf_token";
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            const btn = document.createElement("button");
+            btn.type = "submit";
+            btn.className = "delete-btn";
+            btn.title = "Delete";
+            btn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+            form.appendChild(btn);
+
+            bubble.appendChild(form);
+        }
+
         row.appendChild(bubble);
 
         const timeMeta = document.createElement("div");

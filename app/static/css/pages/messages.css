@@ -144,6 +144,7 @@
     }
 
     .message-bubble {
+    position: relative;
     padding: 14px 18px;
 
     border-radius: 18px;
@@ -194,6 +195,16 @@
         font-weight: 600;
     }
 
+    /* Message bubble form placement */
+    .message-bubble form {
+        position: absolute;
+        right: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0;
+        padding: 0;
+    }
+
     /* Delete button */
     .delete-btn {
         opacity: 0;
@@ -205,7 +216,7 @@
         cursor: pointer;
         padding: 2px 4px;
         border-radius: 4px;
-        margin-top: 4px;
+        white-space: nowrap;
     }
 
     .message-row:hover .delete-btn { opacity: 1; }
