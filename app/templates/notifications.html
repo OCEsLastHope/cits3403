@@ -1,82 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifications – StudySync</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/layout.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components/buttons.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components/cards.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/notifications.css') }}">
-</head>
+{% block title %}Notifications – StudySync{% endblock %}
 
-<body>
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/notifications.css') }}">
+{% endblock %}
 
-    <div class="app-shell">
-        <!-- ── Sidebar ── -->
-        <aside class="sidebar">
-            <h2>
-                <span class="logo-study">Study</span><span class="logo-sync">Sync</span>
-            </h2>
+{% block content %}
 
-            <div class="sidebar-section">
-                <div class="sidebar-title">Navigation</div>
-
-                <a href="{{ url_for('main.dashboard') }}">
-                    <i class="bi bi-grid"></i> Dashboard
-                </a>
-                <a href="{{ url_for('main.profile') }}">
-                    <i class="bi bi-person"></i> Profile
-                </a>
-                <a href="{{ url_for('main.matches') }}">
-                    <i class="bi bi-people"></i> Matches
-                </a>
-                <a href="{{ url_for('main.people') }}">
-                    <i class="bi bi-person-lines-fill"></i> People
-                </a>
-                <a href="{{ url_for('main.events_page') }}">
-                    <i class="bi bi-calendar-event"></i> Events
-                </a>
-                <a href="{{ url_for('main.notifications') }}" class="active">
-                    <i class="bi bi-bell"></i> Notifications
-                    {% if unread_count > 0 %}
-                    <span class="sidebar-notif-badge">{{ unread_count }}</span>
-                    {% endif %}
-                </a>
-
-                <a href="{{ url_for('main.messages_inbox') }}">
-                    <i class="bi bi-chat"></i> Messages
-                </a>
-            </div>
-
-            {% if current_user.is_authenticated %}
-            <div class="sidebar-section">
-                <div class="sidebar-title">Settings</div>
-                <a href="{{ url_for('main.logout') }}">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
-            </div>
-            {% endif %}
-
-            {% if current_user and current_user.is_authenticated %}
-            <div class="sidebar-user-footer">
-                <div class="sidebar-user-avatar">
-                    {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
-                </div>
-                <div>
-                    <div class="sidebar-user-name">{{ current_user.first_name }} {{ current_user.last_name }}</div>
-                    <div class="sidebar-user-username">@{{ current_user.username }}</div>
-                </div>
-            </div>
-            {% endif %}
-        </aside>
-
-        <!-- ── Main Content ── -->
-        <main class="main-content">
+        
 
             <!-- Header -->
             <div class="page-header">
@@ -271,41 +203,16 @@
             </section>
             {% endif %}
 
-        </main>
-    </div>
+    
+    
 
-    {% if current_user and current_user.is_authenticated %}
-    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-        <a href="{{ url_for('main.dashboard') }}">
-            <i class="bi bi-grid"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="{{ url_for('main.profile') }}">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-        </a>
-        <a href="{{ url_for('main.matches') }}">
-            <i class="bi bi-people"></i>
-            <span>Matches</span>
-        </a>
-        <a href="{{ url_for('main.people') }}">
-            <i class="bi bi-person-lines-fill"></i>
-            <span>People</span>
-        </a>
-        <a href="{{ url_for('main.messages_inbox') }}">
-            <i class="bi bi-chat"></i>
-            <span>Messages</span>
-        </a>
-        <a href="{{ url_for('main.notifications') }}" class="active">
-            <i class="bi bi-bell"></i>
-            <span>Notifications</span>
-        </a>
-    </nav>
-    {% endif %}
+    
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const csrfToken = "{{ csrf_token() }}";
+{% block scripts %}
+<script>
+        
+            const csrfToken = "{{ csrf_token() }}";
 
         function markRead(id) {
             const item = document.querySelector(`[data-id="${id}"]`);
@@ -413,5 +320,4 @@
             markRead(notifId);
         }
     </script>
-</body>
-</html>
+{% endblock %}
