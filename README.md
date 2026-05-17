@@ -22,13 +22,12 @@ Many students entering university often feel isolated and struggle to build mean
 
 ##  2. Group Members
 
-| UWA ID   | Name   | GitHub Username |
-| -------- | ------ | --------------- |
-| 23284373 | Mineth | ethnimp         |
-| 24342886 | Sarah  | onioncodes      |
-| 24463471 | Robert | OCEsLastHope    |
-| 24230704 | Laila  | lailaamin70     |
-  
+| UWA ID  | Name            | GitHub Username |
+|---------|-----------------|-----------------|
+| 23284373| Mineth Perara   | ethnimp         |
+| 24342886| Sarah Siddiqui  | onioncodes      |
+| 24463471| Robert Ho       | OCEsLastHope    |
+| 24230704| Laila Aamin     | lailaaamin70    |
 ---
 ## 3. How to Launch the Application
 
