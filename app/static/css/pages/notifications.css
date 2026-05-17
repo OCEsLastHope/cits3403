@@ -233,10 +233,9 @@
 
 .notif-meta {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
     margin-top: 6px;
 }
 
@@ -246,14 +245,15 @@
     display: flex;
     align-items: center;
     gap: 3px;
+    overflow-wrap: anywhere;
 }
 
 .notif-actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 6px;
-    margin-left: auto;
+    width: 100%;
     opacity: 0;
     transition: opacity 0.15s;
 }
@@ -314,4 +314,3 @@
         opacity: 1;
     }
 }
-

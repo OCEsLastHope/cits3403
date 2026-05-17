@@ -148,13 +148,36 @@
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 16px;
+    min-width: 0;
 }
 
 .friends-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
+.friends-row > div:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.friends-actions .btn {
+    min-width: 92px;
+}
+
+@media (max-width: 576px) {
+    .friends-row {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+
+    .friends-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
 
 
