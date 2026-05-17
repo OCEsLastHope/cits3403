@@ -156,5 +156,16 @@
     gap: 10px;
 }
 
+.people-card .row .info-card .mt-3 div:first-child {
+    width: 150px;
+}
+
+.people-card .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    min-width: 95px;
+}
+
+
 
 
