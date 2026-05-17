@@ -1,5 +1,16 @@
 import unittest
 import time
+import os
+import threading
+
+# Force database URL to a separate test database file for selenium.
+# This prevents it from overwriting the main development database.
+os.environ["DATABASE_URL"] = "sqlite:///test_selenium.db"
+os.environ["TEST_DATABASE_URL"] = "sqlite:///test_selenium.db"
+
+from app import app, db
+from app.database import User
+from config import TestConfig
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
